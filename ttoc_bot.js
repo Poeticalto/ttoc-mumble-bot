@@ -7,9 +7,6 @@ var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 var sheets = google.sheets('v4');
 var spreadsheetId = '1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4';
-var captainsmum;
-var status = true;
-var signupsopen = false;
 var cool = require('cool-ascii-faces');
 var cats = require('cat-ascii-faces');
 // This part is the code used to authenticate with Google API
@@ -232,7 +229,7 @@ var drafted = 0;
 var draftstart = 0;
 var draftsetup = 1;
 var setupstart = 1;
-var players = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x"];
+var players = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x"]; // letters are stock until I set up the draft stuff 
 var playersr = players;
 var captains = ["Poeticalto"];
 var captainspick = [0];
@@ -256,7 +253,9 @@ var mumbleurl = 'mumble.koalabeast.com';
 var whitelist = ['Poeticalto','Poeticaltwo'];
 var blacklist;
 var greylist;
-
+var captainsmum;
+var status = true;
+var signupsopen = false;
 var mailuser;
 var mailsender;
 var mailmessage;
@@ -413,8 +412,8 @@ connection.on('message', function (message,actor,scope) {
 			case 'time':
 				reply = 'TToC was treed at 9:30 PM CST and the draft will start at around 10:15 PM CST.';
 				break;
-			case 'random':
-				reply = cool();
+			case 'cat':
+				reply = cats();
 				break;
 			case 'help':
 				reply = '<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!map</b> - Gives user the map for the current season<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!time</b> - Gives user the time of the draft<br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><br/><b>!getmail</b> - Retrieves your mail.<br/>';
@@ -516,7 +515,10 @@ connection.on('message', function (message,actor,scope) {
 				reply = "Everything has been backed up!";}
 				else {
 					reply = tohelp;}
-				break;				
+				break;	
+			case 'qak':
+				reply = 'qak';
+				break;			
 			default:
 				reply = tohelp;
 				break;
@@ -542,7 +544,7 @@ user.sendMessage("Howdy "+user.name+"! I've been keeping some cool mail from oth
 user.sendMessage('quibble sends her greetings to you! c: (This is an automated message from TToC_BOT)');}
 	if(signupsopen == true && greylist.indexOf(user.name) == -1){
 user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you want to signup, message me !signups or !spreadsheet<br/><br/>(If you don't want these automated messages, message the !stop command to me)");}
-	if(greylist.indexOf(user.name) == -1 && gerylist.indexOf(user.name) == -1){
+	if(greylist.indexOf(user.name) == -1 ){
 user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");}
 });
 
