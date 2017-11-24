@@ -104,9 +104,9 @@ function storeToken(token) {
 
 
 // These are the individual functions used to run the Google Scripts needed for tourney
-var scriptId = 'MR8ANgNM86TUijo7WF5u3bAUVXR8RJHBv';
+var scriptId = 'MR8ANgNM86TUijo7WF5u3bAUVXR8RJHBv'; // This ID corresponds to the TToC scripts
 var script = google.script('v1');
-function spreadformsetup(auth) {
+function spreadformsetup(auth) { // This function calls the FormSetup script, which sets up a form linked to the TToC spreadsheet
 
   // Make the API request. The request object is included here as 'resource'.
   script.scripts.run({
@@ -145,7 +145,7 @@ function spreadformsetup(auth) {
   });
 }
 
-function spreadsheetsetup(auth) {
+function spreadsheetsetup(auth) { // This function calls the SheetSetup script, which sets up the sheet for a form linked to the TToC spreadsheet
   // Make the API request. The request object is included here as 'resource'.
   script.scripts.run({
     auth: auth,
@@ -183,7 +183,7 @@ function spreadsheetsetup(auth) {
   });
 }
 
-function spreaddraftboardsetup(auth) {
+function spreaddraftboardsetup(auth) { // This function calls te DraftBoardSetup script, which sets up a draft for a sheet linked to the TToC spreadsheet
   // Make the API request. The request object is included here as 'resource'.
   script.scripts.run({
     auth: auth,
@@ -220,15 +220,23 @@ function spreaddraftboardsetup(auth) {
 
   });
 }
+
+// todo: add function to read/write values
+
+
+
+
+
+
 // End of defining google apps scripts
 
 
 
-// Var set
+// Define global variables
 var drafted = 0;
 var draftstart = 0;
-var draftsetup = 1;
-var setupstart = 1;
+var draftsetup = 0;
+var setupstart = 0;
 var players = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x"]; // letters are stock until I set up the draft stuff 
 var playersr = players;
 var captains = ["Poeticalto"];
@@ -237,43 +245,47 @@ var picknum = 1;
 var newseason = 0;
 var setupsheet = 0;
 var setupdraft = 0;
-var sgnlink = 'https://goo.gl/forms/UBisBUjO4eg6pjfp1';
-var sslink = 'https://docs.google.com/spreadsheets/d/1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4/edit#gid=115661595';
-var ssmap =  'Cache';
-var ssmaplink = 'http://unfortunate-maps.jukejuice.com/static/previews/52272.png';
+var sgnlink;
+var sslink;
+var ssmap;
+var ssmaplink;
 var tohelp = 'Sorry, I did not recognize that. Use !help for a list of public commands! c:';
 var wait = 0;
 var reply = '';
 var tree = '';
-var seasonsize = 6;
-var draftmod = 21;
-var playerdindex = 0;
+var seasonsize;
+var draftmod;
+var playerdindex;
 var draftround = 1;
 var mumbleurl = 'mumble.koalabeast.com';
-var whitelist = ['Poeticalto','Poeticaltwo'];
+var whitelist;
 var blacklist;
 var greylist;
 var captainsmum;
-var status = true;
 var signupsopen = false;
 var mailuser;
 var mailsender;
 var mailmessage;
-if (fs.existsSync('mailuser.txt')) {
-mailuser = fs.readFileSync('mailuser.txt').toString().split("\n");
-mailsender = fs.readFileSync('mailsender.txt').toString().split("\n");
-mailmessage = fs.readFileSync('mailmessage.txt').toString().split("\n");
-sslink = fs.readFileSync('sslink.txt').toString().split("\n");
+var sadbot = "<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)";
+var motdset = false;
+
+
+// imports information from .txt files in folder
+if (fs.existsSync('whitelist.txt')) {
+mailuser = fs.readFileSync('mailuser.txt').toString().split("\n");       //mailuser contains receivers of mail
+mailsender = fs.readFileSync('mailsender.txt').toString().split("\n");   //mailsender contains senders of mail
+mailmessage = fs.readFileSync('mailmessage.txt').toString().split("\n"); //mailmessage contains mail to send
+sslink = fs.readFileSync('sslink.txt').toString().split("\n");           //sslink contains the signup link [sgnlink] and spreadsheet link [sslink]
 sgnlink = sslink[0];
 sslink = sslink[1];
-ssmap = fs.readFileSync('ssmap.txt').toString().split("\n");
+ssmap = fs.readFileSync('ssmap.txt').toString().split("\n");             //ssmap contains the map name [ssmap] and map link [ssmaplink]
 ssmaplink = ssmap[1];
 ssmap = ssmap[0];
 whitelist = fs.readFileSync('whitelist.txt').toString().split("\n");
 blacklist = fs.readFileSync('blacklist.txt').toString().split("\n");
 greylist = fs.readFileSync('greylist.txt').toString().split("\n");
 }
-else {
+else { //set defaults if .txt files don't exist in folder
 mailuser = ['226078'];
 mailsender = ['226078'];
 mailmessage = ['226078'];
@@ -283,11 +295,15 @@ ssmap =  'Cache';
 ssmaplink = 'http://unfortunate-maps.jukejuice.com/static/previews/52272.png';
 whitelist = [Poeticalto,Poeticaltwo];}
 
+
+// Defines the certificates to connect to the mumble server through node-mumble
 var options = {
 	key: fs.readFileSync('botkey.pem'),
 	cert: fs.readFileSync('botcerts.pem')
 };
 
+
+// connect to the mumble server
 console.log('Connecting to Mumble Server');
 console.log( 'Connecting' );
 mumble.connect( mumbleurl, options, function ( error, connection ) {
@@ -299,10 +315,11 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
         console.log('connection ready');
     });
 
-    // Show all incoming events and the name of the event which is fired.
+    /* //Event Logger
     connection.on( 'protocol-in', function (data) {
-        //console.log('data', data.message);
+        console.log('data', data.message);
 });
+*/
 
 	var sessions = {};
     connection.on( 'userState', function (state) {
@@ -315,20 +332,10 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
         channels[state.channelId] = state;
 });
 
+// logs users on the server
 connection.on('userState',function(state){
 sessions[state.session] = state;
 });
-
-   connection.on('user-move', function(user, fromChannel, toChannel, actor) {
-	//if (toChannel.name == 'TToC' && captainsmum.indexOf(user.name)>-1 && draftsetup == 1){
-	//user.moveToChannel('Draft Channel');
-	//connection.user.channel.sendMessage(user.name+'has been moved into the draft channel!');
-	//user.sendMessage('You have been moved to the draft channel!');}
-	//else if (toChannel.name == 'TToC' && draftsetup == 1){
-	//random stuff	
-	//}
-});
-
 
 connection.on('user-priority-speaker', function(user, status, actor) {
 	if (whitelist.indexOf(actor.name)>-1){
@@ -339,6 +346,7 @@ connection.on('user-priority-speaker', function(user, status, actor) {
 	console.log('Failed to move '+user.name);}
 	connection.user.channel.sendMessage(actor.name+' has sent '+user.name+' to the Draft Channel!');
 	user.sendMessage("You've been moved by "+actor.name+" to prepare for the draft!! :c");
+	//todo: not stop when permissions have been denied by the server
 	}
 });
 
@@ -356,14 +364,33 @@ connection.on('message', function (message,actor,scope) {
 	const content = message || '';
 	const isCommand = content[0] === '!';
 	const contentPieces = content.slice(1, content.length).split(' ');
-	const command = contentPieces[0];
+	const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br/>")[0];
+	console.log(command);
 	var playerd = contentPieces[1];	
 	if (contentPieces.length > 2){
 	for (i=2; i <= contentPieces.length-1;i++) {		
 		playerd = playerd + ' '+contentPieces[i];}}
-	console.log(playerd);
+	console.log(message);
  	if (isCommand && privateMessage) {
 		switch( command ) {
+			case 'backup':
+				if (whitelist.indexOf(actor.name)>-1) {					
+				fs.writeFileSync('mailuser.txt',mailuser.join('\n'));
+				fs.writeFileSync('mailmessage.txt',mailmessage.join('\n'));
+				fs.writeFileSync('mailsender.txt',mailsender.join('\n'));
+				fs.writeFileSync('blacklist.txt',blacklist.join('\n'));
+				fs.writeFileSync('greylist.txt',greylist.join('\n'));
+				fs.writeFileSync('whitelist.txt',whitelist.join('\n'));
+				reply = "Everything has been backed up!";}
+				else {
+					reply = tohelp;}
+				break;
+			case 'cat':
+				reply = cats();
+				break;
+			case 'cats':
+				reply = "<br/>"+cats()+"<br/>"+cats()+"<br/>"+cats()+"<br/>"+cats()+"<br/>"+cats();
+				break;			
 			case 'draft':
 				if (draftstart == 0) {
 					reply = 'The draft has not started! Check back in a bit! c:';
@@ -379,23 +406,99 @@ connection.on('message', function (message,actor,scope) {
 						playersr.splice(playerdindex,1); 
 						drafted = 1;
 						draftplayer(playerd);}
-					//else if (isNumber(playerd) == true && playerd > 0 && playerd < 120) {
-					//var playerdi = playerd;
-					//if (players.length <= playerdi-draftmod){
-					//	playerd = players[playerdi-draftmod];
-					//	playerdindex = playersr.indexOf(playerd);
-					//	if (playerdindex > -1) {
-					//		reply = 'Drafted ' + playerd;
-					//		playersr.splice(playerdindex,1); 
-					//		drafted = 1;}
-					//	else {
-					//reply = 'That player has already been taken! :c';}}}
+					/*else if (isNumber(playerd) == true && playerd > 0 && playerd < 120) {
+					var playerdi = playerd;
+					if (players.length <= playerdi-draftmod){
+						playerd = players[playerdi-draftmod];
+						playerdindex = playersr.indexOf(playerd);
+						if (playerdindex > -1) {
+							reply = 'Drafted ' + playerd;
+							playersr.splice(playerdindex,1); 
+							drafted = 1;}
+						else {
+					reply = 'That player has already been taken! :c';}}}
+					*/					
 					else if (players.indexOf(playerd) == -1){
 					reply = 'That player has already been taken! :c';}					
 					else {
 						reply = 'That player does not exist! Please make sure spelling/capitalization is correct!';}}
 				else {
 					reply = 'The draft has been completed! Thanks for drafting! C:';}
+				break;
+			case 'getmail':
+				if(mailuser.indexOf(actor.name)>-1){
+				actor.sendMessage("Howdy "+actor.name+"! Let me go get your mail!");
+				randomvar = 1;
+				while(mailuser.indexOf(actor.name)>-1) {	
+				var messagegeti = mailuser.indexOf(actor.name);
+				actor.sendMessage('Message from: '+mailsender[messagegeti]);				
+				actor.sendMessage(mailmessage[messagegeti]);
+				mailuser.splice(messagegeti,1);
+				mailmessage.splice(messagegeti,1);
+				mailsender.splice(messagegeti,1);}
+				actor.sendMessage("That's all of your messages for now! If you want to reply to your mail, message me with the command !mail user message! Have a great day! c:");
+				backup();}
+				else{
+				actor.sendMessage("Sorry, you don't have any mail. :c");}
+				break;
+			case 'help':
+				reply = '<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!map</b> - Gives user the map for the current season<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!time</b> - Gives user the time of the draft<br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><br/><b>!getmail</b> - Retrieves your mail.<br/>';
+				break;
+			case 'info':
+				reply = 'TToC, or the TagPro Tournament of Champions is a regular tournament hosted on the NA TagPro Mumble Server. Signups are usually released at 9:30 PM CST, with the draft starting at around 10:15 PM CST. I am a bot designed to run seasons of TToC. If you have any further questions, feel free to message Poeticalto on the Mumble server or /u/Poeticalto on Reddit.';
+				break;
+			case 'mail':
+				if (blacklist.indexOf(actor.name) == -1){
+				var mailusertemp = contentPieces[1];
+				var mailmestemp = contentPieces[2];
+				for (i=3; i <= contentPieces.length-1;i++) {		
+				mailmestemp = mailmestemp + ' '+contentPieces[i];}
+				mailuser.push(mailusertemp);
+				mailsender.push(actor.name);
+				mailmessage.push(mailmestemp);
+				reply = 'Your mail has been successfully created! Your receiver will receive it when they enter the server or use the !getmail command! c:';
+				backup();}
+				else {
+				reply = "You don't have permission to do that! :c";}	
+				break;
+			case 'map':
+				reply = '<br/>The map for tonight is: <a href="'+ssmaplink+'"><b><i><span style="color:#00557f">'+ssmap+'</span></i></b></a>';
+				break;
+			case 'newseason':
+				if(whitelist.indexOf(actor.name)>-1) {
+					newseason = 1;
+					reply = 'Resetting to original settings!';}
+				else{
+					reply = tohelp;}
+				break;
+			case 'qak':
+				reply = 'qak';
+				break;
+			case 'resetseason':
+				if (whitelist.indexOf(actor.name)>-1){
+				console.log('resetting season!');
+				reply = 'Resetting tourney vars!';
+				//reset season vars here
+				}
+				else {
+					reply = tohelp;}
+				break;
+			case 'setupdraft':
+				if (whitelist.indexOf(actor.name)>-1) {
+					setupdraft = 1;
+					reply = 'Setting up draft now!';
+					reply = draftsetup();}
+				else {
+					reply = tohelp;}
+				break;
+			case 'setupsheet':
+				if (whitelist.indexOf(actor.name)>-1) {
+					setupsheet = 1;
+					reply = 'Setting up sheet now!';
+					sheetsetup();
+					signupsopen = true;}
+				else {
+					reply = tohelp;}
 				break;
 			case 'signups':
 				if (setupstart !== 0) {				
@@ -409,46 +512,13 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					reply = 'Signups have not been released yet, check back in a bit! c:';}				
 				break;
+			case 'stop':
+				greylist.push(actor.name);
+				backup();
+				reply = "You've been added to the greylist! You will no longer receive automated messages from TToC_BOT when you connect.";
+				break;
 			case 'time':
 				reply = 'TToC was treed at 9:30 PM CST and the draft will start at around 10:15 PM CST.';
-				break;
-			case 'cat':
-				reply = cats();
-				break;
-			case 'help':
-				reply = '<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!map</b> - Gives user the map for the current season<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!time</b> - Gives user the time of the draft<br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><br/><b>!getmail</b> - Retrieves your mail.<br/>';
-				break;
-			case 'newseason':
-				if(whitelist.indexOf(actor.name)>-1) {
-					newseason = 1;
-					reply = 'Resetting to original settings!';}
-				else{
-					reply = tohelp;}
-				break;
-			case 'setupsheet':
-				if (whitelist.indexOf(actor.name)>-1) {
-					setupsheet = 1;
-					reply = 'Setting up sheet now!';
-					sheetsetup();}
-				else {
-					reply = tohelp;}
-				break;
-			case 'setupdraft':
-				if (whitelist.indexOf(actor.name)>-1) {
-					setupdraft = 1;
-					reply = 'Setting up draft now!';
-					reply = draftsetup();}
-				else {
-					reply = tohelp;}
-				break;
-			case 'tree':
-				if(whitelist.indexOf(actor.name)>-1) {
-					reply = 'look a tree';}
-				else{
-					reply = tohelp;}
-				break;
-			case 'info':
-				reply = 'TToC, or the TagPro Tournament of Champions is a regular tournament hosted on the NA TagPro Mumble Server. Signups are usually released at 9:30 PM CST, with the draft starting at around 10:15 PM CST. I am a bot designed to run seasons of TToC. If you have any further questions, feel free to message Poeticalto on the Mumble server or /u/Poeticalto on Reddit.';
 				break;
 			case 'trade':
 				if (whitelist.indexOf(actor.name)>-1) {
@@ -462,68 +532,54 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					reply = tohelp;}
 				break;
-			case 'map':
-				reply = '<br/>The map for tonight is: <a href="'+ssmaplink+'"><b><i><span style="color:#00557f">'+ssmap+'</span></i></b></a>';
+			case 'tree':
+				if(whitelist.indexOf(actor.name)>-1) {
+					reply = 'look a tree';}
+				else{
+					reply = tohelp;}
+				break;
+			case 'updatelinks':
+				if (whitelist.indexOf(actor.name)> -1){
+				sslink = fs.readFileSync('sslink.txt').toString().split("\n");
+				sgnlink = sslink[0];
+				sslink = sslink[1];
+				ssmap = fs.readFileSync('ssmap.txt').toString().split("\n");
+				ssmaplink = ssmap[1];
+				ssmap = ssmap[0];
+				console.log('updating links!');
+				reply = 'Updating links!';
+				}
+				else {
+					reply = tohelp;}
+				break;
+			case 'updatemotd':
+				if (whitelist.indexOf(actor.name)> -1){
+					if (motdset == false){				
+					motdset = true;
+					motd = fs.readFileSync('motd.txt').toString();
+					motd = motd+sadbot;
+					reply = 'motd has been updated and turned on!';					
+					}
+					else{
+					motdset = false;
+					reply = 'motd has been turned off!';}
+				}
+				else {
+					reply = tohelp;}
 				break;
 			case 'whitelist':
 				if (whitelist.indexOf(actor.name)>-1) {
 				whitelist.push(playerd);
-				reply = 'Added '+playerd+' to the whitelist!';}
+				reply = 'Added '+playerd+' to the whitelist!';
+				backup();}
 				else{
 				reply = tohelp;}
 				break;
-			case 'mail':
-				if (blacklist.indexOf(actor.name) == -1){
-				var mailusertemp = contentPieces[1];
-				var mailmestemp = contentPieces[2];
-				for (i=3; i <= contentPieces.length-1;i++) {		
-				mailmestemp = mailmestemp + ' '+contentPieces[i];}
-				mailuser.push(mailusertemp);
-				mailsender.push(actor.name);
-				mailmessage.push(mailmestemp);
-				reply = 'Your mail has been successfully created! Your receiver will receive it when they enter the server or use the !getmail command! c:';}
-				else {
-				reply = "You don't have permission to do that! :c";}	
-				break;
-			case 'getmail':
-				if(mailuser.indexOf(actor.name)>-1){
-				actor.sendMessage("Howdy "+actor.name+"! Let me go get your mail!");
-				randomvar = 1;
-				while(mailuser.indexOf(actor.name)>-1) {	
-				var messagegeti = mailuser.indexOf(actor.name);
-				actor.sendMessage('Message from: '+mailsender[messagegeti]);				
-				actor.sendMessage(mailmessage[messagegeti]);
-				mailuser.splice(messagegeti,1);
-				mailmessage.splice(messagegeti,1);
-				mailsender.splice(messagegeti,1);}
-				actor.sendMessage("That's all of your messages for now! If you want to reply to your mail, message me with the command !mail user message! Have a great day! c:");}
-				else{
-				actor.sendMessage("Sorry, you don't have any mail. :c");}
-				break;
-			case 'stop':
-				greylist.push(actor.name);
-				reply = "You've been added to the greylist!";
-				break;
-			case 'backup':
-				if (whitelist.indexOf(actor.name)>-1) {					
-				fs.writeFileSync('mailuser.txt',mailuser.join('\n'));
-				fs.writeFileSync('mailmessage.txt',mailmessage.join('\n'));
-				fs.writeFileSync('mailsender.txt',mailsender.join('\n'));
-				fs.writeFileSync('blacklist.txt',blacklist.join('\n'));
-				fs.writeFileSync('greylist.txt',greylist.join('\n'));
-				fs.writeFileSync('whitelist.txt',whitelist.join('\n'));
-				reply = "Everything has been backed up!";}
-				else {
-					reply = tohelp;}
-				break;	
-			case 'qak':
-				reply = 'qak';
-				break;			
 			default:
 				reply = tohelp;
 				break;
 }
-	if (command != 'getmail'){
+	if (command != 'getmail' && command != 'chicken'){
 		console.log(reply);
 		actor.sendMessage(reply);}
 }});
@@ -541,10 +597,12 @@ user.sendMessage("Howdy "+user.name+"! I've been keeping some cool mail from oth
 				mailsender.splice(messagegeti,1);}
 				user.sendMessage("That's all of your messages for now! If you want to reply to your mail, message me with the command !mail user message! Have a great day! c:");}
 	if(user.name == 'mik'){
-user.sendMessage('quibble sends her greetings to you! c: (This is an automated message from TToC_BOT)');}
+user.sendMessage('quibble sends her greetings to you! c:');}
 	if(signupsopen == true && greylist.indexOf(user.name) == -1){
 user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you want to signup, message me !signups or !spreadsheet<br/><br/>(If you don't want these automated messages, message the !stop command to me)");}
-	if(greylist.indexOf(user.name) == -1 ){
+	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == true){
+	user.sendMessage(motd);}	
+	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == false){
 user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");}
 });
 
@@ -553,6 +611,13 @@ user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/><
 	connection.user.channel.sendMessage('Welcome to '+toChannel.name+' '+user.name+'!');}
 	if(mailuser.indexOf(user.name)>-1){
 	user.sendMessage("This is an automated reminder from TToC_BOT that you have some mail! Message !getmail to me when you're ready to receive it! c:");}
+	//if (toChannel.name == 'TToC' && captainsmum.indexOf(user.name)>-1 && draftsetup == 1){
+	//user.moveToChannel('Draft Channel');
+	//connection.user.channel.sendMessage(user.name+'has been moved into the draft channel!');
+	//user.sendMessage('You have been moved to the draft channel!');}
+	//else if (toChannel.name == 'TToC' && draftsetup == 1){
+	//random stuff	
+	//}
 });
 
 function sheetsetup() {
@@ -658,6 +723,18 @@ function draftstrt(){
 	draftstart = 1;
 	drafted = 0;
 }
+
+function backup(){
+	console.log('backing up data!');
+	fs.writeFileSync('mailuser.txt',mailuser.join('\n'));
+	fs.writeFileSync('mailmessage.txt',mailmessage.join('\n'));
+	fs.writeFileSync('mailsender.txt',mailsender.join('\n'));
+	fs.writeFileSync('blacklist.txt',blacklist.join('\n'));
+	fs.writeFileSync('greylist.txt',greylist.join('\n'));
+	fs.writeFileSync('whitelist.txt',whitelist.join('\n'));
+	console.log('data has been backed up!');
+}
+
 
 
 function draftplayer(playerd){
