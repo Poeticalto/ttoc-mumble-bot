@@ -450,7 +450,7 @@ connection.on('message', function (message,actor,scope) {
 				break;
 			case 'gg':
 				if (ggid.indexOf(playerd.toLowerCase()) > -1){
-					reply = '<br/>Here is the '+playerd+' group:<br/><br/><a href="'+gglink[ggid.indexOf(playerd.toLowerCase())]+'"><span style="color:#39a5dd">'+gglink[ggid.indexOf(playerd.toLowerCase())]+'</span></a>'
+					reply = '<br/>Here is the '+playerd.toLowerCase()+' group:<br/><br/><a href="'+gglink[ggid.indexOf(playerd.toLowerCase())]+'"><span style="color:#39a5dd">'+gglink[ggid.indexOf(playerd.toLowerCase())]+'</span></a>'
 				}
 				else {
 					reply = 'Sorry, a group with that name could not be found. :c';
