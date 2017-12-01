@@ -1,7 +1,7 @@
 var mumble = require('mumble');
 var fs = require('fs');
 const isEmpty = require('lodash').isEmpty;
-//var isNumber = require('is-number');
+var request = require('request');
 var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
@@ -268,6 +268,9 @@ var mailsender;
 var mailmessage;
 var sadbot = "<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)";
 var motdset = false;
+var groupbuild;
+var groupsend;
+var groupid;
 
 
 // imports information from .txt files in folder
@@ -354,6 +357,7 @@ connection.on('user-priority-speaker', function(user, status, actor) {
 
 connection.on('message', function (message,actor,scope) {	
 	console.log(actor.name);
+	reply = "";
 	switch(scope){
 		case 'private':
 			privateMessage = true;
@@ -364,7 +368,7 @@ connection.on('message', function (message,actor,scope) {
 	const content = message || '';
 	const isCommand = content[0] === '!';
 	const contentPieces = content.slice(1, content.length).split(' ');
-	const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br/>")[0];
+	const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br")[0];
 	console.log(command);
 	var playerd = contentPieces[1];	
 	if (contentPieces.length > 2){
@@ -390,7 +394,7 @@ connection.on('message', function (message,actor,scope) {
 				break;
 			case 'cats':
 				reply = "<br/>"+cats()+"<br/>"+cats()+"<br/>"+cats()+"<br/>"+cats()+"<br/>"+cats();
-				break;			
+				break;
 			case 'draft':
 				if (draftstart == 0) {
 					reply = 'The draft has not started! Check back in a bit! c:';
@@ -417,7 +421,7 @@ connection.on('message', function (message,actor,scope) {
 							drafted = 1;}
 						else {
 					reply = 'That player has already been taken! :c';}}}
-					*/					
+					*/		// this is supposed to allow captains to draft by row number, unsure how to implement			
 					else if (players.indexOf(playerd) == -1){
 					reply = 'That player has already been taken! :c';}					
 					else {
@@ -440,6 +444,29 @@ connection.on('message', function (message,actor,scope) {
 				backup();}
 				else{
 				actor.sendMessage("Sorry, you don't have any mail. :c");}
+				break;
+			case 'group':
+				playerd = contentPieces[1].toLowerCase();
+				groupbuild = 'http://tagpro-'+playerd+'.koalabeast.com/groups/create';
+				groupsend = 'http://tagpro-'+playerd+'.koalabeast.com/groups/';
+				groupid;
+				request(
+					{ method: 'POST'
+					, uri: groupbuild
+					, multipart:
+					[{ 'follow_redirects': 'false'
+					, body : JSON.stringify({public: "off"})}]}
+					, function (error, response, body) {
+					if (response != null){
+					groupid = body.replace("Found. Redirecting to /groups/","");
+					console.log(groupsend+groupid);
+					reply = '<br/>Here is your '+playerd+' group:<br/><br/><a href="'+groupsend+groupid+'"><span style="color:#39a5dd">'+groupsend+groupid+'</span></a>';}
+					else {
+					reply = '<br/> There was an error when creating your group. Check to make sure you put an actual server! c:';}})
+					function random3() {
+					console.log(reply);
+					actor.sendMessage(reply);}
+					setTimeout(random3,2000);
 				break;
 			case 'help':
 				reply = '<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!map</b> - Gives user the map for the current season<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!time</b> - Gives user the time of the draft<br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><br/><b>!getmail</b> - Retrieves your mail.<br/>';
@@ -579,7 +606,7 @@ connection.on('message', function (message,actor,scope) {
 				reply = tohelp;
 				break;
 }
-	if (command != 'getmail' && command != 'chicken'){
+	if (command != 'getmail' || command != 'group'){
 		console.log(reply);
 		actor.sendMessage(reply);}
 }});
