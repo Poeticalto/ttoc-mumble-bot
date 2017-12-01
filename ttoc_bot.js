@@ -271,6 +271,9 @@ var motdset = false;
 var groupbuild;
 var groupsend;
 var groupid;
+var ggid = [];
+var gglink = [];
+var ggadd;
 
 
 // imports information from .txt files in folder
@@ -445,7 +448,41 @@ connection.on('message', function (message,actor,scope) {
 				else{
 				actor.sendMessage("Sorry, you don't have any mail. :c");}
 				break;
+			case 'gg':
+				if (ggid.indexOf(playerd.toLowerCase()) > -1){
+					reply = '<br/>Here is the '+playerd+' group:<br/><br/><a href="'+gglink[ggid.indexOf(playerd.toLowerCase())]+'"><span style="color:#39a5dd">'+gglink[ggid.indexOf(playerd.toLowerCase())]+'</span></a>'
+				}
+				else {
+					reply = 'Sorry, a group with that name could not be found. :c';
+				}
+				break;
+			/*case 'ggadd':
+				if (contentPieces.length >2){
+				ggadd = contentPieces[2];}
+				else {
+				ggadd = false;}
+				if (contentPieces.length > 3){
+					for (i=3; i <= contentPieces.length-1;i++) {		
+					ggadd = ggadd + ' '+contentPieces[i];}}
+				playerd = contentPieces[1].toLowerCase();
+				if (ggadd == false){
+				reply = "Sorry, a name was not specified to save under. Please try again.";}
+				else {
+					if (ggid.indexOf(ggadd) > -1){
+							gglink[ggid.indexOf(ggadd)] = groupsend+groupid;
+						}
+					else {
+						ggid.push(ggadd);
+						gglink.push(groupsend+groupid);}}
+				break;*/ //commented out until I figure out if it should be added or not.
 			case 'group':
+				if (contentPieces.length >2){
+				ggadd = contentPieces[2];}
+				else {
+				ggadd = false;}
+				if (contentPieces.length > 3){
+					for (i=3; i <= contentPieces.length-1;i++) {		
+					ggadd = ggadd + ' '+contentPieces[i];}}
 				playerd = contentPieces[1].toLowerCase();
 				groupbuild = 'http://tagpro-'+playerd+'.koalabeast.com/groups/create';
 				groupsend = 'http://tagpro-'+playerd+'.koalabeast.com/groups/';
@@ -465,11 +502,19 @@ connection.on('message', function (message,actor,scope) {
 					reply = '<br/> There was an error when creating your group. Check to make sure you put an actual server! c:';}})
 					function random3() {
 					console.log(reply);
-					actor.sendMessage(reply);}
+					actor.sendMessage(reply);
+					if (ggadd != false){
+						if (ggid.indexOf(ggadd) > -1){
+							gglink[ggid.indexOf(ggadd)] = groupsend+groupid;
+						}
+						else {
+							ggid.push(ggadd.toLowerCase());
+						gglink.push(groupsend+groupid);
+					}}}
 					setTimeout(random3,2000);
 				break;
 			case 'help':
-				reply = '<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!map</b> - Gives user the map for the current season<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!time</b> - Gives user the time of the draft<br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><br/><b>!getmail</b> - Retrieves your mail.<br/>';
+				reply = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!ggadd <span style="color:#aa0000">link </span><span style="color:#0000ff">name </span></b>- Adds group link to be accessed via the !gg command.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages.<br/><b>!time</b> - Gives user the time of the draft';
 				break;
 			case 'info':
 				reply = 'TToC, or the TagPro Tournament of Champions is a regular tournament hosted on the NA TagPro Mumble Server. Signups are usually released at 9:30 PM CST, with the draft starting at around 10:15 PM CST. I am a bot designed to run seasons of TToC. If you have any further questions, feel free to message Poeticalto on the Mumble server or /u/Poeticalto on Reddit.';
@@ -630,8 +675,8 @@ user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you wan
 	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == true){
 	user.sendMessage(motd);}	
 	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == false){
-user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");}
-});
+//user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");
+	}});
 
    connection.on('user-move', function(user, fromChannel, toChannel, actor) {
 	if (connection.user.channel.name == toChannel.name) {
