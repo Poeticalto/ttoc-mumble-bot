@@ -275,6 +275,8 @@ var ggid = [];
 var gglink = [];
 var ggadd;
 var motd = "Sorry, there's no motd set right now!";
+var welcomeuser;
+var welcomemessage;
 
 
 // imports information from .txt files in folder
@@ -291,6 +293,8 @@ ssmap = ssmap[0];
 whitelist = fs.readFileSync('whitelist.txt').toString().split("\n");
 blacklist = fs.readFileSync('blacklist.txt').toString().split("\n");
 greylist = fs.readFileSync('greylist.txt').toString().split("\n");
+welcomeuser = fs.readFileSync('welcomeuser.txt').toString().split("\n");
+welcomemessage = fs.readFileSync('welcomemessage.txt').toString().split("\n");
 }
 else { //set defaults if .txt files don't exist in folder
 mailuser = ['226078'];
@@ -381,7 +385,7 @@ connection.on('message', function (message,actor,scope) {
 	console.log(message);
  	if (isCommand && privateMessage) {
 		switch( command ) {
-			case 'backup':
+			case 'backup': // this case is uneeded since function backup runs after each write, but is kept as a redundant measure.
 				if (whitelist.indexOf(actor.name)>-1) {					
 				fs.writeFileSync('mailuser.txt',mailuser.join('\n'));
 				fs.writeFileSync('mailmessage.txt',mailmessage.join('\n'));
@@ -389,6 +393,8 @@ connection.on('message', function (message,actor,scope) {
 				fs.writeFileSync('blacklist.txt',blacklist.join('\n'));
 				fs.writeFileSync('greylist.txt',greylist.join('\n'));
 				fs.writeFileSync('whitelist.txt',whitelist.join('\n'));
+				fs.writeFileSync('welcomemessage.txt',welcomemessage.join('\n'));
+				fs.writeFileSync('welcomeuser.txt',welcomeuser.join('\n'));
 				reply = "Everything has been backed up!";}
 				else {
 					reply = tohelp;}
@@ -487,6 +493,29 @@ connection.on('message', function (message,actor,scope) {
 						ggid.push(ggadd);
 						gglink.push(groupsend+groupid);}}
 				break;*/ //commented out until I figure out if it should be added or not.
+			case 'greet':
+				if (playerd == undefined){
+				reply = 'No greeting was found, please create a message for the bot to send to you when you connect!';}
+				else {
+					if (welcomeuser.indexOf(actor.name) > -1){
+							welcomemessage[welcomeuser.indexOf(actor.name)] = playerd;
+						}
+						else {
+							welcomeuser.push(actor.name);
+						welcomemessage.push(playerd);
+				}
+				backup();
+				reply = 'Your greeting has been set! TToC_BOT will send you this message each time you connect to the server! c:';}
+				break;
+			case 'greetcat':
+				if (welcomeuser.indexOf(actor.name) > -1){
+					welcomemessage[welcomeuser.indexOf(actor.name)] = 'this_is_supposed_to_be_a_cat-217253';	}
+				else {
+						welcomeuser.push(actor.name);
+						welcomemessage.push('this_is_supposed_to_be_a_cat-217253');}
+				backup();
+				reply = 'TToC_BOT will give you a cat each time you connect to the server! c:';
+				break;
 			case 'group':
 				if (contentPieces.length >2){
 				ggadd = contentPieces[2];}
@@ -574,6 +603,49 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					reply = tohelp;}
 				break;
+			case 'setgreet':
+				if(whitelist.indexOf(actor.name)>-1){
+					if (contentPieces.length >2){
+						ggadd = contentPieces[2];}
+					else {
+						ggadd = false;}
+					if (contentPieces.length > 3){
+						for (i=3; i <= contentPieces.length-1;i++) {		
+							ggadd = ggadd + ' '+contentPieces[i];}}
+					playerd = contentPieces[1];
+					if (playerd == undefined){
+					reply = 'No greeting was found, please create a message for the bot to send to you when you connect!';}
+					else {
+						if (welcomeuser.indexOf(playerd) > -1){
+							welcomemessage[welcomeuser.indexOf(playerd)] = ggadd;}
+						else {
+							welcomeuser.push(playerd);
+							welcomemessage.push(ggadd);}
+					backup();
+					reply = 'Greeting has been set for '+playerd+'! They will receive this message each time they connect. c:';}
+				}
+				else{
+					reply = tohelp;
+				}
+				break;
+			case 'setgreetcat':
+				if(whitelist.indexOf(actor.name)>-1){
+					playerd = contentPieces[1];
+					if (playerd == undefined){
+					reply = 'No greeting was found, please create a message for the bot to send to you when you connect!';}
+					else {
+						if (welcomeuser.indexOf(playerd) > -1){
+							welcomemessage[welcomeuser.indexOf(playerd)] = 'this_is_supposed_to_be_a_cat-217253';}
+						else {
+							welcomeuser.push(playerd);
+							welcomemessage.push('this_is_supposed_to_be_a_cat-217253');}
+					backup();
+					reply = 'Greeting has been set for '+playerd+'! They will receive a cat each time they connect. c:';}
+				}
+				else{
+					reply = tohelp;
+				}
+				break;
 			case 'setupdraft':
 				if (whitelist.indexOf(actor.name)>-1) {
 					setupdraft = 1;
@@ -604,9 +676,14 @@ connection.on('message', function (message,actor,scope) {
 					reply = 'Signups have not been released yet, check back in a bit! c:';}				
 				break;
 			case 'stop':
+				if (greylist.indexOf(actor.name) == -1){
 				greylist.push(actor.name);
 				backup();
-				reply = "You've been added to the greylist! You will no longer receive automated messages from TToC_BOT when you connect.";
+				reply = "You've been added to the greylist! You will no longer receive automated messages from TToC_BOT when you connect.";}
+				else {
+					greylist.splice(actor.name,1);
+					backup();
+				reply = "You've been removed from the greylist! You will now receive automated message from TToC_BOT when you connect.";}
 				break;
 			case 'time':
 				reply = 'TToC was treed at 9:30 PM CST and the draft will start at around 10:15 PM CST.';
@@ -701,18 +778,17 @@ user.sendMessage("Howdy "+user.name+"! I've been keeping some cool mail from oth
 user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you want to signup, message me !signups or !spreadsheet<br/><br/>(If you don't want these automated messages, message the !stop command to me)");}
 	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == true){
 	user.sendMessage(motd);}
-	else if (user.name == 'quibble'){
-	user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/>");}
-	else if(user.name == 'mik'){
-user.sendMessage('quibble sends her greetings to you! c:');}
+	else if (welcomeuser.indexOf(user.name) > -1 && signupsopen == false && motdset == false){
+		if (welcomemessage[welcomeuser.indexOf(user.name)] == 'this_is_supposed_to_be_a_cat-217253'){
+		user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/>");}
+		else {user.sendMessage(welcomemessage[welcomeuser.indexOf(user.name)]);}
+	}	
 	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == false){
 //user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");
 	}});
 
    connection.on('user-move', function(user, fromChannel, toChannel, actor) {
-	if (connection.user.channel.name == toChannel.name && user.name == 'Gman8181__'){
-	connection.user.channel.sendMessage('I love you Gman8181__! You are the best <3');}	
-	else if (connection.user.channel.name == toChannel.name && user.name != 'TToC_BOT') {
+	if (connection.user.channel.name == toChannel.name && user.name != 'TToC_BOT') {
 	connection.user.channel.sendMessage('Welcome to '+toChannel.name+' '+user.name+'!');}
 	if(mailuser.indexOf(user.name)>-1){
 	user.sendMessage("This is an automated reminder from TToC_BOT that you have some mail! Message !getmail to me when you're ready to receive it! c:");}
@@ -837,6 +913,8 @@ function backup(){
 	fs.writeFileSync('blacklist.txt',blacklist.join('\n'));
 	fs.writeFileSync('greylist.txt',greylist.join('\n'));
 	fs.writeFileSync('whitelist.txt',whitelist.join('\n'));
+	fs.writeFileSync('welcomemessage.txt',welcomemessage.join('\n'));
+	fs.writeFileSync('welcomeuser.txt',welcomeuser.join('\n'));
 	console.log('data has been backed up!');
 }
 
