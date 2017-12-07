@@ -7,7 +7,7 @@ var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 var sheets = google.sheets('v4');
 var spreadsheetId = '1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4';
-var cool = require('cool-ascii-faces');
+//var cool = require('cool-ascii-faces'); //not really needed, but faces are pretty cool
 var cats = require('cat-ascii-faces');
 // This part is the code used to authenticate with Google API
 var SCOPES = ['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/forms'];
@@ -274,6 +274,7 @@ var groupid;
 var ggid = [];
 var gglink = [];
 var ggadd;
+var motd = "Sorry, there's no motd set right now!";
 
 
 // imports information from .txt files in folder
@@ -392,6 +393,15 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					reply = tohelp;}
 				break;
+			case 'blacklist':
+				if (whitelist.indexOf(actor.name)>-1) {
+				blacklist.push(playerd);
+				reply = 'Added '+playerd+' to the blacklist!';
+				backup();
+				}
+				else {
+				reply = tohelp;}
+				break;
 			case 'cat':
 				reply = cats();
 				break;
@@ -449,7 +459,9 @@ connection.on('message', function (message,actor,scope) {
 				actor.sendMessage("Sorry, you don't have any mail. :c");}
 				break;
 			case 'gg':
-				if (ggid.indexOf(playerd.toLowerCase()) > -1){
+				if (playerd == undefined){
+				 reply = "Please type a group name to find!";}
+				else if (ggid.indexOf(playerd.toLowerCase()) > -1){
 					reply = '<br/>Here is the '+playerd.toLowerCase()+' group:<br/><br/><a href="'+gglink[ggid.indexOf(playerd.toLowerCase())]+'"><span style="color:#39a5dd">'+gglink[ggid.indexOf(playerd.toLowerCase())]+'</span></a>'
 				}
 				else {
@@ -483,7 +495,11 @@ connection.on('message', function (message,actor,scope) {
 				if (contentPieces.length > 3){
 					for (i=3; i <= contentPieces.length-1;i++) {		
 					ggadd = ggadd + ' '+contentPieces[i];}}
-				playerd = contentPieces[1].toLowerCase();
+				playerd = contentPieces[1]
+				if (playerd == undefined) {
+				playerd = 'sphere';}
+				else{
+				playerd = playerd.toLowerCase();}
 				groupbuild = 'http://tagpro-'+playerd+'.koalabeast.com/groups/create';
 				groupsend = 'http://tagpro-'+playerd+'.koalabeast.com/groups/';
 				groupid;
@@ -503,7 +519,7 @@ connection.on('message', function (message,actor,scope) {
 					function random3() {
 					console.log(reply);
 					actor.sendMessage(reply);
-					if (ggadd != false){
+					if (ggadd != false && blacklist.indexOf(actor.name) == -1){ // players on the blacklist will be able to make groups but not add them to the public list of groups
 						if (ggid.indexOf(ggadd) > -1){
 							gglink[ggid.indexOf(ggadd)] = groupsend+groupid;
 						}
@@ -511,7 +527,7 @@ connection.on('message', function (message,actor,scope) {
 							ggid.push(ggadd.toLowerCase());
 						gglink.push(groupsend+groupid);
 					}}}
-					setTimeout(random3,2000);
+					setTimeout(random3,500);
 				break;
 			case 'help':
 				reply = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!ggadd <span style="color:#aa0000">link </span><span style="color:#0000ff">name </span></b>- Adds group link to be accessed via the !gg command.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages.<br/><b>!time</b> - Gives user the time of the draft';
@@ -519,7 +535,7 @@ connection.on('message', function (message,actor,scope) {
 			case 'info':
 				reply = 'TToC, or the TagPro Tournament of Champions is a regular tournament hosted on the NA TagPro Mumble Server. Signups are usually released at 9:30 PM CST, with the draft starting at around 10:15 PM CST. I am a bot designed to run seasons of TToC. If you have any further questions, feel free to message Poeticalto on the Mumble server or /u/Poeticalto on Reddit.';
 				break;
-			case 'mail':
+			case 'mail':				
 				if (blacklist.indexOf(actor.name) == -1){
 				var mailusertemp = contentPieces[1];
 				var mailmestemp = contentPieces[2];
@@ -535,6 +551,9 @@ connection.on('message', function (message,actor,scope) {
 				break;
 			case 'map':
 				reply = '<br/>The map for tonight is: <a href="'+ssmaplink+'"><b><i><span style="color:#00557f">'+ssmap+'</span></i></b></a>';
+				break;
+			case 'motd':
+				reply = motd;
 				break;
 			case 'newseason':
 				if(whitelist.indexOf(actor.name)>-1) {
@@ -628,13 +647,22 @@ connection.on('message', function (message,actor,scope) {
 				if (whitelist.indexOf(actor.name)> -1){
 					if (motdset == false){				
 					motdset = true;
-					motd = fs.readFileSync('motd.txt').toString();
+					playerd = parseInt(contentPieces[1]);
+					motd = fs.readFileSync('motd.txt').toString().split("\n");
+					console.log(playerd);
+					console.log(Number.isInteger(playerd));
+					console.log(motd.length);
+					if (Number.isInteger(playerd) == true && playerd <= motd.length-1 && playerd >= 0) {
+						motd = motd[playerd];}
+					else {
+						motd = motd[0];}
 					motd = motd+sadbot;
 					reply = 'motd has been updated and turned on!';					
 					}
 					else{
 					motdset = false;
-					reply = 'motd has been turned off!';}
+					reply = 'motd has been turned off!';
+					motd = "Sorry, there's no motd set right now!";}
 				}
 				else {
 					reply = tohelp;}
@@ -653,7 +681,8 @@ connection.on('message', function (message,actor,scope) {
 }
 	if (command != 'getmail' || command != 'group'){
 		console.log(reply);
-		actor.sendMessage(reply);}
+		actor.sendMessage(reply);
+		}
 }});
 
 connection.on('user-connect', function(user) {
@@ -668,18 +697,22 @@ user.sendMessage("Howdy "+user.name+"! I've been keeping some cool mail from oth
 				mailmessage.splice(messagegeti,1);
 				mailsender.splice(messagegeti,1);}
 				user.sendMessage("That's all of your messages for now! If you want to reply to your mail, message me with the command !mail user message! Have a great day! c:");}
-	if(user.name == 'mik'){
-user.sendMessage('quibble sends her greetings to you! c:');}
 	if(signupsopen == true && greylist.indexOf(user.name) == -1){
 user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you want to signup, message me !signups or !spreadsheet<br/><br/>(If you don't want these automated messages, message the !stop command to me)");}
 	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == true){
-	user.sendMessage(motd);}	
+	user.sendMessage(motd);}
+	else if (user.name == 'quibble'){
+	user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/>");}
+	else if(user.name == 'mik'){
+user.sendMessage('quibble sends her greetings to you! c:');}
 	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == false){
 //user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");
 	}});
 
    connection.on('user-move', function(user, fromChannel, toChannel, actor) {
-	if (connection.user.channel.name == toChannel.name) {
+	if (connection.user.channel.name == toChannel.name && user.name == 'Gman8181__'){
+	connection.user.channel.sendMessage('I love you Gman8181__! You are the best <3');}	
+	else if (connection.user.channel.name == toChannel.name && user.name != 'TToC_BOT') {
 	connection.user.channel.sendMessage('Welcome to '+toChannel.name+' '+user.name+'!');}
 	if(mailuser.indexOf(user.name)>-1){
 	user.sendMessage("This is an automated reminder from TToC_BOT that you have some mail! Message !getmail to me when you're ready to receive it! c:");}
