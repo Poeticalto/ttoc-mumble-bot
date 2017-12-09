@@ -221,6 +221,36 @@ function spreaddraftboardsetup(auth) { // This function calls te DraftBoardSetup
   });
 }
 
+
+function updatespreadlinks(auth){
+	 var sheets = google.sheets('v4');
+  sheets.spreadsheets.values.get({
+    auth: auth,
+    spreadsheetId: spreadsheetId,
+    range: "'Hall of Fame'!B17:B23",
+  }, function(err, response) {
+    if (err) {
+      console.log('The API returned an error: ' + err);
+      return;
+    }
+    var rows = response.values;
+    if (rows.length == 0) {
+      console.log('No data found.');
+    } else {
+      console.log('List of players: ');
+      for (var i = 0; i < rows.length; i++) {
+		testarr[i] = rows[i][0];
+		console.log(rows[i]);
+      }
+    }
+	console.log(testarr);
+	testarr.splice(testarr.indexOf('Poeticalto'),1);
+	console.log('random space');
+	console.log(testarr);
+  });
+	
+	
+}
 // todo: add function to read/write values
 
 
@@ -277,6 +307,9 @@ var ggadd;
 var motd = "Sorry, there's no motd set right now!";
 var welcomeuser;
 var welcomemessage;
+var lockchannel = false;
+var lockschannel = false;
+var testarr = [];
 
 
 // imports information from .txt files in folder
@@ -349,16 +382,15 @@ sessions[state.session] = state;
 });
 
 connection.on('user-priority-speaker', function(user, status, actor) {
-	if (whitelist.indexOf(actor.name)>-1){
-	try { 
-	user.moveToChannel('Draft Channel');}
-	catch(err){
-	actor.sendMessage("Sorry, couldn't move "+user.name+". Try checking the permissions of the channel!");
-	console.log('Failed to move '+user.name);}
-	connection.user.channel.sendMessage(actor.name+' has sent '+user.name+' to the Draft Channel!');
-	user.sendMessage("You've been moved by "+actor.name+" to prepare for the draft!! :c");
-	//todo: not stop when permissions have been denied by the server
+	if (whitelist.indexOf(actor.name)>-1 && status == true){
+	if ( user.name == "TToC_BOT"){
+	user.moveToChannel(actor.channel);
+	actor.channel.sendMessage(actor.name+' has summoned me to this channel!');
 	}
+	else{
+	user.moveToChannel(connection.user.channel);
+	connection.user.channel.sendMessage(actor.name+' has moved '+user.name+' to '+connection.user.channel.name+'!');
+}}
 });
 
 
@@ -447,6 +479,23 @@ connection.on('message', function (message,actor,scope) {
 						reply = 'That player does not exist! Please make sure spelling/capitalization is correct!';}}
 				else {
 					reply = 'The draft has been completed! Thanks for drafting! C:';}
+				break;
+			case 'find':
+				if (connection.userByName(playerd) == undefined){
+				reply = 'Sorry, a player with that name could not be found.';}
+				else {
+					var parentc = [];
+					parentc.unshift(connection.userByName(playerd).channel.name);
+					parentc.unshift(connection.userByName(playerd).channel.parent.name);
+					while (connection.channelByName(parentc[0]).parent.name != 'North American TagPro Mumble'){
+					parentc.unshift(connection.channelByName(parentc[0]).parent.name);}
+					var mumbleurl = 'mumble://mumble.koalabeast.com';
+				for (i = 0;i<parentc.length;i++){
+				mumbleurl = mumbleurl+'/'+parentc[i].replace(/ /g,"%20");}
+					console.log('test');
+					console.log(mumbleurl);
+					console.log(parentc);
+					reply = '<br/>'+playerd+' was found in <a href="'+mumbleurl+'"><span style="color:#39a5dd">'+parentc[parentc.length-1]+'</span></a>';}
 				break;
 			case 'getmail':
 				if(mailuser.indexOf(actor.name)>-1){
@@ -561,9 +610,51 @@ connection.on('message', function (message,actor,scope) {
 			case 'help':
 				reply = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!greet</b> <b><span style="color:#aa0000">message </span></b>- Sets a greeting for the user that will be sent on connect.<br/><b>!greetcat</b> - TToC_BOT will greet the user with a cat that will be sent on connect.<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets TToC_BOT send messages again.<br/><b>!time</b> - Gives user the time of the draft';
 				break;
+			case 'here':
+				if (whitelist.indexOf(actor.name) > -1){
+					connection.user.moveToChannel(actor.channel);
+					actor.channel.sendMessage(actor.name+' has summoned me to this channel!');
+				}
+				else {
+				actor.sendMessage(tohelp);}
+				break;
 			case 'info':
 				reply = 'TToC, or the TagPro Tournament of Champions is a regular tournament hosted on the NA TagPro Mumble Server. Signups are usually released at 9:30 PM CST, with the draft starting at around 10:15 PM CST. I am a bot designed to run seasons of TToC. If you have any further questions, feel free to message Poeticalto on the Mumble server or /u/Poeticalto on Reddit.';
 				break;
+			case 'lock':
+				if (whitelist.indexOf(actor.name) > -1){
+				if (lockchannel == false && lockschannel == false){				
+				connection.user.channel.sendMessage(actor.name+' has put this channel on lockdown! No new users will be allowed unless moved by a whitelisted user.');
+				lockchannel = true;}
+				else if (lockchannel == false && lockschannel == true){
+				connection.user.channel.sendMessage(actor.name+' has downgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
+				lockchannel = true;
+				lockschannel = false;}
+				else if (lockchannel == true || lockschannel == true){
+				connection.user.channel.sendMessage(actor.name+' has lifted the channel lockdown! Users may now freely enter and leave.');
+				lockchannel = false;
+				lockschannel = false;
+				}}
+				else {
+				actor.sendMessage(tohelp);}
+				break;
+			case 'lock+':
+				if (whitelist.indexOf(actor.name) > -1){
+				if (lockchannel == false && lockschannel == false){				
+				connection.user.channel.sendMessage(actor.name+' has put this channel on super lockdown! No new users will be allowed to enter or leave unless moved by a whitelisted user.');
+				lockschannel = true;}
+				else if (lockchannel == true && lockschannel == false){
+				connection.user.channel.sendMessage(actor.name+' has upgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
+				lockchannel = false;
+				lockschannel = true;}
+				else if (lockchannel == true || lockschannel == true){
+				connection.user.channel.sendMessage(actor.name+' has lifted the channel lockdown! Users may now freely enter and leave.');
+				lockchannel = false;
+				lockschannel = false;
+				}}
+				else {
+				actor.sendMessage(tohelp);}
+				break;	
 			case 'mail':				
 				if (blacklist.indexOf(actor.name) == -1){
 				var mailusertemp = contentPieces[1];
@@ -681,7 +772,7 @@ connection.on('message', function (message,actor,scope) {
 				backup();
 				reply = "You've been added to the greylist! You will no longer receive automated messages from TToC_BOT when you connect.";}
 				else {
-					greylist.splice(actor.name,1);
+					greylist.splice(greylist.indexOf(actor.name),1);
 					backup();
 				reply = "You've been removed from the greylist! You will now receive automated message from TToC_BOT when you connect.";}
 				break;
@@ -716,6 +807,7 @@ connection.on('message', function (message,actor,scope) {
 				ssmap = ssmap[0];
 				console.log('updating links!');
 				reply = 'Updating links!';
+				updatelinks();
 				}
 				else {
 					reply = tohelp;}
@@ -756,11 +848,19 @@ connection.on('message', function (message,actor,scope) {
 				reply = tohelp;
 				break;
 }
-	if (command != 'getmail' || command != 'group'){
+	if (command != 'getmail' || command != 'group' || command != 'lock' || command != 'lock+' || command != 'here'){
 		console.log(reply);
 		actor.sendMessage(reply);
+		//connection.channelByName('Meep is God').sendMessage('this is a test');
 		}
 }});
+
+connection.on('error',function(MumbleError){
+	console.log(MumbleError);
+})
+
+
+
 
 connection.on('user-connect', function(user) {
 	if(mailuser.indexOf(user.name)>-1){
@@ -788,7 +888,17 @@ user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you wan
 	}});
 
    connection.on('user-move', function(user, fromChannel, toChannel, actor) {
-	if (connection.user.channel.name == toChannel.name && user.name != 'TToC_BOT') {
+	if (connection.user.channel.name == toChannel.name && (lockchannel == true || lockschannel == true) && actor.name != 'TToC_BOT' && whitelist.indexOf(actor.name) == -1){
+		user.moveToChannel('TToC');
+		user.sendMessage('Sorry, you cannot enter this channel right now. :c');
+		connection.user.channel.sendMessage(user.name+' was prevented from entering this channel!');
+	}
+	else if (connection.user.channel.name == fromChannel.name && lockschannel == true && actor.name != 'TToC_BOT' && whitelist.indexOf(actor.name) == -1){
+		user.moveToChannel(connection.user.channel);
+		user.sendMessage('Sorry, you cannot leave this channel right now. :c');
+		connection.user.channel.sendMessage(user.name+' was prevented from leaving this channel!');
+	}
+	else if (connection.user.channel.name == toChannel.name && user.name != 'TToC_BOT' && actor.name != 'TToC_BOT') {
 	connection.user.channel.sendMessage('Welcome to '+toChannel.name+' '+user.name+'!');}
 	if(mailuser.indexOf(user.name)>-1){
 	user.sendMessage("This is an automated reminder from TToC_BOT that you have some mail! Message !getmail to me when you're ready to receive it! c:");}
@@ -816,13 +926,7 @@ authorize(JSON.parse(content), spreadsheetsetup);}
 random1();
 setTimeout(random2,15000);
 });
-	
-
-/*
-	retrieve the following vars:
-	spreadsheet link
-	form link
-	*/
+updatelinks()
 }
 function draftsetup(){
 	console.log('setupdraft has been activated!');
@@ -927,6 +1031,20 @@ function draftplayer(playerd){
 	drafted = 0;
 	picknum = picknum + 1;
 	draftround = Math.floor(picknum/seasonsize)+1;
+}
+
+function updatelinks() {
+	console.log('updatelinks has been activated!');
+	console.log('Retrieving links from the spreadsheet!');
+	fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+  if (err) {
+    console.log('Error loading client secret file: ' + err);
+    return;
+  }
+function random4() {
+authorize(JSON.parse(content), updatespreadlinks);}
+random4();
+});
 }
 
 });
