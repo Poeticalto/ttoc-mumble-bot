@@ -121,6 +121,7 @@ function gscriptrun(auth) { // This function runs code from Google Scripts
 }
 
 function ssread(auth){
+	testarr = [];
 	 var sheets = google.sheets('v4');
   sheets.spreadsheets.values.get({
     auth: auth,
@@ -131,14 +132,15 @@ function ssread(auth){
       console.log('The API returned an error: ' + err);
       return;
     }
+	console.log(ssreadfrom);
 	var testarr = response.values;
-    if (rows.length == 0) {
+    if (testarr.length == 0) {
       console.log('No data found.');
     } else {
-		console.log('players imported');
-      for (var i = 0; i < rows.length; i++) {
-		rows[i] = testarr[i][0];
-      }
+		console.log('imported');
+        console.log(testarr);
+	  for (var i = 0; i < testarr.length; i++) {
+	  rows[i] = testarr[i][0];}
     }
   });
 }
@@ -178,12 +180,12 @@ sheets.spreadsheets.values.update({
 
 // Define global variables
 var drafted = 0;
-var draftstart = 1;
+var draftstart = 0;
 var draftsetup = 0;
 var setupstart = 0;
-var players = ['JBB','protag','gg!','danisk','legeniple','777z','llamatron','Meep','YA BOYYYY','Gram Parsons','Cheetosrule','Wayne','Pandora','waterwheel','corbeh','Warriors','Cook','slowyourroll']; // letters are stock until I set up the draft stuff 
-var playersr = players;
-var captains = ['Poeticalto','Daffodil','no defense','AnthonyDavis','TagProf','Taco.Ball'];
+var players = []; // letters are stock until I set up the draft stuff 
+var playersr = [];
+var captains = [];
 var captainspick = [0];
 var picknum = 1;
 var newseason = 0;
@@ -197,7 +199,7 @@ var tohelp = 'Sorry, I did not recognize that. Use !help for a list of public co
 var wait = 0;
 var reply = '';
 var tree = '';
-var seasonsize;
+var seasonsize = 9;
 var seasonnum;
 var draftmod;
 var playerdindex;
@@ -402,7 +404,6 @@ connection.on('message', function (message,actor,scope) {
 				else if (playersr.length !== 0 && draftstart == 1 && drafted == 0) {
 					playerdindex = playersr.indexOf(playerd);
 					if (playerdindex > -1) {
-						reply = 'Drafted ' + playerd;
 						playersr.splice(playerdindex,1); 
 						drafted = 1;
 						draftplayer(playerd);}
@@ -705,7 +706,7 @@ connection.on('message', function (message,actor,scope) {
 				if (whitelist.indexOf(actor.name)>-1) {
 					setupdraft = 1;
 					reply = 'Setting up draft now!';
-					reply = draftsetup();}
+					draftsetup();}
 				else {
 					reply = tohelp;}
 				break;
@@ -730,6 +731,9 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					reply = 'Signups have not been released yet, check back in a bit! c:';}				
 				break;
+			case 'startdraft':
+				draftstart();
+				break;
 			case 'stop':
 				if (greylist.indexOf(actor.name) == -1){
 				greylist.push(actor.name);
@@ -746,17 +750,38 @@ connection.on('message', function (message,actor,scope) {
 				console.log(users[i]);}
 				break;
 			case 'time':
-				reply = 'TToC was treed at 9:30 PM CST and the draft will start at around 10:15 PM CST.';
+				if (setupstart !== 0) {
+				reply = 'TToC was treed at 9:30 PM CST and the draft will start at around 10:15 PM CST.';}
+				else {
+				reply = 'Signups have not been released yet, check back in a bit! c:';}	
 				break;
 			case 'trade':
 				if (whitelist.indexOf(actor.name)>-1) {
-				var tradec1 = contentPieces[1];
-				var tradec2 = contentPieces[2];
-				var tradec1 = captains[tradec1];
-				var tradec2 = captains[tradec2];				
-
-				// switch captains on the spreadsheet, captains array, captainsmum array 
-					reply = 'Successfully switched captains '+tradec1+' and '+tradec2;}
+				values = [];
+				var tradec1 = contentPieces[1]-1;
+				var tradec2 = contentPieces[2]-1;
+				if (tradec1 > tradec2){
+				playerd = tradec2;
+				tradec2 = tradec1;
+				tradec1 = playerd;}
+				tradec1 = captains[tradec1];
+				tradec2 = captains[tradec2];
+				captains[captains.indexOf(tradec2)] = tradec1;
+				captains[captains.indexOf(tradec1)] = tradec2;
+				playerd = 6+6-1;
+				ssreadfrom = "'S-"+seasonnum+"'!N6:N"+playerd;
+				for (i=0;i<6;i++){
+					values.push([captains[i]]);}
+				// switch captains on the spreadsheet, captains array
+				fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+				if (err) {
+					console.log('Error loading client secret file: ' + err);
+					return;}
+				function random8() {
+					authorize(JSON.parse(content), sswrite);}
+				random8()});
+				connection.user.channel.sendMessage('Successfully switched captains '+tradec1+' and '+tradec2+'!');	
+				connection.channelByName('Spectating Lounge [Open to all]').sendMessage('Successfully switched captains '+tradec1+' and '+tradec2+'!');}
 				else {
 					reply = tohelp;}
 				break;
@@ -811,11 +836,9 @@ connection.on('message', function (message,actor,scope) {
 				reply = tohelp;
 				break;
 }
-	if (command != 'getmail' || command != 'group' || command != 'lock' || command != 'lock+' || command != 'here'){
+	if (command != 'getmail' || command != 'group' || command != 'lock' || command != 'lock+' || command != 'here' || command != 'trade' || reply != ''){
 		console.log(reply);
-		actor.sendMessage(reply);
-		//connection.channelByName('Meep is God').sendMessage('this is a test');
-		}
+		actor.sendMessage(reply);}
 }});
 
 connection.on('error',function(MumbleError){
@@ -892,20 +915,43 @@ function draftsetup(){
   }
   scriptname = 'DraftBoardSetup';
 authorize(JSON.parse(content), gscriptrun);
-});
-	/*run draftboardsetup
-	retrieve the following vars/arrays:
-	players (duplicate to playersr)
+function random11(){
+ssreadfrom = "'S-"+seasonnum+"'!T3";
+rows = [];
+authorize(JSON.parse(content), ssread);}
+function random12(){
+seasonsize = rows[0];
+console.log(seasonsize);
+console.log(rows);
+playerd = parseInt(seasonsize)+5;
+console.log(seasonsize);
+ssreadfrom = "'S-"+seasonnum+"'!N6:N"+playerd;
+authorize(JSON.parse(content), ssread);
+for (i=0;i<seasonsize;i++){
+	captains[i] = rows[i];}}
+setTimeout(random11,10000);
+setTimeout(random12,15000);})}
+
+function pickrefresh(){
+/* refresh the following vars:
+	spreadsheet link
+	form link
+	tree message
+	if draft has started:
+	players
+	playersr(duplicate of players)
 	captains
-	season size	
-	*/
-	for (i=1; i<=seasonsize; i++){
-	captainspick.push(i);}
-	for (i=seasonsize; i>0; i--){
-	captainspick.push(i);}
-	for (i=seasonsize; i>0; i--){
-	captainspick.push(i);}
-	switch(seasonsize){
+	season size
+*/
+}
+
+function draftstart(){
+	console.log('draftstart has been activated!');
+	console.log('Starting Draft!');
+	draftround = 1;
+	draftstart = 1;
+	drafted = 0;
+		switch(parseInt(seasonsize)){
 		case 3:
 			draftmod = 7+5;
 			break;
@@ -939,29 +985,17 @@ authorize(JSON.parse(content), gscriptrun);
 		default:
 			draftmod = -1;
 			break;}
-// Assign captains to mumble names
-var captainsmum = new Array(seasonsize);}
-
-function pickrefresh(){
-/* refresh the following vars:
-	spreadsheet link
-	form link
-	tree message
-	if draft has started:
-	players
-	playersr(duplicate of players)
-	captains
-	season size
-*/
-}
-
-function draftstrt(){
-	console.log('draftstart has been activated!');
-	console.log('Starting Draft!');
-	draftround = 1;
-	draftstart = 1;
-	drafted = 0;
-}
+			fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+  if (err) {
+    console.log('Error loading client secret file: ' + err);
+    return;}
+			playerd = parseInt(draftmod)+4*parseInt(seasonsize);
+			ssreadfrom = "'S-"+seasonnum+"'!"+"M"+draftmod+":M"+playerd;
+			authorize(JSON.parse(content), ssread);
+			players = rows;
+			for (i=0;i<seasonsize;i++){
+				players.splice(players.indexOf(captains[i]),1);}
+			playersr = players;})}
 
 function backup(){
 	console.log('backing up data!');
@@ -1042,7 +1076,7 @@ function random4() {
 ssreadfrom = "'Hall of Fame'!B17:B23";
 authorize(JSON.parse(content), ssread);}
 function random6() {
-	ssmaplink = rows[4];
+ssmaplink = rows[4];
 ssmap = rows[3];
 sslink = rows[6];
 sgnlink = rows[5];
