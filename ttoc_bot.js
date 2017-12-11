@@ -438,7 +438,7 @@ connection.on('message', function (message,actor,scope) {
 				break;
 			case 'getmail':
 				getmail(actor);
-				//getmail function;
+				break;
 			case 'gg':
 				if (playerd == undefined){
 				 reply = "Please type a group name to find!";}
@@ -610,6 +610,7 @@ connection.on('message', function (message,actor,scope) {
 				reply = tohelp;}
 				break;
 			case 'mail':				
+				if (playerd == undefined){
 				if (blacklist.indexOf(actor.name) == -1){
 				var mailusertemp = contentPieces[1];
 				var mailmestemp = contentPieces[2];
@@ -621,7 +622,9 @@ connection.on('message', function (message,actor,scope) {
 				reply = 'Your mail has been successfully created! Your receiver will receive it when they enter the server or use the !getmail command! c:';
 				backup();}
 				else {
-				reply = "You don't have permission to do that! :c";}	
+				reply = "You don't have permission to do that! :c";}
+				else {
+				reply = "No message was detected, please put one in before sending! c:";}}	
 				break;
 			case 'map':
 				reply = '<br/>The map for tonight is: <a href="'+ssmaplink+'"><b><i><span style="color:#00557f">'+ssmap+'</span></i></b></a>';
