@@ -131,14 +131,13 @@ function ssread(auth){
       console.log('The API returned an error: ' + err);
       return;
     }
-    var rows = response.values;
+	var testarr = response.values;
     if (rows.length == 0) {
       console.log('No data found.');
     } else {
-      console.log('List of players: ');
+		console.log('players imported');
       for (var i = 0; i < rows.length; i++) {
-		testarr[i] = rows[i][0];
-		console.log(rows[i]);
+		rows[i] = testarr[i][0];
       }
     }
   });
@@ -158,11 +157,13 @@ function sswrite(auth){
 	var body = {
   values: values
 };
-service.spreadsheets.values.update({
+ var sheets = google.sheets('v4');
+sheets.spreadsheets.values.update({
   spreadsheetId: spreadsheetId,
-  range: range,
-  valueInputOption: valueInputOption,
-  resource: body
+  range: ssreadfrom,
+  valueInputOption: 'RAW',
+  resource: body,
+  auth: auth
 }, function(err, result) {
   if(err) {
     // Handle error
@@ -177,12 +178,12 @@ service.spreadsheets.values.update({
 
 // Define global variables
 var drafted = 0;
-var draftstart = 0;
+var draftstart = 1;
 var draftsetup = 0;
 var setupstart = 0;
-var players = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x"]; // letters are stock until I set up the draft stuff 
+var players = ['JBB','protag','gg!','danisk','legeniple','777z','llamatron','Meep','YA BOYYYY','Gram Parsons','Cheetosrule','Wayne','Pandora','waterwheel','corbeh','Warriors','Cook','slowyourroll']; // letters are stock until I set up the draft stuff 
 var playersr = players;
-var captains = ["Poeticalto"];
+var captains = ['Poeticalto','Daffodil','no defense','AnthonyDavis','TagProf','Taco.Ball'];
 var captainspick = [0];
 var picknum = 1;
 var newseason = 0;
@@ -197,6 +198,7 @@ var wait = 0;
 var reply = '';
 var tree = '';
 var seasonsize;
+var seasonnum;
 var draftmod;
 var playerdindex;
 var draftround = 1;
@@ -222,10 +224,13 @@ var welcomeuser;
 var welcomemessage;
 var lockchannel = [];
 var lockschannel = [];
-var testarr = [];
 var scriptname;
 var ssreadrange;
 var ssreadfrom;
+var values = [];
+var picknumround;
+var picknumrounddraft;
+var rows;
 var help = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!greet</b> <b><span style="color:#aa0000">message </span></b>- Sets a greeting for the user that will be sent on connect.<br/><b>!greetcat</b> - TToC_BOT will greet the user with a cat that will be sent on connect.<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets TToC_BOT send messages again.<br/><b>!time</b> - Gives user the time of the draft';
 
 
@@ -234,12 +239,12 @@ if (fs.existsSync('whitelist.txt')) {
 mailuser = fs.readFileSync('mailuser.txt').toString().split("\n");       //mailuser contains receivers of mail
 mailsender = fs.readFileSync('mailsender.txt').toString().split("\n");   //mailsender contains senders of mail
 mailmessage = fs.readFileSync('mailmessage.txt').toString().split("\n"); //mailmessage contains mail to send
-sslink = fs.readFileSync('sslink.txt').toString().split("\n");           //sslink contains the signup link [sgnlink] and spreadsheet link [sslink]
-sgnlink = sslink[0];
-sslink = sslink[1];
-ssmap = fs.readFileSync('ssmap.txt').toString().split("\n");             //ssmap contains the map name [ssmap] and map link [ssmaplink]
-ssmaplink = ssmap[1];
-ssmap = ssmap[0];
+rows = fs.readFileSync('sslink.txt').toString().split("\n");           //sslink contains the signup link [sgnlink] and spreadsheet link [sslink]
+seasonnum = rows[1];
+ssmap = rows[3];
+ssmaplink = rows[4];
+sgnlink = rows[5];
+sslink = rows[6];
 whitelist = fs.readFileSync('whitelist.txt').toString().split("\n");
 blacklist = fs.readFileSync('blacklist.txt').toString().split("\n");
 greylist = fs.readFileSync('greylist.txt').toString().split("\n");
@@ -289,7 +294,7 @@ var usersl = [];
 	if (usersf.indexOf(state.name) == -1) {
 	usersf.push(state.name);
 	updateuserarray(usersf,usersl);
-	}} 
+	} 
 });
 	rl.on('line', (input) => {
 	//console.log(`Received: ${input}`);
@@ -298,7 +303,7 @@ var usersl = [];
 	
 	function updateuserarray(array1,array2){
 		if (array1.indexOf(null) >-1){
-	array1.splice(array.indexOf(null),1);}
+	array1.splice(array1.indexOf(null),1);}
 	for (i=0;i<array1.length; i++){
 	array2[i] = array1[i].toLowerCase();}}
 	
@@ -310,7 +315,7 @@ var usersl = [];
 	if (usersf.indexOf(state.name) > -1) {
 	usersf.splice(usersf.indexOf(state.name),1);
 	updateuserarray(usersf,usersl);
-	}} 		
+	} 		
 	});
 
 /* var channels = [];
@@ -763,12 +768,6 @@ connection.on('message', function (message,actor,scope) {
 				break;
 			case 'updatelinks':
 				if (whitelist.indexOf(actor.name)> -1){
-				sslink = fs.readFileSync('sslink.txt').toString().split("\n");
-				sgnlink = sslink[0];
-				sslink = sslink[1];
-				ssmap = fs.readFileSync('ssmap.txt').toString().split("\n");
-				ssmaplink = ssmap[1];
-				ssmap = ssmap[0];
 				console.log('updating links!');
 				reply = 'Updating links!';
 				updatelinks();
@@ -881,6 +880,7 @@ setTimeout(random2,15000);
 });
 
 updatelinks();
+setTimeout(backup,5000);
 }
 function draftsetup(){
 	console.log('setupdraft has been activated!');
@@ -965,6 +965,8 @@ function draftstrt(){
 
 function backup(){
 	console.log('backing up data!');
+	rows = ['TToC',seasonnum,'Sphere',ssmap,ssmaplink,sgnlink,sslink];
+	fs.writeFileSync('sslink.txt',rows.join('\n'));
 	fs.writeFileSync('mailuser.txt',mailuser.join('\n'));
 	fs.writeFileSync('mailmessage.txt',mailmessage.join('\n'));
 	fs.writeFileSync('mailsender.txt',mailsender.join('\n'));
@@ -980,11 +982,52 @@ function backup(){
 
 function draftplayer(playerd){
 	console.log(playerd+' is being drafted!');
-	connection.user.channel.sendMessage(playerd+' has been drafted by ');
-	//update spreadsheet with player
+	seasonnum = 292;
+	seasonsize = 6;// tempvars for testing
+	picknumround = picknum % seasonsize;
+	if (picknumround == 0 && draftround == 1){
+	picknumround = seasonsize;}
+	else if (picknumround == 0 && (draftround == 2 || draftround == 3)){
+	picknumround = 1;}
+	else if (draftround > 1 && picknumround != seasonsize){
+	picknumround = seasonsize - picknumround+1;
+	}
+	if (picknum == seasonsize+1){
+	picknumround = seasonsize;}
+	picknumrounddraft = picknumround+5;
+	switch(draftround){
+		case 1:
+		picknumcolumn = 'O';
+		break;
+		case 2:
+		picknumcolumn = 'P';
+		break;
+		case 3:
+		picknumcolumn = 'Q';
+		break;}	
+	ssreadfrom = "'S-"+seasonnum+"'!"+picknumcolumn+picknumrounddraft;
+	values = [[playerd]];
+	fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+	if (err) {
+		console.log('Error loading client secret file: ' + err);
+		return;
+	}
+	function random5() {
+		authorize(JSON.parse(content), sswrite);}
+		random5();
+	});	
+	connection.user.channel.sendMessage(playerd+' has been drafted by '+captains[picknumround-1]+'!');	
+	connection.channelByName('Spectating Lounge [Open to all]').sendMessage(playerd+' has been drafted by '+captains[picknumround-1]+'!');
 	drafted = 0;
 	picknum = picknum + 1;
-	draftround = Math.floor(picknum/seasonsize)+1;
+	if (picknum == seasonsize){
+	draftround = 1;}
+	else if (picknum == seasonsize * 2){
+	draftround = 2;}
+	else if (picknum == seasonsize * 3){
+	draftround = 3;}
+	else{
+	draftround = Math.floor(picknum/seasonsize)+1;}
 }
 
 function updatelinks() {
@@ -998,7 +1041,20 @@ function updatelinks() {
 function random4() {
 ssreadfrom = "'Hall of Fame'!B17:B23";
 authorize(JSON.parse(content), ssread);}
+function random6() {
+	ssmaplink = rows[4];
+ssmap = rows[3];
+sslink = rows[6];
+sgnlink = rows[5];
+seasonnum = rows[1];
+console.log(ssmap);
+console.log(ssmaplink);
+console.log(seasonnum);
+console.log(sslink);
+console.log(sgnlink);}
 random4();
+setTimeout(random6,5000);
+setTimeout(backup,6000);
 });
 }
 
