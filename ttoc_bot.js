@@ -112,13 +112,13 @@ function storeToken(token) {
 // These are the individual functions used to run the Google Scripts needed for tourney
 var scriptId = 'MR8ANgNM86TUijo7WF5u3bAUVXR8RJHBv'; // This ID corresponds to the TToC scripts
 var script = google.script('v1');
-function spreadformsetup(auth) { // This function calls the FormSetup script, which sets up a form linked to the TToC spreadsheet
+function gscriptrun(auth) { // This function calls the FormSetup script, which sets up a form linked to the TToC spreadsheet
 
   // Make the API request. The request object is included here as 'resource'.
   script.scripts.run({
     auth: auth,
     resource: {
-      function: 'FormSetup'
+      function: scriptname
     },
     scriptId: scriptId
   }, function(err, resp) {
@@ -150,83 +150,6 @@ function spreadformsetup(auth) { // This function calls the FormSetup script, wh
 
   });
 }
-
-function spreadsheetsetup(auth) { // This function calls the SheetSetup script, which sets up the sheet for a form linked to the TToC spreadsheet
-  // Make the API request. The request object is included here as 'resource'.
-  script.scripts.run({
-    auth: auth,
-    resource: {
-      function: 'SheetSetup'
-    },
-    scriptId: scriptId
-  }, function(err, resp) {
-    if (err) {
-      // The API encountered a problem before the script started executing.
-      console.log('The API returned an error: ' + err);
-      return;
-    }
-    if (resp.error) {
-      // The API executed, but the script returned an error.
-
-      // Extract the first (and only) set of error details. The values of this
-      // object are the script's 'errorMessage' and 'errorType', and an array
-      // of stack trace elements.
-      var error = resp.error.details[0];
-      console.log('Script error message: ' + error.errorMessage);
-      console.log('Script error stacktrace:');
-
-      if (error.scriptStackTraceElements) {
-        // There may not be a stacktrace if the script didn't start executing.
-        for (var i = 0; i < error.scriptStackTraceElements.length; i++) {
-          var trace = error.scriptStackTraceElements[i];
-          console.log('\t%s: %s', trace.function, trace.lineNumber);
-        }
-      }
-    } else {
-	console.log('Success!');
-    }
-
-  });
-}
-
-function spreaddraftboardsetup(auth) { // This function calls te DraftBoardSetup script, which sets up a draft for a sheet linked to the TToC spreadsheet
-  // Make the API request. The request object is included here as 'resource'.
-  script.scripts.run({
-    auth: auth,
-    resource: {
-      function: 'DraftBoardSetup'
-    },
-    scriptId: scriptId
-  }, function(err, resp) {
-    if (err) {
-      // The API encountered a problem before the script started executing.
-      console.log('The API returned an error: ' + err);
-      return;
-    }
-    if (resp.error) {
-      // The API executed, but the script returned an error.
-
-      // Extract the first (and only) set of error details. The values of this
-      // object are the script's 'errorMessage' and 'errorType', and an array
-      // of stack trace elements.
-      var error = resp.error.details[0];
-      console.log('Script error message: ' + error.errorMessage);
-      console.log('Script error stacktrace:');
-
-      if (error.scriptStackTraceElements) {
-        // There may not be a stacktrace if the script didn't start executing.
-        for (var i = 0; i < error.scriptStackTraceElements.length; i++) {
-          var trace = error.scriptStackTraceElements[i];
-          console.log('\t%s: %s', trace.function, trace.lineNumber);
-        }
-      }
-    } else {
-	console.log('Success!');
-    }
-
-  });
-}
-
 
 function updatespreadlinks(auth){
 	 var sheets = google.sheets('v4');
@@ -316,6 +239,7 @@ var welcomemessage;
 var lockchannel = [];
 var lockschannel = [];
 var testarr = [];
+var scriptname;
 
 
 // imports information from .txt files in folder
@@ -438,14 +362,7 @@ connection.on('message', function (message,actor,scope) {
 		switch( command ) {
 			case 'backup': // this case is uneeded since function backup runs after each write, but is kept as a redundant measure.
 				if (whitelist.indexOf(actor.name)>-1) {					
-				fs.writeFileSync('mailuser.txt',mailuser.join('\n'));
-				fs.writeFileSync('mailmessage.txt',mailmessage.join('\n'));
-				fs.writeFileSync('mailsender.txt',mailsender.join('\n'));
-				fs.writeFileSync('blacklist.txt',blacklist.join('\n'));
-				fs.writeFileSync('greylist.txt',greylist.join('\n'));
-				fs.writeFileSync('whitelist.txt',whitelist.join('\n'));
-				fs.writeFileSync('welcomemessage.txt',welcomemessage.join('\n'));
-				fs.writeFileSync('welcomeuser.txt',welcomeuser.join('\n'));
+				backup();
 				reply = "Everything has been backed up!";}
 				else {
 					reply = tohelp;}
@@ -987,9 +904,11 @@ function sheetsetup() {
     return;
   }
 function random1() {
-authorize(JSON.parse(content), spreadformsetup);}
+	scriptname = 'FormSetup';
+authorize(JSON.parse(content), gscriptrun);}
 function random2() {
-authorize(JSON.parse(content), spreadsheetsetup);}
+	scriptname = 'SheetSetup';
+authorize(JSON.parse(content), gscriptrun);}
 random1();
 setTimeout(random2,15000);
 });
@@ -1003,7 +922,8 @@ function draftsetup(){
     console.log('Error loading client secret file: ' + err);
     return;
   }
-authorize(JSON.parse(content), spreaddraftboardsetup);
+  scriptname = 'DraftBoardSetup';
+authorize(JSON.parse(content), gscriptrun);
 });
 
 	/*run draftboardsetup
