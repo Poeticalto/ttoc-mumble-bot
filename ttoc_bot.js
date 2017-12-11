@@ -226,6 +226,7 @@ var testarr = [];
 var scriptname;
 var ssreadrange;
 var ssreadfrom;
+var help = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!greet</b> <b><span style="color:#aa0000">message </span></b>- Sets a greeting for the user that will be sent on connect.<br/><b>!greetcat</b> - TToC_BOT will greet the user with a cat that will be sent on connect.<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets TToC_BOT send messages again.<br/><b>!time</b> - Gives user the time of the draft';
 
 
 // imports information from .txt files in folder
@@ -273,7 +274,7 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
     connection.on( 'initialized', function () {
         console.log('connection ready');
 		connection.user.setSelfDeaf(true);
-		connection.user.setComment('Hi I am a bot');
+		connection.user.setComment(help);
     });
 
 var users = [];
@@ -534,7 +535,7 @@ connection.on('message', function (message,actor,scope) {
 					setTimeout(random3,500);
 				break;
 			case 'help':
-				reply = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!greet</b> <b><span style="color:#aa0000">message </span></b>- Sets a greeting for the user that will be sent on connect.<br/><b>!greetcat</b> - TToC_BOT will greet the user with a cat that will be sent on connect.<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets TToC_BOT send messages again.<br/><b>!time</b> - Gives user the time of the draft';
+				reply = help;
 				break;
 			case 'here':
 				if (whitelist.indexOf(actor.name) > -1){
@@ -570,8 +571,7 @@ connection.on('message', function (message,actor,scope) {
 				connection.channelByName(actor.channel.name).sendMessage(actor.name+' has lifted the channel lockdown! Users may now freely enter and leave.');
 				lockchannel.splice(lockchannel.indexOf(actor.channel.name),1);
 				lockschannel.splice(lockschannel.indexOf(actor.channel.name),1);
-				console.log(actor.channel.name+' has been removed from lockdown');
-				}}
+				console.log(actor.channel.name+' has been removed from lockdown');}}
 				else {
 				actor.sendMessage(tohelp);}
 				break;
@@ -590,8 +590,7 @@ connection.on('message', function (message,actor,scope) {
 				connection.channelByName(actor.channel.name).sendMessage(actor.name+' has lifted the channel lockdown! Users may now freely enter and leave.');
 				console.log(actor.channel.name+' has been removed from lockdown+');
 				lockchannel.splice(lockchannel.indexOf(actor.channel.name),1);
-				lockschannel.splice(lockschannel.indexOf(actor.channel.name),1);
-				}}
+				lockschannel.splice(lockschannel.indexOf(actor.channel.name),1);}}
 				else {
 				actor.sendMessage(tohelp);}
 				break;
@@ -622,9 +621,9 @@ connection.on('message', function (message,actor,scope) {
 				reply = 'Your mail has been successfully created! Your receiver will receive it when they enter the server or use the !getmail command! c:';
 				backup();}
 				else {
-				reply = "You don't have permission to do that! :c";}
+				reply = "You don't have permission to do that! :c";}}
 				else {
-				reply = "No message was detected, please put one in before sending! c:";}}	
+				reply = "No message was detected, please put one in before sending! c:";}	
 				break;
 			case 'map':
 				reply = '<br/>The map for tonight is: <a href="'+ssmaplink+'"><b><i><span style="color:#00557f">'+ssmap+'</span></i></b></a>';
