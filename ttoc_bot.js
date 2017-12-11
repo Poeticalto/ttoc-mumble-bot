@@ -151,12 +151,12 @@ function gscriptrun(auth) { // This function calls the FormSetup script, which s
   });
 }
 
-function updatespreadlinks(auth){
+function ssread(auth){
 	 var sheets = google.sheets('v4');
   sheets.spreadsheets.values.get({
     auth: auth,
     spreadsheetId: spreadsheetId,
-    range: "'Hall of Fame'!B17:B23",
+    range: ssreadfrom,
   }, function(err, response) {
     if (err) {
       console.log('The API returned an error: ' + err);
@@ -172,21 +172,40 @@ function updatespreadlinks(auth){
 		console.log(rows[i]);
       }
     }
-	console.log(testarr);
-	testarr.splice(testarr.indexOf('Poeticalto'),1);
-	console.log('random space');
-	console.log(testarr);
   });
 	
 	
 }
-// todo: add function to read/write values
 
 
 
+/*
+var values = [
+  [
+    // Cell values ...
+  ],
+  // Additional rows ...
+];
 
+*/
 
-
+function sswrite(auth){
+	var body = {
+  values: values
+};
+service.spreadsheets.values.update({
+  spreadsheetId: spreadsheetId,
+  range: range,
+  valueInputOption: valueInputOption,
+  resource: body
+}, function(err, result) {
+  if(err) {
+    // Handle error
+    console.log(err);
+  } else {
+    console.log('%d cells updated.', result.updatedCells);
+  }
+});}
 // End of defining google apps scripts
 
 
@@ -240,6 +259,8 @@ var lockchannel = [];
 var lockschannel = [];
 var testarr = [];
 var scriptname;
+var ssreadrange;
+var ssreadfrom;
 
 
 // imports information from .txt files in folder
@@ -845,9 +866,6 @@ connection.on('error',function(MumbleError){
 	console.log(MumbleError.name);
 })
 
-
-
-
 connection.on('user-connect', function(user) {
 	if(mailuser.indexOf(user.name)>-1){
 user.sendMessage("Howdy "+user.name+"! I've been keeping some cool mail from other people for you, let me go get it!");
@@ -912,7 +930,8 @@ authorize(JSON.parse(content), gscriptrun);}
 random1();
 setTimeout(random2,15000);
 });
-updatelinks()
+
+updatelinks();
 }
 function draftsetup(){
 	console.log('setupdraft has been activated!');
@@ -925,7 +944,6 @@ function draftsetup(){
   scriptname = 'DraftBoardSetup';
 authorize(JSON.parse(content), gscriptrun);
 });
-
 	/*run draftboardsetup
 	retrieve the following vars/arrays:
 	players (duplicate to playersr)
@@ -1029,7 +1047,8 @@ function updatelinks() {
     return;
   }
 function random4() {
-authorize(JSON.parse(content), updatespreadlinks);}
+ssreadfrom = "'Hall of Fame'!B17:B23";
+authorize(JSON.parse(content), ssread);}
 random4();
 });
 }
