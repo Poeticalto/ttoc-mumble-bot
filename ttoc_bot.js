@@ -14,6 +14,12 @@ var SCOPES = ['https://www.googleapis.com/auth/spreadsheets','https://www.google
 var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
     process.env.USERPROFILE) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'script-nodejs-quickstart.json';
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
 // Load client secrets from a local file.
 fs.readFile('client_secret.json', function processClientSecrets(err, content) {
   if (err) {
@@ -307,8 +313,8 @@ var ggadd;
 var motd = "Sorry, there's no motd set right now!";
 var welcomeuser;
 var welcomemessage;
-var lockchannel = false;
-var lockschannel = false;
+var lockchannel = [];
+var lockschannel = [];
 var testarr = [];
 
 
@@ -339,7 +345,6 @@ ssmap =  'Cache';
 ssmaplink = 'http://unfortunate-maps.jukejuice.com/static/previews/52272.png';
 whitelist = [Poeticalto,Poeticaltwo];}
 
-
 // Defines the certificates to connect to the mumble server through node-mumble
 var options = {
 	key: fs.readFileSync('botkey.pem'),
@@ -357,29 +362,48 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
 
     connection.on( 'initialized', function () {
         console.log('connection ready');
+		connection.user.setSelfDeaf(true);
+		connection.user.setComment('Hi I am a bot');
     });
 
-    /* //Event Logger
-    connection.on( 'protocol-in', function (data) {
-        console.log('data', data.message);
+var users = [];
+var usersf = [];
+var usersl = [];
+	connection.on( 'userState', function (state) {
+	if (users.indexOf(state.name) == -1 && greylist.indexOf(state.name) == -1){
+	users.push(state.name);}
+	if (users.indexOf(null) >-1){
+		users.splice(users.indexOf(null),1); //unsure where the null leaks in from, but this removes it	
+	}
+	if (usersf.indexOf(state.name) == -1) {
+	usersf.push(state.name);
+	if (usersf.indexOf(null) >-1){
+	usersf.splice(usersf.indexOf(null),1);
+	for (i=0;i<usersf.length; i++){
+		usersl[i] = usersf[i].toLowerCase();}}} 
 });
-*/
+	rl.on('line', (input) => {
+	//console.log(`Received: ${input}`);
+	connection.user.channel.sendMessage(input);
+	});
+	connection.on('user-disconnect', function(state) {
+		if (greylist.indexOf(state.name) == -1){
+		users.splice(users.indexOf(state.name),1);}
+		if (users.indexOf(null) >-1){
+		users.splice(users.indexOf(null),1);}
+	if (usersf.indexOf(state.name) > -1) {
+	usersf.splice(usersf.indexOf(state.name),1);
+	if (usersf.indexOf(null) >-1){
+	usersf.splice(usersf.indexOf(null),1);
+	for (i=0;i<usersf.length; i++){
+		usersl[i] = usersf[i].toLowerCase();}}} 		
+	});
 
-	var sessions = {};
-    connection.on( 'userState', function (state) {
-        sessions[state.session] = state;
-    });
-
-    // Collect channel information
-    var channels = {};
-    connection.on( 'channelState', function (state) {
-        channels[state.channelId] = state;
-});
-
-// logs users on the server
-connection.on('userState',function(state){
-sessions[state.session] = state;
-});
+/* var channels = [];
+connection.on( 'channelState', function (state) {
+if (channels.indexOf(state.channel_id) == -1){
+	channels.push(state.channel_id);}
+}); */ //used to get a list of channel ids
 
 connection.on('user-priority-speaker', function(user, status, actor) {
 	if (whitelist.indexOf(actor.name)>-1 && status == true){
@@ -398,13 +422,8 @@ connection.on('user-priority-speaker', function(user, status, actor) {
 connection.on('message', function (message,actor,scope) {	
 	console.log(actor.name);
 	reply = "";
-	switch(scope){
-		case 'private':
-			privateMessage = true;
-			break;
-		default:
-			privateMessage = false;
-			break;}
+	const privateMessage = scope === 'private';
+	const inChannel = actor.channel.name === connection.user.channel.name;
 	const content = message || '';
 	const isCommand = content[0] === '!';
 	const contentPieces = content.slice(1, content.length).split(' ');
@@ -431,6 +450,20 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					reply = tohelp;}
 				break;
+			case 'ban':
+				if (whitelist.indexOf(actor.name)>-1) {
+					var playerd = contentPieces[2];	
+						if (contentPieces.length > 3){
+							for (i=3; i <= contentPieces.length-1;i++) {		
+								playerd = playerd + ' '+contentPieces[i];}}
+					if (playerd == undefined){
+					playerd = '';}
+					playerd = playerd + ' [banned by '+actor.name+']';
+					connection.userByName(contentPieces[1]).ban(playerd);
+				}
+				else {
+				reply = tohelp;}
+				break;
 			case 'blacklist':
 				if (whitelist.indexOf(actor.name)>-1) {
 				blacklist.push(playerd);
@@ -448,13 +481,13 @@ connection.on('message', function (message,actor,scope) {
 				break;
 			case 'draft':
 				if (draftstart == 0) {
-					reply = 'The draft has not started! Check back in a bit! c:';
+					reply = tohelp;
 				}
-				else if (captainsmum[captainspick[picknum]] != actor.name) {
+				else if (actor.channel.name != connection.user.channel.name) {
 					reply = 'You are not a captain, please do not use this command.';}
 				else if (playersr.length !== 0 && draftstart == 1 && drafted == 1) {
 					reply = 'A pick is currently being processed, please wait...';}
-				else if (playersr.length !== 0 && draftstart == 1 && drafted == 0 && captainsmum[captainspick[picknum]] == actor.name) {
+				else if (playersr.length !== 0 && draftstart == 1 && drafted == 0) {
 					playerdindex = playersr.indexOf(playerd);
 					if (playerdindex > -1) {
 						reply = 'Drafted ' + playerd;
@@ -481,6 +514,9 @@ connection.on('message', function (message,actor,scope) {
 					reply = 'The draft has been completed! Thanks for drafting! C:';}
 				break;
 			case 'find':
+				if (usersl.indexOf(playerd.toLowerCase()) > -1){
+				playerd = usersf[usersl.indexOf(playerd.toLowerCase())];}
+				
 				if (connection.userByName(playerd) == undefined){
 				reply = 'Sorry, a player with that name could not be found.';}
 				else {
@@ -558,7 +594,7 @@ connection.on('message', function (message,actor,scope) {
 				break;
 			case 'greetcat':
 				if (welcomeuser.indexOf(actor.name) > -1){
-					welcomemessage[welcomeuser.indexOf(actor.name)] = 'this_is_supposed_to_be_a_cat-217253';	}
+					welcomemessage[welcomeuser.indexOf(actor.name)] = 'this_is_supposed_to_be_a_cat-217253';}
 				else {
 						welcomeuser.push(actor.name);
 						welcomemessage.push('this_is_supposed_to_be_a_cat-217253');}
@@ -618,43 +654,71 @@ connection.on('message', function (message,actor,scope) {
 				else {
 				actor.sendMessage(tohelp);}
 				break;
+			case 'home':
+				if (whitelist.indexOf(actor.name) > -1){
+					connection.user.moveToChannel('Meep is God');
+					connection.channelByName('Meep is God').sendMessage(actor.name+' has sent me to this channel!');
+				}
+				else {
+				actor.sendMessage(tohelp);}
+				break;
 			case 'info':
 				reply = 'TToC, or the TagPro Tournament of Champions is a regular tournament hosted on the NA TagPro Mumble Server. Signups are usually released at 9:30 PM CST, with the draft starting at around 10:15 PM CST. I am a bot designed to run seasons of TToC. If you have any further questions, feel free to message Poeticalto on the Mumble server or /u/Poeticalto on Reddit.';
 				break;
 			case 'lock':
 				if (whitelist.indexOf(actor.name) > -1){
-				if (lockchannel == false && lockschannel == false){				
-				connection.user.channel.sendMessage(actor.name+' has put this channel on lockdown! No new users will be allowed unless moved by a whitelisted user.');
-				lockchannel = true;}
-				else if (lockchannel == false && lockschannel == true){
-				connection.user.channel.sendMessage(actor.name+' has downgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
-				lockchannel = true;
-				lockschannel = false;}
-				else if (lockchannel == true || lockschannel == true){
-				connection.user.channel.sendMessage(actor.name+' has lifted the channel lockdown! Users may now freely enter and leave.');
-				lockchannel = false;
-				lockschannel = false;
+				if (lockchannel.indexOf(actor.channel.name) == -1 && lockschannel.indexOf(actor.channel.name) == -1){				
+				connection.channelByName(actor.channel.name).sendMessage(actor.name+' has put this channel on lockdown! No new users will be allowed unless moved by a whitelisted user.');
+				console.log(actor.channel.name+' has been put on lockdown');
+				lockchannel.push(actor.channel.name);}
+				else if (lockchannel.indexOf(actor.channel.name) == -1 && lockschannel.indexOf(actor.channel.name) > -1){
+				connection.channelByName(actor.channel.name).sendMessage(actor.name+' has downgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
+				lockchannel.push(actor.channel.name);
+				console.log(actor.channel.name+' has been downgraded to lockdown');
+				lockschannel.splice(lockschannel.indexOf(actor.channel.name),1);}
+				else if (lockchannel.indexOf(actor.channel.name) > -1 || lockschannel.indexOf(actor.channel.name) > -1){
+				connection.channelByName(actor.channel.name).sendMessage(actor.name+' has lifted the channel lockdown! Users may now freely enter and leave.');
+				lockchannel.splice(lockchannel.indexOf(actor.channel.name),1);
+				lockschannel.splice(lockschannel.indexOf(actor.channel.name),1);
+				console.log(actor.channel.name+' has been removed from lockdown');
 				}}
 				else {
 				actor.sendMessage(tohelp);}
 				break;
 			case 'lock+':
 				if (whitelist.indexOf(actor.name) > -1){
-				if (lockchannel == false && lockschannel == false){				
-				connection.user.channel.sendMessage(actor.name+' has put this channel on super lockdown! No new users will be allowed to enter or leave unless moved by a whitelisted user.');
-				lockschannel = true;}
-				else if (lockchannel == true && lockschannel == false){
-				connection.user.channel.sendMessage(actor.name+' has upgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
-				lockchannel = false;
-				lockschannel = true;}
-				else if (lockchannel == true || lockschannel == true){
-				connection.user.channel.sendMessage(actor.name+' has lifted the channel lockdown! Users may now freely enter and leave.');
-				lockchannel = false;
-				lockschannel = false;
+				if (lockchannel.indexOf(actor.channel.name) == -1 && lockschannel.indexOf(actor.channel.name) == -1){				
+				connection.channelByName(actor.channel.name).sendMessage(actor.name+' has put this channel on super lockdown! No new users will be allowed to enter or leave unless moved by a whitelisted user.');
+				lockschannel.push(actor.channel.name);
+				console.log(actor.channel.name+' has been put on lockdown+');}
+				else if (lockchannel.indexOf(actor.channel.name) > -1 && lockschannel.indexOf(actor.channel.name) == -1){
+				connection.channelByName(actor.channel.name).sendMessage(actor.name+' has upgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
+				console.log(actor.channel.name+' has been upgraded to lockdown+');
+				lockschannel.push(actor.channel.name);
+				lockchannel.splice(lockschannel.indexOf(actor.channel.name),1);}
+				else if (lockchannel.indexOf(actor.channel.name) > -1 || lockschannel.indexOf(actor.channel.name) > -1){
+				connection.channelByName(actor.channel.name).sendMessage(actor.name+' has lifted the channel lockdown! Users may now freely enter and leave.');
+				console.log(actor.channel.name+' has been removed from lockdown+');
+				lockchannel.splice(lockchannel.indexOf(actor.channel.name),1);
+				lockschannel.splice(lockschannel.indexOf(actor.channel.name),1);
 				}}
 				else {
 				actor.sendMessage(tohelp);}
-				break;	
+				break;
+			case 'kick':
+				if (whitelist.indexOf(actor.name)>-1) {
+					var playerd = contentPieces[2];	
+						if (contentPieces.length > 3){
+							for (i=3; i <= contentPieces.length-1;i++) {		
+								playerd = playerd + ' '+contentPieces[i];}}
+					if (playerd == undefined){
+					playerd = '';}
+					playerd = playerd + ' [kicked by '+actor.name+']';
+					connection.userByName(contentPieces[1]).kick(playerd);
+				}
+				else {
+				reply = tohelp;}
+				break;
 			case 'mail':				
 				if (blacklist.indexOf(actor.name) == -1){
 				var mailusertemp = contentPieces[1];
@@ -776,6 +840,11 @@ connection.on('message', function (message,actor,scope) {
 					backup();
 				reply = "You've been removed from the greylist! You will now receive automated message from TToC_BOT when you connect.";}
 				break;
+			case 'stream':
+				for (i=0; i < users.length; i++){
+				//connection.userByName(users[i]).sendMessage('this is a quick test of the TToC_BOT tree function, please ignore c:');
+				console.log(users[i]);}
+				break;
 			case 'time':
 				reply = 'TToC was treed at 9:30 PM CST and the draft will start at around 10:15 PM CST.';
 				break;
@@ -856,7 +925,7 @@ connection.on('message', function (message,actor,scope) {
 }});
 
 connection.on('error',function(MumbleError){
-	console.log(MumbleError);
+	console.log(MumbleError.name);
 })
 
 
@@ -888,16 +957,14 @@ user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you wan
 	}});
 
    connection.on('user-move', function(user, fromChannel, toChannel, actor) {
-	if (connection.user.channel.name == toChannel.name && (lockchannel == true || lockschannel == true) && actor.name != 'TToC_BOT' && whitelist.indexOf(actor.name) == -1){
+	if ((lockchannel.indexOf(toChannel.name) > -1 || lockschannel.indexOf(toChannel.name) > -1) && actor.name != 'TToC_BOT' && whitelist.indexOf(actor.name) == -1){
 		user.moveToChannel('TToC');
 		user.sendMessage('Sorry, you cannot enter this channel right now. :c');
-		connection.user.channel.sendMessage(user.name+' was prevented from entering this channel!');
-	}
-	else if (connection.user.channel.name == fromChannel.name && lockschannel == true && actor.name != 'TToC_BOT' && whitelist.indexOf(actor.name) == -1){
-		user.moveToChannel(connection.user.channel);
+		connection.channelByName(toChannel.name).sendMessage(user.name+' was prevented from entering this channel!');}
+	else if (lockschannel.indexOf(fromChannel.name) > -1 && actor.name != 'TToC_BOT' && whitelist.indexOf(actor.name) == -1){
+		user.moveToChannel(fromChannel.name);
 		user.sendMessage('Sorry, you cannot leave this channel right now. :c');
-		connection.user.channel.sendMessage(user.name+' was prevented from leaving this channel!');
-	}
+		connection.channelByName(fromChannel.name).sendMessage(user.name+' was prevented from leaving this channel!');}
 	else if (connection.user.channel.name == toChannel.name && user.name != 'TToC_BOT' && actor.name != 'TToC_BOT') {
 	connection.user.channel.sendMessage('Welcome to '+toChannel.name+' '+user.name+'!');}
 	if(mailuser.indexOf(user.name)>-1){
