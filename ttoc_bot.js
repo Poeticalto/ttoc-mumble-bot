@@ -20,6 +20,9 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
+// The following section is the GApps authorization stuff needed to create OAuth keys
+// It is taken from the quickstart for node.js, so check that out if you need help with it.
+
 // Load client secrets from a local file.
 fs.readFile('client_secret.json', function processClientSecrets(err, content) {
   if (err) {
@@ -31,13 +34,6 @@ fs.readFile('client_secret.json', function processClientSecrets(err, content) {
   gappkey = content;
 });
 
-/**
- * Create an OAuth2 client with the given credentials, and then execute the
- * given callback function.
- *
- * @param {Object} credentials The authorization client credentials.
- * @param {function} callback The callback to call with the authorized client.
- */
 function authorize(credentials, callback) {
   var clientSecret = credentials.installed.client_secret;
   var clientId = credentials.installed.client_id;
@@ -54,15 +50,6 @@ function authorize(credentials, callback) {
     }
   });
 }
-
-/**
- * Get and store new token after prompting for user authorization, and then
- * execute the given callback with the authorized OAuth2 client.
- *
- * @param {google.auth.OAuth2} oauth2Client The OAuth2 client to get token for.
- * @param {getEventsCallback} callback The callback to call with the authorized
- *     client.
- */
 function getNewToken(oauth2Client, callback) {
   var authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -86,12 +73,6 @@ function getNewToken(oauth2Client, callback) {
     });
   });
 }
-
-/**
- * Store token to disk be used in later program executions.
- *
- * @param {Object} token The token to store to disk.
- */
 function storeToken(token) {
   try {
     fs.mkdirSync(TOKEN_DIR);
@@ -104,16 +85,12 @@ function storeToken(token) {
   console.log('Token stored to ' + TOKEN_PATH);
 }
 
-
-
 // END OF GOOGLE AUTH SECTION
-
 
 // These are the individual functions used to run the Google Scripts needed for tourney
 var scriptId = 'MR8ANgNM86TUijo7WF5u3bAUVXR8RJHBv'; // This ID corresponds to the TToC scripts
 var script = google.script('v1');
-function gscriptrun(auth) { // This function calls the FormSetup script, which sets up a form linked to the TToC spreadsheet
-
+function gscriptrun(auth) { // This function runs code from Google Scripts
   // Make the API request. The request object is included here as 'resource'.
   script.scripts.run({
     auth: auth,
@@ -123,20 +100,13 @@ function gscriptrun(auth) { // This function calls the FormSetup script, which s
     scriptId: scriptId
   }, function(err, resp) {
     if (err) {
-      // The API encountered a problem before the script started executing.
-      console.log('The API returned an error: ' + err);
+      console.log('The API returned an error: ' + err);// The API encountered a problem before the script started executing.
       return;
     }
     if (resp.error) {
-      // The API executed, but the script returned an error.
-
-      // Extract the first (and only) set of error details. The values of this
-      // object are the script's 'errorMessage' and 'errorType', and an array
-      // of stack trace elements.
       var error = resp.error.details[0];
       console.log('Script error message: ' + error.errorMessage);
-      console.log('Script error stacktrace:');
-
+      console.log('Script error stacktrace:');       // The API executed, but the script returned an error.
       if (error.scriptStackTraceElements) {
         // There may not be a stacktrace if the script didn't start executing.
         for (var i = 0; i < error.scriptStackTraceElements.length; i++) {
@@ -147,7 +117,6 @@ function gscriptrun(auth) { // This function calls the FormSetup script, which s
     } else {
 	console.log('Success!');
     }
-
   });
 }
 
@@ -173,10 +142,7 @@ function ssread(auth){
       }
     }
   });
-	
-	
 }
-
 
 
 /*
@@ -188,7 +154,6 @@ var values = [
 ];
 
 */
-
 function sswrite(auth){
 	var body = {
   values: values
@@ -472,21 +437,7 @@ connection.on('message', function (message,actor,scope) {
 					reply = '<br/>'+playerd+' was found in <a href="'+mumbleurl+'"><span style="color:#39a5dd">'+parentc[parentc.length-1]+'</span></a>';}
 				break;
 			case 'getmail':
-				if(mailuser.indexOf(actor.name)>-1){
-				actor.sendMessage("Howdy "+actor.name+"! Let me go get your mail!");
-				randomvar = 1;
-				while(mailuser.indexOf(actor.name)>-1) {	
-				var messagegeti = mailuser.indexOf(actor.name);
-				actor.sendMessage('Message from: '+mailsender[messagegeti]);				
-				actor.sendMessage(mailmessage[messagegeti]);
-				mailuser.splice(messagegeti,1);
-				mailmessage.splice(messagegeti,1);
-				mailsender.splice(messagegeti,1);}
-				actor.sendMessage("That's all of your messages for now! If you want to reply to your mail, message me with the command !mail user message! Have a great day! c:");
-				backup();}
-				else{
-				actor.sendMessage("Sorry, you don't have any mail. :c");}
-				break;
+//getmail function;
 			case 'gg':
 				if (playerd == undefined){
 				 reply = "Please type a group name to find!";}
@@ -1052,5 +1003,21 @@ authorize(JSON.parse(content), ssread);}
 random4();
 });
 }
+
+function getmail() {
+	if(mailuser.indexOf(actor.name)>-1){
+	actor.sendMessage("Howdy "+actor.name+"! Let me go get your mail!");
+	randomvar = 1;
+	while(mailuser.indexOf(actor.name)>-1) {	
+	var messagegeti = mailuser.indexOf(actor.name);
+	actor.sendMessage('Message from: '+mailsender[messagegeti]);				
+	actor.sendMessage(mailmessage[messagegeti]);
+	mailuser.splice(messagegeti,1);
+	mailmessage.splice(messagegeti,1);
+	mailsender.splice(messagegeti,1);}
+	actor.sendMessage("That's all of your messages for now! If you want to reply to your mail, message me with the command !mail user message! Have a great day! c:");
+	backup();}
+	else{
+	actor.sendMessage("Sorry, you don't have any mail. :c");}}
 
 });
