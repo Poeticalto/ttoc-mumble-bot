@@ -437,7 +437,8 @@ connection.on('message', function (message,actor,scope) {
 					reply = '<br/>'+playerd+' was found in <a href="'+mumbleurl+'"><span style="color:#39a5dd">'+parentc[parentc.length-1]+'</span></a>';}
 				break;
 			case 'getmail':
-//getmail function;
+				getmail(actor);
+				//getmail function;
 			case 'gg':
 				if (playerd == undefined){
 				 reply = "Please type a group name to find!";}
@@ -820,15 +821,7 @@ connection.on('error',function(MumbleError){
 connection.on('user-connect', function(user) {
 	if(mailuser.indexOf(user.name)>-1){
 user.sendMessage("Howdy "+user.name+"! I've been keeping some cool mail from other people for you, let me go get it!");
-	randomvar = 1;
-	while(mailuser.indexOf(user.name)>-1) {	
-				var messagegeti = mailuser.indexOf(user.name);
-				user.sendMessage('Message from: '+mailsender[messagegeti]);				
-				user.sendMessage(mailmessage[messagegeti]);
-				mailuser.splice(messagegeti,1);
-				mailmessage.splice(messagegeti,1);
-				mailsender.splice(messagegeti,1);}
-				user.sendMessage("That's all of your messages for now! If you want to reply to your mail, message me with the command !mail user message! Have a great day! c:");}
+	getmail(user);}
 	if(signupsopen == true && greylist.indexOf(user.name) == -1){
 user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you want to signup, message me !signups or !spreadsheet<br/><br/>(If you don't want these automated messages, message the !stop command to me)");}
 	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == true){
@@ -1004,7 +997,7 @@ random4();
 });
 }
 
-function getmail() {
+function getmail(actor) {
 	if(mailuser.indexOf(actor.name)>-1){
 	actor.sendMessage("Howdy "+actor.name+"! Let me go get your mail!");
 	randomvar = 1;
