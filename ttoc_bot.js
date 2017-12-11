@@ -288,15 +288,20 @@ var usersl = [];
 	}
 	if (usersf.indexOf(state.name) == -1) {
 	usersf.push(state.name);
-	if (usersf.indexOf(null) >-1){
-	usersf.splice(usersf.indexOf(null),1);
-	for (i=0;i<usersf.length; i++){
-		usersl[i] = usersf[i].toLowerCase();}}} 
+	updateuserarray(usersf,usersl);
+	}} 
 });
 	rl.on('line', (input) => {
 	//console.log(`Received: ${input}`);
 	connection.user.channel.sendMessage(input);
 	});
+	
+	function updateuserarray(array1,array2){
+		if (array1.indexOf(null) >-1){
+	array1.splice(array.indexOf(null),1);}
+	for (i=0;i<array1.length; i++){
+	array2[i] = array1[i].toLowerCase();}}
+	
 	connection.on('user-disconnect', function(state) {
 		if (greylist.indexOf(state.name) == -1){
 		users.splice(users.indexOf(state.name),1);}
@@ -304,10 +309,8 @@ var usersl = [];
 		users.splice(users.indexOf(null),1);}
 	if (usersf.indexOf(state.name) > -1) {
 	usersf.splice(usersf.indexOf(state.name),1);
-	if (usersf.indexOf(null) >-1){
-	usersf.splice(usersf.indexOf(null),1);
-	for (i=0;i<usersf.length; i++){
-		usersl[i] = usersf[i].toLowerCase();}}} 		
+	updateuserarray(usersf,usersl);
+	}} 		
 	});
 
 /* var channels = [];
