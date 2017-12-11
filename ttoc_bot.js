@@ -933,7 +933,8 @@ setTimeout(random11,10000);
 setTimeout(random12,15000);})}
 
 function pickrefresh(){
-/* refresh the following vars:
+/* 
+	TODO refresh the following vars:
 	spreadsheet link
 	form link
 	tree message
