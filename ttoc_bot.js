@@ -145,16 +145,6 @@ function ssread(auth){
   });
 }
 
-
-/*
-var values = [
-  [
-    // Cell values ...
-  ],
-  // Additional rows ...
-];
-
-*/
 function sswrite(auth){
 	var body = {
   values: values
@@ -298,17 +288,11 @@ var usersl = [];
 	updateuserarray(usersf,usersl);
 	} 
 });
-	rl.on('line', (input) => {
-	//console.log(`Received: ${input}`);
-	connection.user.channel.sendMessage(input);
-	});
-	
 	function updateuserarray(array1,array2){
 		if (array1.indexOf(null) >-1){
 	array1.splice(array1.indexOf(null),1);}
 	for (i=0;i<array1.length; i++){
 	array2[i] = array1[i].toLowerCase();}}
-	
 	connection.on('user-disconnect', function(state) {
 		if (greylist.indexOf(state.name) == -1){
 		users.splice(users.indexOf(state.name),1);}
@@ -319,23 +303,25 @@ var usersl = [];
 	updateuserarray(usersf,usersl);
 	} 		
 	});
-
+	
+	rl.on('line', (input) => {
+	connection.user.channel.sendMessage(input);}) //allows user to chat as the bot via command line
+	
 /* var channels = [];
 connection.on( 'channelState', function (state) {
 if (channels.indexOf(state.channel_id) == -1){
 	channels.push(state.channel_id);}
-}); */ //used to get a list of channel ids
+}); */ //used to get a list of channel ids, may be better as a tree function depending on the amount of channels on the server
 
 connection.on('user-priority-speaker', function(user, status, actor) {
 	if (whitelist.indexOf(actor.name)>-1 && status == true){
-	if ( user.name == "TToC_BOT"){
+	if ( user.name == "TToC_BOT"){ // moves bot to the channel of the actor 
 	user.moveToChannel(actor.channel);
 	actor.channel.sendMessage(actor.name+' has summoned me to this channel!');
 	}
-	else{
+	else{ // moves player to the channel of the bot
 	user.moveToChannel(connection.user.channel);
-	connection.user.channel.sendMessage(actor.name+' has moved '+user.name+' to '+connection.user.channel.name+'!');
-}}
+	connection.user.channel.sendMessage(actor.name+' has moved '+user.name+' to '+connection.user.channel.name+'!');}}
 });
 
 
@@ -343,28 +329,26 @@ connection.on('user-priority-speaker', function(user, status, actor) {
 connection.on('message', function (message,actor,scope) {	
 	console.log(actor.name);
 	reply = "";
-	const privateMessage = scope === 'private';
-	const inChannel = actor.channel.name === connection.user.channel.name;
+	const privateMessage = scope === 'private'; // scope defines how the bot received the message
 	const content = message || '';
 	const isCommand = content[0] === '!';
 	const contentPieces = content.slice(1, content.length).split(' ');
 	const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br")[0];
-	console.log(command);
 	var playerd = contentPieces[1];	
 	if (contentPieces.length > 2){
 	for (i=2; i <= contentPieces.length-1;i++) {		
-		playerd = playerd + ' '+contentPieces[i];}}
+		playerd = playerd + ' '+contentPieces[i];}} // arg playerd may have multiple words, so combine everything afters command into one var
 	console.log(message);
  	if (isCommand && privateMessage) {
 		switch( command ) {
-			case 'backup': // this case is uneeded since function backup runs after each write, but is kept as a redundant measure.
+			case 'backup': // this case is uneeded since function backup runs after each write/splice, but is kept as a redundant measure.
 				if (whitelist.indexOf(actor.name)>-1) {					
 				backup();
 				reply = "Everything has been backed up!";}
 				else {
 					reply = tohelp;}
 				break;
-			case 'ban':
+			case 'ban': // bans player from the server, playerd defines the reason and lists the actor name at the end.
 				if (whitelist.indexOf(actor.name)>-1) {
 					var playerd = contentPieces[2];	
 						if (contentPieces.length > 3){
@@ -378,7 +362,7 @@ connection.on('message', function (message,actor,scope) {
 				else {
 				reply = tohelp;}
 				break;
-			case 'blacklist':
+			case 'blacklist': // adds user to the blacklist, playerd defines the user.
 				if (whitelist.indexOf(actor.name)>-1) {
 				blacklist.push(playerd);
 				reply = 'Added '+playerd+' to the blacklist!';
@@ -387,17 +371,17 @@ connection.on('message', function (message,actor,scope) {
 				else {
 				reply = tohelp;}
 				break;
-			case 'cat':
+			case 'cat': // sends a cat to the user.
 				reply = cats();
 				break;
-			case 'cats':
+			case 'cats': // sends multiple cats to the user.
 				reply = "<br/>"+cats()+"<br/>"+cats()+"<br/>"+cats()+"<br/>"+cats()+"<br/>"+cats();
 				break;
-			case 'draft':
+			case 'draft': // draftstart=1 when draft is active, playerd defines the player to draft in the tournament.
 				if (draftstart == 0) {
 					reply = tohelp;
 				}
-				else if (actor.channel.name != connection.user.channel.name) {
+				else if (actor.channel.name != connection.user.channel.name) { // to prevent spam, captain must be in the same channel as the bot to draft
 					reply = 'You are not a captain, please do not use this command.';}
 				else if (playersr.length !== 0 && draftstart == 1 && drafted == 1) {
 					reply = 'A pick is currently being processed, please wait...';}
@@ -426,10 +410,9 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					reply = 'The draft has been completed! Thanks for drafting! C:';}
 				break;
-			case 'find':
+			case 'find': // gives a url to a player on the server, playerd defines user to find, case-insensitive.
 				if (usersl.indexOf(playerd.toLowerCase()) > -1){
 				playerd = usersf[usersl.indexOf(playerd.toLowerCase())];}
-				
 				if (connection.userByName(playerd) == undefined){
 				reply = 'Sorry, a player with that name could not be found.';}
 				else {
@@ -446,10 +429,10 @@ connection.on('message', function (message,actor,scope) {
 					console.log(parentc);
 					reply = '<br/>'+playerd+' was found in <a href="'+mumbleurl+'"><span style="color:#39a5dd">'+parentc[parentc.length-1]+'</span></a>';}
 				break;
-			case 'getmail':
+			case 'getmail': // manual getmail command, playerd is uneeded in this case.
 				getmail(actor);
 				break;
-			case 'gg':
+			case 'gg': // gg = getgroup, playerd defines the name of the group to retrieve from the bot.
 				if (playerd == undefined){
 				 reply = "Please type a group name to find!";}
 				else if (ggid.indexOf(playerd.toLowerCase()) > -1){
@@ -459,7 +442,7 @@ connection.on('message', function (message,actor,scope) {
 					reply = 'Sorry, a group with that name could not be found. :c';
 				}
 				break;
-			/*case 'ggadd':
+			/*case 'ggadd': // ggadd allows actors to add their own group to the bot, allowing others to retrieve it with the !gg command
 				if (contentPieces.length >2){
 				ggadd = contentPieces[2];}
 				else {
@@ -478,7 +461,7 @@ connection.on('message', function (message,actor,scope) {
 						ggid.push(ggadd);
 						gglink.push(groupsend+groupid);}}
 				break;*/ //commented out until I figure out if it should be added or not.
-			case 'greet':
+			case 'greet': // defines a greeting for the actor which is sent on every connection to the server, playerd defines the message.
 				if (playerd == undefined){
 				reply = 'No greeting was found, please create a message for the bot to send to you when you connect!';}
 				else {
@@ -492,7 +475,7 @@ connection.on('message', function (message,actor,scope) {
 				backup();
 				reply = 'Your greeting has been set! TToC_BOT will send you this message each time you connect to the server! c:';}
 				break;
-			case 'greetcat':
+			case 'greetcat': // sets the greeting for the actor to a cat which is sent on every connection to the server, playerd is uneeded in this context.
 				if (welcomeuser.indexOf(actor.name) > -1){
 					welcomemessage[welcomeuser.indexOf(actor.name)] = 'this_is_supposed_to_be_a_cat-217253';}
 				else {
@@ -501,7 +484,7 @@ connection.on('message', function (message,actor,scope) {
 				backup();
 				reply = 'TToC_BOT will give you a cat each time you connect to the server! c:';
 				break;
-			case 'group':
+			case 'group': // creates group on a defined server. playerd is the server, ggadd is the optional group name which is stored on the bot.
 				if (contentPieces.length >2){
 				ggadd = contentPieces[2];}
 				else {
@@ -543,10 +526,10 @@ connection.on('message', function (message,actor,scope) {
 					}}}
 					setTimeout(random3,500);
 				break;
-			case 'help':
+			case 'help': // sends help info to the actor.
 				reply = help;
 				break;
-			case 'here':
+			case 'here': // moves the bot to the channel of the actor.
 				if (whitelist.indexOf(actor.name) > -1){
 					connection.user.moveToChannel(actor.channel);
 					actor.channel.sendMessage(actor.name+' has summoned me to this channel!');
@@ -554,7 +537,7 @@ connection.on('message', function (message,actor,scope) {
 				else {
 				actor.sendMessage(tohelp);}
 				break;
-			case 'home':
+			case 'home': // moves the bot back to a predefined home channel.
 				if (whitelist.indexOf(actor.name) > -1){
 					connection.user.moveToChannel('Meep is God');
 					connection.channelByName('Meep is God').sendMessage(actor.name+' has sent me to this channel!');
@@ -562,10 +545,10 @@ connection.on('message', function (message,actor,scope) {
 				else {
 				actor.sendMessage(tohelp);}
 				break;
-			case 'info':
+			case 'info': // displays info about the bot
 				reply = 'TToC, or the TagPro Tournament of Champions is a regular tournament hosted on the NA TagPro Mumble Server. Signups are usually released at 9:30 PM CST, with the draft starting at around 10:15 PM CST. I am a bot designed to run seasons of TToC. If you have any further questions, feel free to message Poeticalto on the Mumble server or /u/Poeticalto on Reddit.';
 				break;
-			case 'lock':
+			case 'lock': // prevents users from entering the channel [note move to does not work if the bot does not have permissions to move]
 				if (whitelist.indexOf(actor.name) > -1){
 				if (lockchannel.indexOf(actor.channel.name) == -1 && lockschannel.indexOf(actor.channel.name) == -1){				
 				connection.channelByName(actor.channel.name).sendMessage(actor.name+' has put this channel on lockdown! No new users will be allowed unless moved by a whitelisted user.');
@@ -584,7 +567,7 @@ connection.on('message', function (message,actor,scope) {
 				else {
 				actor.sendMessage(tohelp);}
 				break;
-			case 'lock+':
+			case 'lock+': // prevents users from entering or leaving the channel [note, move back does not work if bot does not have permissions to move]
 				if (whitelist.indexOf(actor.name) > -1){
 				if (lockchannel.indexOf(actor.channel.name) == -1 && lockschannel.indexOf(actor.channel.name) == -1){				
 				connection.channelByName(actor.channel.name).sendMessage(actor.name+' has put this channel on super lockdown! No new users will be allowed to enter or leave unless moved by a whitelisted user.');
@@ -603,7 +586,7 @@ connection.on('message', function (message,actor,scope) {
 				else {
 				actor.sendMessage(tohelp);}
 				break;
-			case 'kick':
+			case 'kick': // kicks player from the server, playerd defines reason.
 				if (whitelist.indexOf(actor.name)>-1) {
 					var playerd = contentPieces[2];	
 						if (contentPieces.length > 3){
@@ -617,7 +600,7 @@ connection.on('message', function (message,actor,scope) {
 				else {
 				reply = tohelp;}
 				break;
-			case 'mail':				
+			case 'mail': // creates mail to send to another user.		
 				if (playerd == undefined){
 				if (blacklist.indexOf(actor.name) == -1){
 				var mailusertemp = contentPieces[1];
@@ -634,32 +617,19 @@ connection.on('message', function (message,actor,scope) {
 				else {
 				reply = "No message was detected, please put one in before sending! c:";}	
 				break;
-			case 'map':
+			case 'map': // sends the map link for the tournament
 				reply = '<br/>The map for tonight is: <a href="'+ssmaplink+'"><b><i><span style="color:#00557f">'+ssmap+'</span></i></b></a>';
 				break;
-			case 'motd':
+			case 'motd': // sends the message of the day
 				reply = motd;
 				break;
-			case 'newseason':
-				if(whitelist.indexOf(actor.name)>-1) {
-					newseason = 1;
-					reply = 'Resetting to original settings!';}
-				else{
-					reply = tohelp;}
-				break;
-			case 'qak':
+			case 'qak': // qak
 				reply = 'qak';
 				break;
-			case 'resetseason':
-				if (whitelist.indexOf(actor.name)>-1){
-				console.log('resetting season!');
-				reply = 'Resetting tourney vars!';
-				//reset season vars here
-				}
-				else {
-					reply = tohelp;}
+			case 'reset': // Incomplete, resets the bot
+				reply = 'brb!';
 				break;
-			case 'setgreet':
+			case 'setgreet': // allows a whitelisted actor to set a greeting for a specific user
 				if(whitelist.indexOf(actor.name)>-1){
 					if (contentPieces.length >2){
 						ggadd = contentPieces[2];}
@@ -684,7 +654,7 @@ connection.on('message', function (message,actor,scope) {
 					reply = tohelp;
 				}
 				break;
-			case 'setgreetcat':
+			case 'setgreetcat': // allows a whitelisted user to set a cat greeting for a specific user
 				if(whitelist.indexOf(actor.name)>-1){
 					playerd = contentPieces[1];
 					if (playerd == undefined){
@@ -702,7 +672,7 @@ connection.on('message', function (message,actor,scope) {
 					reply = tohelp;
 				}
 				break;
-			case 'setupdraft':
+			case 'setupdraft': // sets up the draft, playerd is uneeded.
 				if (whitelist.indexOf(actor.name)>-1) {
 					setupdraft = 1;
 					reply = 'Setting up draft now!';
@@ -710,7 +680,7 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					reply = tohelp;}
 				break;
-			case 'setupsheet':
+			case 'setupsheet': // sets up the form and sheet, playerd is uneeded.
 				if (whitelist.indexOf(actor.name)>-1) {
 					setupsheet = 1;
 					reply = 'Setting up sheet now!';
@@ -719,22 +689,22 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					reply = tohelp;}
 				break;
-			case 'signups':
+			case 'signups': // replies with the signup link, playerd is uneeded.
 				if (setupstart !== 0) {				
 					reply = '<a href="'+sgnlink+'"><b><span style="color:#aa0000"><br/>Click here for the signups!</span></b></a>';}
 				else {
 					reply = 'Signups have not been released yet, check back in a bit! c:';}				
 				break;
-			case 'spreadsheet':
+			case 'spreadsheet': // replies with the spreadsheet link, playerd is uneeded.
 				if (setupstart !== 0) {				
 					reply = '<br/><a href="'+sslink+'"><b><span style="color:#00007f">Click here for the spreadsheet!</span></b></a>';}
 				else {
 					reply = 'Signups have not been released yet, check back in a bit! c:';}				
 				break;
-			case 'startdraft':
+			case 'startdraft': // starts the draft and retrieves players, to be done after trades are complete, playerd is uneeded.
 				draftstart();
 				break;
-			case 'stop':
+			case 'stop': // adds users to the greylist, which prevents them from receiving automated messages from the bot, playerd is uneeded.
 				if (greylist.indexOf(actor.name) == -1){
 				greylist.push(actor.name);
 				backup();
@@ -744,18 +714,18 @@ connection.on('message', function (message,actor,scope) {
 					backup();
 				reply = "You've been removed from the greylist! You will now receive automated message from TToC_BOT when you connect.";}
 				break;
-			case 'stream':
+			case 'stream': // test case right now, but allows for treeing the motd, playerd is uneeded.
 				for (i=0; i < users.length; i++){
 				//connection.userByName(users[i]).sendMessage('this is a quick test of the TToC_BOT tree function, please ignore c:');
 				console.log(users[i]);}
 				break;
-			case 'time':
+			case 'time': // shows the time
 				if (setupstart !== 0) {
 				reply = 'TToC was treed at 9:30 PM CST and the draft will start at around 10:15 PM CST.';}
 				else {
 				reply = 'Signups have not been released yet, check back in a bit! c:';}	
 				break;
-			case 'trade':
+			case 'trade': // trades two captains based on their position on the draft board. Requires two numbers for each trading party.
 				if (whitelist.indexOf(actor.name)>-1) {
 				values = [];
 				var tradec1 = contentPieces[1]-1;
@@ -772,7 +742,6 @@ connection.on('message', function (message,actor,scope) {
 				ssreadfrom = "'S-"+seasonnum+"'!N6:N"+playerd;
 				for (i=0;i<6;i++){
 					values.push([captains[i]]);}
-				// switch captains on the spreadsheet, captains array
 				fs.readFile('client_secret.json', function processClientSecrets(err, content) {
 				if (err) {
 					console.log('Error loading client secret file: ' + err);
@@ -785,13 +754,13 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					reply = tohelp;}
 				break;
-			case 'tree':
+			case 'tree': // incomplete, allows a whitelisted user to tree out signups, playerd is uneeded
 				if(whitelist.indexOf(actor.name)>-1) {
 					reply = 'look a tree';}
 				else{
 					reply = tohelp;}
 				break;
-			case 'updatelinks':
+			case 'updatelinks': // updates links from the spreadsheet, playerd is uneeded
 				if (whitelist.indexOf(actor.name)> -1){
 				console.log('updating links!');
 				reply = 'Updating links!';
@@ -800,7 +769,7 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					reply = tohelp;}
 				break;
-			case 'updatemotd':
+			case 'updatemotd': // updates var motd to a line on motd.txt, playerd defines which number to utilize, defaults to 0
 				if (whitelist.indexOf(actor.name)> -1){
 					if (motdset == false){				
 					motdset = true;
@@ -824,7 +793,7 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					reply = tohelp;}
 				break;
-			case 'whitelist':
+			case 'whitelist': // adds a user to the whitelist, which allows them to access whitelist only commands, playerd defines user to add
 				if (whitelist.indexOf(actor.name)>-1) {
 				whitelist.push(playerd);
 				reply = 'Added '+playerd+' to the whitelist!';
@@ -841,50 +810,43 @@ connection.on('message', function (message,actor,scope) {
 		actor.sendMessage(reply);}
 }});
 
-connection.on('error',function(MumbleError){
+connection.on('error',function(MumbleError){ //incomplete, error event when something goes wrong through mumble, need to add parsing of error
 	console.log(MumbleError.name);
 })
 
-connection.on('user-connect', function(user) {
-	if(mailuser.indexOf(user.name)>-1){
+connection.on('user-connect', function(user) { // user-connect is the event emitted when a user connects to the server
+	if(mailuser.indexOf(user.name)>-1){ // sends mail if user has mail to collect.
 user.sendMessage("Howdy "+user.name+"! I've been keeping some cool mail from other people for you, let me go get it!");
 	getmail(user);}
-	if(signupsopen == true && greylist.indexOf(user.name) == -1){
+	if(signupsopen == true && greylist.indexOf(user.name) == -1){ // if a tournament is running, signups are sent to the player
 user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you want to signup, message me !signups or !spreadsheet<br/><br/>(If you don't want these automated messages, message the !stop command to me)");}
-	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == true){
+	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == true){ // sends the motd if active
 	user.sendMessage(motd);}
-	else if (welcomeuser.indexOf(user.name) > -1 && signupsopen == false && motdset == false){
+	else if (welcomeuser.indexOf(user.name) > -1 && signupsopen == false && motdset == false){ // sends the user's predefined welcome message
 		if (welcomemessage[welcomeuser.indexOf(user.name)] == 'this_is_supposed_to_be_a_cat-217253'){
 		user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/>");}
 		else {user.sendMessage(welcomemessage[welcomeuser.indexOf(user.name)]);}
 	}	
-	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == false){
+	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == false){ // default message sent to every player on connect.
 //user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");
 	}});
 
-   connection.on('user-move', function(user, fromChannel, toChannel, actor) {
-	if ((lockchannel.indexOf(toChannel.name) > -1 || lockschannel.indexOf(toChannel.name) > -1) && actor.name != 'TToC_BOT' && whitelist.indexOf(actor.name) == -1){
+   connection.on('user-move', function(user, fromChannel, toChannel, actor) { // user-move is the event emitted when a user switches channels
+	if ((lockchannel.indexOf(toChannel.name) > -1 || lockschannel.indexOf(toChannel.name) > -1) && actor.name != 'TToC_BOT' && whitelist.indexOf(actor.name) == -1){ // prevents user from entering if channel is locked.
 		user.moveToChannel('TToC');
 		user.sendMessage('Sorry, you cannot enter this channel right now. :c');
 		connection.channelByName(toChannel.name).sendMessage(user.name+' was prevented from entering this channel!');}
-	else if (lockschannel.indexOf(fromChannel.name) > -1 && actor.name != 'TToC_BOT' && whitelist.indexOf(actor.name) == -1){
+	else if (lockschannel.indexOf(fromChannel.name) > -1 && actor.name != 'TToC_BOT' && whitelist.indexOf(actor.name) == -1){ // prevents user from leaving is channel is on super lockdown.
 		user.moveToChannel(fromChannel.name);
 		user.sendMessage('Sorry, you cannot leave this channel right now. :c');
 		connection.channelByName(fromChannel.name).sendMessage(user.name+' was prevented from leaving this channel!');}
-	else if (connection.user.channel.name == toChannel.name && user.name != 'TToC_BOT' && actor.name != 'TToC_BOT') {
+	else if (connection.user.channel.name == toChannel.name && user.name != 'TToC_BOT' && actor.name != 'TToC_BOT') { // if user has mail, sends a message to remind them to collect it.
 	connection.user.channel.sendMessage('Welcome to '+toChannel.name+' '+user.name+'!');}
 	if(mailuser.indexOf(user.name)>-1){
 	user.sendMessage("This is an automated reminder from TToC_BOT that you have some mail! Message !getmail to me when you're ready to receive it! c:");}
-	//if (toChannel.name == 'TToC' && captainsmum.indexOf(user.name)>-1 && draftsetup == 1){
-	//user.moveToChannel('Draft Channel');
-	//connection.user.channel.sendMessage(user.name+'has been moved into the draft channel!');
-	//user.sendMessage('You have been moved to the draft channel!');}
-	//else if (toChannel.name == 'TToC' && draftsetup == 1){
-	//random stuff	
-	//}
 });
 
-function sheetsetup() {
+function sheetsetup() { // sets up the form and sheet for a season.
 	console.log('setupsheet has been activated!');
 	console.log('Running Form Setup Script');
 	fs.readFile('client_secret.json', function processClientSecrets(err, content) {
@@ -905,7 +867,7 @@ setTimeout(random2,15000);
 updatelinks();
 setTimeout(backup,5000);
 }
-function draftsetup(){
+function draftsetup(){ // sets up a draft for a season.
 	console.log('setupdraft has been activated!');
 	console.log('Running Draft Setup Script');
 	fs.readFile('client_secret.json', function processClientSecrets(err, content) {
@@ -932,7 +894,7 @@ for (i=0;i<seasonsize;i++){
 setTimeout(random11,10000);
 setTimeout(random12,15000);})}
 
-function pickrefresh(){
+function pickrefresh(){ // incomplete, if bot crashes during the draft, this is supposed to retrieve needed information
 /* 
 	TODO refresh the following vars:
 	spreadsheet link
@@ -946,13 +908,13 @@ function pickrefresh(){
 */
 }
 
-function draftstart(){
+function draftstart(){ // concludes trading period and starts draft
 	console.log('draftstart has been activated!');
 	console.log('Starting Draft!');
 	draftround = 1;
 	draftstart = 1;
 	drafted = 0;
-		switch(parseInt(seasonsize)){
+		switch(parseInt(seasonsize)){ // draftmod defines where to start getting signups from.
 		case 3:
 			draftmod = 7+5;
 			break;
@@ -998,7 +960,7 @@ function draftstart(){
 				players.splice(players.indexOf(captains[i]),1);}
 			playersr = players;})}
 
-function backup(){
+function backup(){// backs up data.
 	console.log('backing up data!');
 	rows = ['TToC',seasonnum,'Sphere',ssmap,ssmaplink,sgnlink,sslink];
 	fs.writeFileSync('sslink.txt',rows.join('\n'));
@@ -1015,7 +977,7 @@ function backup(){
 
 
 
-function draftplayer(playerd){
+function draftplayer(playerd){ // interface with google sheets to write player name on the draft board
 	console.log(playerd+' is being drafted!');
 	seasonnum = 292;
 	seasonsize = 6;// tempvars for testing
@@ -1065,7 +1027,7 @@ function draftplayer(playerd){
 	draftround = Math.floor(picknum/seasonsize)+1;}
 }
 
-function updatelinks() {
+function updatelinks() { // interface with google sheets to get links
 	console.log('updatelinks has been activated!');
 	console.log('Retrieving links from the spreadsheet!');
 	fs.readFile('client_secret.json', function processClientSecrets(err, content) {
@@ -1093,7 +1055,7 @@ setTimeout(backup,6000);
 });
 }
 
-function getmail(actor) {
+function getmail(actor) { // gets mail from arrays
 	if(mailuser.indexOf(actor.name)>-1){
 	actor.sendMessage("Howdy "+actor.name+"! Let me go get your mail!");
 	randomvar = 1;
