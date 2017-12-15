@@ -5,11 +5,10 @@ var request = require('request');
 var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
+var script = google.script('v1');
 var sheets = google.sheets('v4');
 const readFile = require('fs-readfile-promise');
-var spreadsheetId = '1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4';
 var cats = require('cat-ascii-faces');
-// This part is the code used to authenticate with Google API
 var SCOPES = ['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/forms'];
 var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
     process.env.USERPROFILE) + '/.credentials/';
@@ -18,12 +17,100 @@ var WebClient = require('@slack/client').WebClient;
 var GroupMe = require('groupme');
 var API = GroupMe.Stateless;
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout});
+// CUSTOM SETTINGS FOR THE BOT
+var botname = 'TToC_BOT';
+var scriptId = 'MR8ANgNM86TUijo7WF5u3bAUVXR8RJHBv'; // This ID corresponds to the TToC scripts
+var spreadsheetId = '1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4'; // This ID goes to the TToC Spreadsheet
+var help = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!greet</b> <b><span style="color:#aa0000">message </span></b>- Sets a greeting for the user that will be sent on connect.<br/><b>!greetcat</b> - '+botname+' will greet the user with a cat that will be sent on connect.<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets '+botname+' send messages again.<br/><b>!time</b> - Gives user the time of the draft';
+var tohelp = 'Sorry, I did not recognize that. Use !help for a list of public commands! c:';
+var sadbot = "<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)";
+var mumbleurl = 'mumble.koalabeast.com';
+
+// The following are defaults for the various functions
+var mailuser = [];
+var mailsender = []; 
+var mailmessage = [];
+var rows;
+var seasonnum; 
+var ssmap;
+var ssmaplink; 
+var sgnlink; 
+var sslink;
+var whitelist = ['Poeticalto','Poeticaltwo']; 
+var blacklist = []; 
+var greylist = [];
+var welcomeuser;
+var welcomemessage; 
+var slackchannel = undefined; 
+var slacktoken = undefined; 
+var mods = undefined;
+var ACCESS_TOKEN = undefined; 
+var GROUP_ID = undefined; 
+var USER_NAME = undefined; 
+var GMBOT = undefined; 
+var USER_ID = undefined;
+var bot_id = null;
+var gappkey;
+
+// for each file, replaces the defaults if it exists.
+// consult the readme for help on how to setup each .txt file.
+if (fs.existsSync('whitelist.txt')) {
+whitelist = fs.readFileSync('whitelist.txt').toString().split("\n");			// whitelist is the superuser list for the bot
+console.log('Whitelist imported from whitelist.txt!');}
+if (fs.existsSync('mailuser.txt')){
+mailuser = fs.readFileSync('mailuser.txt').toString().split("\n");      		//mailuser contains receivers of mail
+console.log('mailuser imported from mailuser.txt!');}
+if (fs.existsSync('mailsender.txt')){
+mailsender = fs.readFileSync('mailsender.txt').toString().split("\n");   		//mailsender contains senders of mail
+console.log('mailsender imported from mailsender.txt!');}
+if (fs.existsSync('mailmessage.txt')){
+mailmessage = fs.readFileSync('mailmessage.txt').toString().split("\n"); 		//mailmessage contains mail to send
+console.log('mailmessage imported from mailmessage.txt!');}
+if (fs.existsSync('sslink.txt')){
+rows = fs.readFileSync('sslink.txt').toString().split("\n");
+seasonnum = rows[1]; 															// seasonnum refers to the season # of the tourney
+ssmap = rows[3];																// ssmap is the map name for the tourney
+ssmaplink = rows[4];															// ssmaplink is the link for the map
+sgnlink = rows[5];																// sgnlink is the signup link for the tourney
+sslink = rows[6];																// sslink is the spreadsheet link for the tourney
+console.log('Spreadsheet info imported from sslink.txt!');}
+if (fs.existsSync('blacklist.txt')){
+blacklist = fs.readFileSync('blacklist.txt').toString().split("\n");			// blacklist is the bad user list for the bot
+console.log('Blacklist imported from blacklist.txt!');}
+if (fs.existsSync('greylist.txt')){
+greylist = fs.readFileSync('greylist.txt').toString().split("\n");				// greylist prevents automated messages from the bot
+console.log('Greylist imported from greylist.txt!');}
+if (fs.existsSync('welcomeuser.txt')){
+welcomeuser = fs.readFileSync('welcomeuser.txt').toString().split("\n");		// welcomeuser is the list of users who want welcome messages
+console.log('welcomeuser imported from welcomeuser.txt!');}
+if (fs.existsSync('welcomemessage.txt')){
+welcomemessage = fs.readFileSync('welcomemessage.txt').toString().split("\n");	// welcomemessage is the message corresponding to the users who want welcomes
+console.log('welcomemessage imported from welcomemessage.txt!');}
+if (fs.existsSync('slacktoken.txt')){
+slacktoken = fs.readFileSync('slacktoken.txt').toString().split("\n");
+slackchannel = slacktoken[1];													// slackchannel is the channel to send notifs to on slack
+slacktoken = slacktoken[0];														// slacktoken is the API key to talk to slack
+console.log('Slack keys imported from slacktoken.txt!');}
+if (fs.existsSync('moderators.txt')){
+mods = fs.readFileSync('moderators.txt').toString().split("\n");				// mods is the mod list for the bot
+console.log('moderators imported from moderators.txt!');}
+if (fs.existsSync('groupmekey.txt')){
+ACCESS_TOKEN = fs.readFileSync('groupmekey.txt').toString().split("\n");
+GROUP_ID = ACCESS_TOKEN[4];														// GROUP_ID is the group id to send groupme messages to
+USER_NAME = ACCESS_TOKEN[3];													// USER_NAME is your groupme name in the group, used to filter out messages
+GMBOT = ACCESS_TOKEN[2];														// GMBOT is the name of your groupme bot
+USER_ID = ACCESS_TOKEN[1];														// USER_ID is your user id [not the bot id]
+ACCESS_TOKEN = ACCESS_TOKEN[0];														// ACCESS_TOKEN is your groupme access token
+console.log('GroupMe keys imported from groupmekey.txt!');}
+// Defines the certificates to connect to the mumble server through node-mumble
+var options = {
+	key: fs.readFileSync('botkey.pem'),
+	cert: fs.readFileSync('botcerts.pem')
+};
 
 // The following section is the GApps authorization stuff needed to create OAuth keys
 // It is taken from the quickstart for node.js, so check that out if you need help with it.
+// https://developers.google.com/apps-script/guides/rest/quickstart/nodejs
 
 // Load client secrets from a local file.
 fs.readFile('client_secret.json', function processClientSecrets(err, content) {
@@ -90,8 +177,6 @@ function storeToken(token) {
 // END OF GOOGLE AUTH SECTION
 
 // These are the individual functions used to run the Google Scripts needed for tourney
-var scriptId = 'MR8ANgNM86TUijo7WF5u3bAUVXR8RJHBv'; // This ID corresponds to the TToC scripts
-var script = google.script('v1');
 function gscriptrun(auth) { // This function runs code from Google Scripts
   // Make the API request. The request object is included here as 'resource'.
   script.scripts.run({
@@ -122,7 +207,7 @@ function gscriptrun(auth) { // This function runs code from Google Scripts
   });
 }
 
-function ssread(auth){
+function ssread(auth){// this function reads a range from the spreadsheet
 	testarr = [];
 	 var sheets = google.sheets('v4');
   sheets.spreadsheets.values.get({
@@ -147,7 +232,7 @@ function ssread(auth){
   });
 }
 
-function sswrite(auth){
+function sswrite(auth){// this function writes a range to the spreadsheet
 	var body = {
   values: values
 };
@@ -175,37 +260,23 @@ var drafted = 0;
 var draftstart = 0;
 var draftsetup = 0;
 var setupstart = 0;
-var players = []; // letters are stock until I set up the draft stuff 
+var players = [];
 var playersr = [];
 var captains = [];
 var captainspick = [0];
 var picknum = 1;
-var newseason = 0;
 var setupsheet = 0;
 var setupdraft = 0;
-var sgnlink;
-var sslink;
-var ssmap;
-var ssmaplink;
-var tohelp = 'Sorry, I did not recognize that. Use !help for a list of public commands! c:';
 var wait = 0;
 var reply = '';
 var tree = '';
-var seasonsize = 9;
+var seasonsize;
 var seasonnum;
 var draftmod;
 var playerdindex;
 var draftround = 1;
-var mumbleurl = 'mumble.koalabeast.com';
-var whitelist;
-var blacklist;
 var greylist;
-var captainsmum;
 var signupsopen = false;
-var mailuser;
-var mailsender;
-var mailmessage;
-var sadbot = "<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)";
 var motdset = false;
 var groupbuild;
 var groupsend;
@@ -214,8 +285,6 @@ var ggid = [];
 var gglink = [];
 var ggadd;
 var motd = "Sorry, there's no motd set right now!";
-var welcomeuser;
-var welcomemessage;
 var lockchannel = [];
 var lockschannel = [];
 var scriptname;
@@ -224,90 +293,41 @@ var ssreadfrom;
 var values = [];
 var picknumround;
 var picknumrounddraft;
-var rows;
-var slacktoken;
-var mods = [];
 var modsmum = [];
 var sessions = [];
 var sessionsu = [];
 var startchat = false;
-var slackchannel;
-var ACCESS_TOKEN;
-var USER_ID;
-var BOT_NAME;
-var USER_NAME;
-var GROUP_ID;
-var bot_id = null;
-var help = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!greet</b> <b><span style="color:#aa0000">message </span></b>- Sets a greeting for the user that will be sent on connect.<br/><b>!greetcat</b> - TToC_BOT will greet the user with a cat that will be sent on connect.<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets TToC_BOT send messages again.<br/><b>!time</b> - Gives user the time of the draft';
 
-// imports information from .txt files in folder
-if (fs.existsSync('whitelist.txt')) {
-mailuser = fs.readFileSync('mailuser.txt').toString().split("\n");       		//mailuser contains receivers of mail
-mailsender = fs.readFileSync('mailsender.txt').toString().split("\n");   		//mailsender contains senders of mail
-mailmessage = fs.readFileSync('mailmessage.txt').toString().split("\n"); 		//mailmessage contains mail to send
-rows = fs.readFileSync('sslink.txt').toString().split("\n");
-seasonnum = rows[1]; 															// seasonnum refers to the season # of the tourney
-ssmap = rows[3];																// ssmap is the map name for the tourney
-ssmaplink = rows[4];															// ssmaplink is the link for the map
-sgnlink = rows[5];																// sgnlink is the signup link for the tourney
-sslink = rows[6];																// sslink is the spreadsheet link for the tourney
-whitelist = fs.readFileSync('whitelist.txt').toString().split("\n");			// whitelist is the superuser list for the bot
-blacklist = fs.readFileSync('blacklist.txt').toString().split("\n");			// blacklist is the bad user list for the bot
-greylist = fs.readFileSync('greylist.txt').toString().split("\n");				// greylist prevents automated messages from the bot
-welcomeuser = fs.readFileSync('welcomeuser.txt').toString().split("\n");		// welcomeuser is the list of users who want welcome messages
-welcomemessage = fs.readFileSync('welcomemessage.txt').toString().split("\n");	// welcomemessage is the message corresponding to the users who want welcomes
-slacktoken = fs.readFileSync('slacktoken.txt').toString().split("\n");
-slackchannel = slacktoken[1];													// slackchannel is the channel to send notifs to on slack
-slacktoken = slacktoken[0];														// slacktoken is the API key to talk to slack
-mods = fs.readFileSync('moderators.txt').toString().split("\n");				// mods is the mod list for the bot
-ACCESS_TOKEN = fs.readFileSync('groupmekey.txt').toString().split("\n");
-GROUP_ID = ACCESS_TOKEN[4];														// GROUP_ID is the group id to send groupme messages to
-USER_NAME = ACCESS_TOKEN[3];													// USER_NAME is your groupme name in the group, used to filter out messages
-BOT_NAME = ACCESS_TOKEN[2];														// BOT_NAME is the name of your groupme bot
-USER_ID = ACCESS_TOKEN[1];														// USER_ID is your user id [not the bot id]
-ACCESS_TOKEN = ACCESS_TOKEN[0];													// ACCESS_TOKEN is your groupme access token
-}
-else { //set defaults if .txt files don't exist in folder
-mailuser = ['226078'];
-mailsender = ['226078'];
-mailmessage = ['226078'];
-sgnlink = 'https://goo.gl/forms/UBisBUjO4eg6pjfp1';
-sslink = 'https://docs.google.com/spreadsheets/d/1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4/edit#gid=115661595';
-ssmap =  'Cache';
-ssmaplink = 'http://unfortunate-maps.jukejuice.com/static/previews/52272.png';
-whitelist = [Poeticalto,Poeticaltwo];}
-
-// Defines the certificates to connect to the mumble server through node-mumble
-var options = {
-	key: fs.readFileSync('botkey.pem'),
-	cert: fs.readFileSync('botcerts.pem')
-};
+const rl = readline.createInterface({ // creates cmd interface to interact with the bot
+  input: process.stdin,
+  output: process.stdout});
 
 // connect to the mumble server
 console.log('Connecting to Mumble Server');
 console.log( 'Connecting' );
-var web = new WebClient(slacktoken);
+
 mumble.connect( mumbleurl, options, function ( error, connection ) {
     if( error ) { throw new Error( error ); }
 
-    connection.authenticate( 'TToC_BOT' );
+    connection.authenticate( botname );
     connection.on( 'initialized', function () {
         console.log('connection ready');
-		connection.user.setSelfDeaf(true);
-		connection.user.setComment(help);
+		connection.user.setSelfDeaf(true); // mute/deafens the bot
+		connection.user.setComment(help); // sets the comment for the bot
     });
-    // Constructs the IncomingStream, identified by the access token and 
-    var incoming = new GroupMe.IncomingStream(ACCESS_TOKEN, USER_ID, null);
-    // This waits for the IncomingStream to complete its handshake and start listening.
-    // We then get the bot id of a specific bot.
-    incoming.on('connected', function() {
+    
+	// Initialize slack/groupme connections
+	var web = new WebClient(slacktoken);
+	var incoming = new GroupMe.IncomingStream(ACCESS_TOKEN, USER_ID, null);
+	
+    incoming.on('connected', function() { // gets remaining info needed for bot to run.
         console.log("[IncomingStream 'connected']");
 
         API.Bots.index(ACCESS_TOKEN, function(err,ret) {
             if (!err) {
                 var botdeets;
                 for (var i = 0; i < ret.length; i++) {
-                    if (ret[i].name == BOT_NAME) {
+                    if (ret[i].name == GMBOT) {
                         bot_id = ret[i].bot_id;
                     }
                 }
@@ -317,10 +337,10 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
 
     });
 
-    incoming.on('disconnected', function() {
+    incoming.on('disconnected', function() { // if disconnected from GroupMe API, attempts to reconnect.
     console.log("[IncomingStream 'disconnect']");
     var retryCount = 3;
-	if (retryCount > 0 && startchat == true) {
+	if (retryCount > 0 && startchat == true) { // if startchat is false, groupme functionality is disabled, so no reconnect attempts should be made.
         retryCount = retryCount - 1;
         incoming.connect();    
     }
@@ -329,7 +349,7 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
     incoming.on('message', function(msg) {
 		if (msg["data"] 
             && msg["data"]["subject"] 
-            && msg["data"]["subject"]["text"]){
+            && msg["data"]["subject"]["text"]){ // error is thrown when attempting to access a message without data,subject, or text, so checks to make sure they all exist
 		if (bot_id && msg["data"]["subject"]["name"] != USER_NAME&& msg["data"]["subject"]["group_id"] == GROUP_ID) {
 		connection.user.channel.sendMessage(msg["data"]["subject"]["text"]);}
 	}});
@@ -400,7 +420,7 @@ if (channels.indexOf(state.channel_id) == -1){
 
 connection.on('user-priority-speaker', function(user, status, actor) {
 	if (whitelist.indexOf(actor.name)>-1 && status == true){
-	if ( user.name == "TToC_BOT"){ // moves bot to the channel of the actor 
+	if ( user.name == botname){ // moves bot to the channel of the actor 
 	user.moveToChannel(actor.channel);
 	actor.channel.sendMessage(actor.name+' has summoned me to this channel!');
 	}
@@ -599,7 +619,7 @@ connection.on('message', function (message,actor,scope) {
 						welcomemessage.push(playerd);
 				}
 				backup();
-				reply = 'Your greeting has been set! TToC_BOT will send you this message each time you connect to the server! c:';}
+				reply = 'Your greeting has been set! '+botname+' will send you this message each time you connect to the server! c:';}
 				break;
 			case 'greetcat': // sets the greeting for the actor to a cat which is sent on every connection to the server, playerd is uneeded in this context.
 				if (welcomeuser.indexOf(actor.name) > -1){
@@ -608,7 +628,7 @@ connection.on('message', function (message,actor,scope) {
 						welcomeuser.push(actor.name);
 						welcomemessage.push('this_is_supposed_to_be_a_cat-217253');}
 				backup();
-				reply = 'TToC_BOT will give you a cat each time you connect to the server! c:';
+				reply = botname+' will give you a cat each time you connect to the server! c:';
 				break;
 			case 'group': // creates group on a defined server. playerd is the server, ggadd is the optional group name which is stored on the bot.
 				if (contentPieces.length >2){
@@ -847,11 +867,11 @@ connection.on('message', function (message,actor,scope) {
 				else {
 					greylist.splice(greylist.indexOf(actor.name),1);
 					backup();
-				reply = "You've been removed from the greylist! You will now receive automated message from TToC_BOT when you connect.";}
+				reply = "You've been removed from the greylist! You will now receive automated message from "+botname+" when you connect.";}
 				break;
 			case 'stream': // test case right now, but allows for treeing the motd, playerd is uneeded.
 				for (i=0; i < users.length; i++){
-				//connection.userByName(users[i]).sendMessage('this is a quick test of the TToC_BOT tree function, please ignore c:');
+				//connection.userByName(users[i]).sendMessage('this is a quick test of the '+botname+' tree function, please ignore c:');
 				console.log(users[i]);}
 				break;
 			case 'time': // shows the time
@@ -877,13 +897,9 @@ connection.on('message', function (message,actor,scope) {
 				ssreadfrom = "'S-"+seasonnum+"'!N6:N"+playerd;
 				for (i=0;i<6;i++){
 					values.push([captains[i]]);}
-				fs.readFile('client_secret.json', function processClientSecrets(err, content) {
-				if (err) {
-					console.log('Error loading client secret file: ' + err);
-					return;}
 				function random8() {
-					authorize(JSON.parse(content), sswrite);}
-				random8()});
+					authorize(JSON.parse(gappkey), sswrite);}
+				random8();
 				connection.user.channel.sendMessage('Successfully switched captains '+tradec1+' and '+tradec2+'!');	
 				connection.channelByName('Spectating Lounge [Open to all]').sendMessage('Successfully switched captains '+tradec1+' and '+tradec2+'!');}
 				else {
@@ -960,26 +976,26 @@ user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you wan
 	user.sendMessage(motd);}
 	else if (welcomeuser.indexOf(user.name) > -1 && signupsopen == false && motdset == false){ // sends the user's predefined welcome message
 		if (welcomemessage[welcomeuser.indexOf(user.name)] == 'this_is_supposed_to_be_a_cat-217253'){
-		user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/>");}
+		user.sendMessage("<br/>"+botname+" sends a cat to say hi!<br/><br/>"+cats()+"<br/>");}
 		else {user.sendMessage(welcomemessage[welcomeuser.indexOf(user.name)]);}
 	}	
 	else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == false){ // default message sent to every player on connect.
-//user.sendMessage("<br/>TToC_BOT sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");
+//user.sendMessage("<br/>"+botname+" sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");
 	}});
 
    connection.on('user-move', function(user, fromChannel, toChannel, actor) { // user-move is the event emitted when a user switches channels
-	if ((lockchannel.indexOf(toChannel.name) > -1 || lockschannel.indexOf(toChannel.name) > -1) && actor.name != 'TToC_BOT' && (whitelist.indexOf(actor.name) == -1 || mods.indexOf(actor.name) == -1)){ // prevents user from entering if channel is locked.
+	if ((lockchannel.indexOf(toChannel.name) > -1 || lockschannel.indexOf(toChannel.name) > -1) && actor.name != botname && (whitelist.indexOf(actor.name) == -1 || mods.indexOf(actor.name) == -1)){ // prevents user from entering if channel is locked.
 		user.moveToChannel('TToC');
 		user.sendMessage('Sorry, you cannot enter this channel right now. :c');
 		connection.channelByName(toChannel.name).sendMessage(user.name+' was prevented from entering this channel!');}
-	else if (lockschannel.indexOf(fromChannel.name) > -1 && actor.name != 'TToC_BOT' && (whitelist.indexOf(actor.name) == -1 || mods.indexOf(actor.name) == -1)){ // prevents user from leaving is channel is on super lockdown.
+	else if (lockschannel.indexOf(fromChannel.name) > -1 && actor.name != botname && (whitelist.indexOf(actor.name) == -1 || mods.indexOf(actor.name) == -1)){ // prevents user from leaving is channel is on super lockdown.
 		user.moveToChannel(fromChannel.name);
 		user.sendMessage('Sorry, you cannot leave this channel right now. :c');
 		connection.channelByName(fromChannel.name).sendMessage(user.name+' was prevented from leaving this channel!');}
-	else if (connection.user.channel.name == toChannel.name && user.name != 'TToC_BOT' && actor.name != 'TToC_BOT') { // if user has mail, sends a message to remind them to collect it.
+	else if (connection.user.channel.name == toChannel.name && user.name != botname && actor.name != botname) { // if user has mail, sends a message to remind them to collect it.
 	connection.user.channel.sendMessage('Welcome to '+toChannel.name+' '+user.name+'!');}
 	if(mailuser.indexOf(user.name)>-1){
-	user.sendMessage("This is an automated reminder from TToC_BOT that you have some mail! Message !getmail to me when you're ready to receive it! c:");}
+	user.sendMessage("This is an automated reminder from "+botname+" that you have some mail! Message !getmail to me when you're ready to receive it! c:");}
 	if (toChannel.name == 'In-Game Moderators Assistance Room' && mods.indexOf(user.name) == -1){
 	user.sendMessage('<br/>Welcome to the In-Game Moderators Assistance Room! If you want a list of mods currently on Mumble, use the !mods command. <br/><br/>If there is not a mod available, try going to the IRC channel by <a href="http://webchat.freenode.net/?channels=tpmods"><b><span style="color:#39a5dd">clicking here</span></b></a>, where a mod is almost always availble to help there! c:');
 	reply = '[NA Mumble] '+user.name+' is waiting in the In-Game Moderators Assistance Room!';
@@ -989,20 +1005,14 @@ user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you wan
 function sheetsetup() { // sets up the form and sheet for a season.
 	console.log('setupsheet has been activated!');
 	console.log('Running Form Setup Script');
-	fs.readFile('client_secret.json', function processClientSecrets(err, content) {
-  if (err) {
-    console.log('Error loading client secret file: ' + err);
-    return;
-  }
 function random1() {
 	scriptname = 'FormSetup';
-authorize(JSON.parse(content), gscriptrun);}
+authorize(JSON.parse(gappkey), gscriptrun);}
 function random2() {
 	scriptname = 'SheetSetup';
-authorize(JSON.parse(content), gscriptrun);}
+authorize(JSON.parse(gappkey), gscriptrun);}
 random1();
 setTimeout(random2,15000);
-});
 
 updatelinks();
 setTimeout(backup,5000);
@@ -1010,17 +1020,12 @@ setTimeout(backup,5000);
 function draftsetup(){ // sets up a draft for a season.
 	console.log('setupdraft has been activated!');
 	console.log('Running Draft Setup Script');
-	fs.readFile('client_secret.json', function processClientSecrets(err, content) {
-  if (err) {
-    console.log('Error loading client secret file: ' + err);
-    return;
-  }
   scriptname = 'DraftBoardSetup';
-authorize(JSON.parse(content), gscriptrun);
+authorize(JSON.parse(gappkey), gscriptrun);
 function random11(){
 ssreadfrom = "'S-"+seasonnum+"'!T3";
 rows = [];
-authorize(JSON.parse(content), ssread);}
+authorize(JSON.parse(gappkey), ssread);}
 function random12(){
 seasonsize = rows[0];
 console.log(seasonsize);
@@ -1028,11 +1033,11 @@ console.log(rows);
 playerd = parseInt(seasonsize)+5;
 console.log(seasonsize);
 ssreadfrom = "'S-"+seasonnum+"'!N6:N"+playerd;
-authorize(JSON.parse(content), ssread);
+authorize(JSON.parse(gappkey), ssread);
 for (i=0;i<seasonsize;i++){
 	captains[i] = rows[i];}}
 setTimeout(random11,10000);
-setTimeout(random12,15000);})}
+setTimeout(random12,15000);}
 
 function pickrefresh(){ // incomplete, if bot crashes during the draft, this is supposed to retrieve needed information
 /* 
@@ -1088,17 +1093,13 @@ function draftstart(){ // concludes trading period and starts draft
 		default:
 			draftmod = -1;
 			break;}
-			fs.readFile('client_secret.json', function processClientSecrets(err, content) {
-  if (err) {
-    console.log('Error loading client secret file: ' + err);
-    return;}
 			playerd = parseInt(draftmod)+4*parseInt(seasonsize);
 			ssreadfrom = "'S-"+seasonnum+"'!"+"M"+draftmod+":M"+playerd;
-			authorize(JSON.parse(content), ssread);
+			authorize(JSON.parse(gappkey), ssread);
 			players = rows;
 			for (i=0;i<seasonsize;i++){
 				players.splice(players.indexOf(captains[i]),1);}
-			playersr = players;})}
+			playersr = players;}
 
 function backup(){// backs up data.
 	console.log('backing up data!');
@@ -1112,10 +1113,7 @@ function backup(){// backs up data.
 	fs.writeFileSync('whitelist.txt',whitelist.join('\n'));
 	fs.writeFileSync('welcomemessage.txt',welcomemessage.join('\n'));
 	fs.writeFileSync('welcomeuser.txt',welcomeuser.join('\n'));
-	console.log('data has been backed up!');
-}
-
-
+	console.log('data has been backed up!');}
 
 function draftplayer(playerd){ // interface with google sheets to write player name on the draft board
 	console.log(playerd+' is being drafted!');
@@ -1144,15 +1142,9 @@ function draftplayer(playerd){ // interface with google sheets to write player n
 		break;}	
 	ssreadfrom = "'S-"+seasonnum+"'!"+picknumcolumn+picknumrounddraft;
 	values = [[playerd]];
-	fs.readFile('client_secret.json', function processClientSecrets(err, content) {
-	if (err) {
-		console.log('Error loading client secret file: ' + err);
-		return;
-	}
 	function random5() {
-		authorize(JSON.parse(content), sswrite);}
-		random5();
-	});	
+		authorize(JSON.parse(gappkey), sswrite);}
+		random5();	
 	connection.user.channel.sendMessage(playerd+' has been drafted by '+captains[picknumround-1]+'!');	
 	connection.channelByName('Spectating Lounge [Open to all]').sendMessage(playerd+' has been drafted by '+captains[picknumround-1]+'!');
 	drafted = 0;
@@ -1170,14 +1162,9 @@ function draftplayer(playerd){ // interface with google sheets to write player n
 function updatelinks() { // interface with google sheets to get links
 	console.log('updatelinks has been activated!');
 	console.log('Retrieving links from the spreadsheet!');
-	fs.readFile('client_secret.json', function processClientSecrets(err, content) {
-  if (err) {
-    console.log('Error loading client secret file: ' + err);
-    return;
-  }
 function random4() {
 ssreadfrom = "'Hall of Fame'!B17:B23";
-authorize(JSON.parse(content), ssread);}
+authorize(JSON.parse(gappkey), ssread);}
 function random6() {
 ssmaplink = rows[4];
 ssmap = rows[3];
@@ -1192,7 +1179,6 @@ console.log(sgnlink);}
 random4();
 setTimeout(random6,5000);
 setTimeout(backup,6000);
-});
 }
 
 function getmail(actor) { // gets mail from arrays
