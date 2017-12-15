@@ -199,6 +199,8 @@ Here is a list of whitelist commands:
 
 !kick user reason - kicks user from the Mumble Server. The actor is noted in the reason.
 
+!move user - moves the user to the channel of the actor.
+
 !setgreet user message - allows a whitelisted user to set a custom greeting for any Mumble user.
 
 !setgreetcat user - allows a whitelisted user to set a custom cat greeting for any Mumble user.
@@ -230,5 +232,7 @@ Giving priority speaker to the bot will move the bot to the same channel as the 
 1. Ability to reset seasons
 
 2. Piping audio through node-mumble-audio
+
+2a. Music bot?
 
 3. Code cleanup/refactoring

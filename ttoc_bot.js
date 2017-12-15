@@ -832,6 +832,9 @@ connection.on('message', function (message,actor,scope) {
 			case 'motd': // sends the message of the day
 				reply = motd;
 				break;
+			case 'move':
+				connection.userByName(playerd).moveToChannel(actor.channel.name);
+				break;
 			case 'qak': // qak
 				reply = 'qak';
 				break;
@@ -1010,8 +1013,8 @@ connection.on('message', function (message,actor,scope) {
 				reply = tohelp;
 				break;
 }
-
-	if (command != 'getmail' || command != 'group' || command != 'lock' || command != 'lock+' || command != 'here' || command != 'trade' || reply != ''){
+var noReply = ['getmail','group','lock','lock+','here','trade','move'];
+	if (noReply.indexOf(command) == -1 || reply != ''){
 		console.log(reply);
 		actor.sendMessage(reply);}
 }});
