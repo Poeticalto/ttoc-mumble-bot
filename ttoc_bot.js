@@ -6,19 +6,21 @@ var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 var sheets = google.sheets('v4');
+const readFile = require('fs-readfile-promise');
 var spreadsheetId = '1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4';
-//var cool = require('cool-ascii-faces'); //not really needed, but faces are pretty cool
 var cats = require('cat-ascii-faces');
 // This part is the code used to authenticate with Google API
 var SCOPES = ['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/forms'];
 var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
     process.env.USERPROFILE) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'script-nodejs-quickstart.json';
+var WebClient = require('@slack/client').WebClient;
+var GroupMe = require('groupme');
+var API = GroupMe.Stateless;
 
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
-});
+  output: process.stdout});
 
 // The following section is the GApps authorization stuff needed to create OAuth keys
 // It is taken from the quickstart for node.js, so check that out if you need help with it.
@@ -223,25 +225,47 @@ var values = [];
 var picknumround;
 var picknumrounddraft;
 var rows;
+var slacktoken;
+var mods = [];
+var modsmum = [];
+var sessions = [];
+var sessionsu = [];
+var startchat = false;
+var slackchannel;
+var ACCESS_TOKEN;
+var USER_ID;
+var BOT_NAME;
+var USER_NAME;
+var GROUP_ID;
+var bot_id = null;
 var help = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!greet</b> <b><span style="color:#aa0000">message </span></b>- Sets a greeting for the user that will be sent on connect.<br/><b>!greetcat</b> - TToC_BOT will greet the user with a cat that will be sent on connect.<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets TToC_BOT send messages again.<br/><b>!time</b> - Gives user the time of the draft';
-
 
 // imports information from .txt files in folder
 if (fs.existsSync('whitelist.txt')) {
-mailuser = fs.readFileSync('mailuser.txt').toString().split("\n");       //mailuser contains receivers of mail
-mailsender = fs.readFileSync('mailsender.txt').toString().split("\n");   //mailsender contains senders of mail
-mailmessage = fs.readFileSync('mailmessage.txt').toString().split("\n"); //mailmessage contains mail to send
-rows = fs.readFileSync('sslink.txt').toString().split("\n");           //sslink contains the signup link [sgnlink] and spreadsheet link [sslink]
-seasonnum = rows[1];
-ssmap = rows[3];
-ssmaplink = rows[4];
-sgnlink = rows[5];
-sslink = rows[6];
-whitelist = fs.readFileSync('whitelist.txt').toString().split("\n");
-blacklist = fs.readFileSync('blacklist.txt').toString().split("\n");
-greylist = fs.readFileSync('greylist.txt').toString().split("\n");
-welcomeuser = fs.readFileSync('welcomeuser.txt').toString().split("\n");
-welcomemessage = fs.readFileSync('welcomemessage.txt').toString().split("\n");
+mailuser = fs.readFileSync('mailuser.txt').toString().split("\n");       		//mailuser contains receivers of mail
+mailsender = fs.readFileSync('mailsender.txt').toString().split("\n");   		//mailsender contains senders of mail
+mailmessage = fs.readFileSync('mailmessage.txt').toString().split("\n"); 		//mailmessage contains mail to send
+rows = fs.readFileSync('sslink.txt').toString().split("\n");
+seasonnum = rows[1]; 															// seasonnum refers to the season # of the tourney
+ssmap = rows[3];																// ssmap is the map name for the tourney
+ssmaplink = rows[4];															// ssmaplink is the link for the map
+sgnlink = rows[5];																// sgnlink is the signup link for the tourney
+sslink = rows[6];																// sslink is the spreadsheet link for the tourney
+whitelist = fs.readFileSync('whitelist.txt').toString().split("\n");			// whitelist is the superuser list for the bot
+blacklist = fs.readFileSync('blacklist.txt').toString().split("\n");			// blacklist is the bad user list for the bot
+greylist = fs.readFileSync('greylist.txt').toString().split("\n");				// greylist prevents automated messages from the bot
+welcomeuser = fs.readFileSync('welcomeuser.txt').toString().split("\n");		// welcomeuser is the list of users who want welcome messages
+welcomemessage = fs.readFileSync('welcomemessage.txt').toString().split("\n");	// welcomemessage is the message corresponding to the users who want welcomes
+slacktoken = fs.readFileSync('slacktoken.txt').toString().split("\n");
+slackchannel = slacktoken[1];													// slackchannel is the channel to send notifs to on slack
+slacktoken = slacktoken[0];														// slacktoken is the API key to talk to slack
+mods = fs.readFileSync('moderators.txt').toString().split("\n");				// mods is the mod list for the bot
+ACCESS_TOKEN = fs.readFileSync('groupmekey.txt').toString().split("\n");
+GROUP_ID = ACCESS_TOKEN[4];														// GROUP_ID is the group id to send groupme messages to
+USER_NAME = ACCESS_TOKEN[3];													// USER_NAME is your groupme name in the group, used to filter out messages
+BOT_NAME = ACCESS_TOKEN[2];														// BOT_NAME is the name of your groupme bot
+USER_ID = ACCESS_TOKEN[1];														// USER_ID is your user id [not the bot id]
+ACCESS_TOKEN = ACCESS_TOKEN[0];													// ACCESS_TOKEN is your groupme access token
 }
 else { //set defaults if .txt files don't exist in folder
 mailuser = ['226078'];
@@ -259,27 +283,82 @@ var options = {
 	cert: fs.readFileSync('botcerts.pem')
 };
 
-
 // connect to the mumble server
 console.log('Connecting to Mumble Server');
 console.log( 'Connecting' );
+var web = new WebClient(slacktoken);
 mumble.connect( mumbleurl, options, function ( error, connection ) {
     if( error ) { throw new Error( error ); }
 
     connection.authenticate( 'TToC_BOT' );
-
     connection.on( 'initialized', function () {
         console.log('connection ready');
 		connection.user.setSelfDeaf(true);
 		connection.user.setComment(help);
     });
+    // Constructs the IncomingStream, identified by the access token and 
+    var incoming = new GroupMe.IncomingStream(ACCESS_TOKEN, USER_ID, null);
+    // This waits for the IncomingStream to complete its handshake and start listening.
+    // We then get the bot id of a specific bot.
+    incoming.on('connected', function() {
+        console.log("[IncomingStream 'connected']");
+
+        API.Bots.index(ACCESS_TOKEN, function(err,ret) {
+            if (!err) {
+                var botdeets;
+                for (var i = 0; i < ret.length; i++) {
+                    if (ret[i].name == BOT_NAME) {
+                        bot_id = ret[i].bot_id;
+                    }
+                }
+                console.log("[API.Bots.index return] Firing up bot!", bot_id);
+            }
+        });
+
+    });
+
+    incoming.on('disconnected', function() {
+    console.log("[IncomingStream 'disconnect']");
+    var retryCount = 3;
+	if (retryCount > 0 && startchat == true) {
+        retryCount = retryCount - 1;
+        incoming.connect();    
+    }
+    })
+
+    incoming.on('message', function(msg) {
+		if (msg["data"] 
+            && msg["data"]["subject"] 
+            && msg["data"]["subject"]["text"]){
+		if (bot_id && msg["data"]["subject"]["name"] != USER_NAME&& msg["data"]["subject"]["group_id"] == GROUP_ID) {
+		connection.user.channel.sendMessage(msg["data"]["subject"]["text"]);}
+	}});
+	
+	connection.on('userRemove', function (data) {
+	if (data.actor != null && data.ban == false){
+	reply = '[NA Mumble] '+connection.userBySession(data.actor).name+' kicked '+sessionsu[sessions.indexOf(data.session)]+': '+data.reason;
+	sendtoslack(slackchannel,reply);}
+	else if (data.actor != null && data.ban == true) {
+	reply = '[NA Mumble] '+connection.userBySession(data.actor).name+' banned '+sessionsu[sessions.indexOf(data.session)]+': '+data.reason;
+	sendtoslack(slackchannel,reply);}
+	})
 
 var users = [];
 var usersf = [];
 var usersl = [];
 	connection.on( 'userState', function (state) {
+	if (sessions.indexOf(state.session) > -1){
+		sessionsu[sessions.indexOf(state.session)] = state.name;}
+	else {
+		sessions.push(state.session);
+		sessionsu.push(state.name);}
 	if (users.indexOf(state.name) == -1 && greylist.indexOf(state.name) == -1){
-	users.push(state.name);}
+	users.push(state.name);
+	if (mods.indexOf(state.name) > -1 && modsmum.indexOf(state.name) == -1){ 
+	if (state.name == 'Cyanide'){
+	modsmum.push('Cryanide');}
+	else{
+	modsmum.push(state.name);}}}
 	if (users.indexOf(null) >-1){
 		users.splice(users.indexOf(null),1); //unsure where the null leaks in from, but this removes it	
 	}
@@ -288,12 +367,18 @@ var usersl = [];
 	updateuserarray(usersf,usersl);
 	} 
 });
+	
 	function updateuserarray(array1,array2){
 		if (array1.indexOf(null) >-1){
 	array1.splice(array1.indexOf(null),1);}
 	for (i=0;i<array1.length; i++){
 	array2[i] = array1[i].toLowerCase();}}
+	
 	connection.on('user-disconnect', function(state) {
+		if (modsmum.indexOf(state.name) > -1){ 
+		modsmum.splice(modsmum.indexOf(state.name),1);}
+		if (state.name == 'Cyanide'){
+		modsmum.splice(modsmum.indexOf('Cryanide'),1);}
 		if (greylist.indexOf(state.name) == -1){
 		users.splice(users.indexOf(state.name),1);}
 		if (users.indexOf(null) >-1){
@@ -332,6 +417,7 @@ connection.on('message', function (message,actor,scope) {
 	const privateMessage = scope === 'private'; // scope defines how the bot received the message
 	const content = message || '';
 	const isCommand = content[0] === '!';
+	const isChat = content[0] === '@';
 	const contentPieces = content.slice(1, content.length).split(' ');
 	const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br")[0];
 	var playerd = contentPieces[1];	
@@ -339,6 +425,22 @@ connection.on('message', function (message,actor,scope) {
 	for (i=2; i <= contentPieces.length-1;i++) {		
 		playerd = playerd + ' '+contentPieces[i];}} // arg playerd may have multiple words, so combine everything afters command into one var
 	console.log(message);
+	if (privateMessage == false && isChat == true && startchat == true){
+	var playerd = contentPieces[0];	
+	if (contentPieces.length > 1){
+	for (i=1; i <= contentPieces.length-1;i++) {		
+		playerd = playerd + ' '+contentPieces[i];}}
+	if (playerd == undefined){
+		connection.user.channel.sendMessage("Sorry, there was nothing to respond to!");}
+	else {
+		playerd = '@zo '+playerd;
+		function hi(){
+		console.log("Success!");}
+		API.Messages.create(ACCESS_TOKEN,GROUP_ID,{message:{ text:playerd, attachments: [{type:"mentions", user_ids: [46185459], loci: [[0,3]] }]}},hi);
+	}
+		
+		
+		console.log(playerd);}
  	if (isCommand && privateMessage) {
 		switch( command ) {
 			case 'backup': // this case is uneeded since function backup runs after each write/splice, but is kept as a redundant measure.
@@ -349,7 +451,7 @@ connection.on('message', function (message,actor,scope) {
 					reply = tohelp;}
 				break;
 			case 'ban': // bans player from the server, playerd defines the reason and lists the actor name at the end.
-				if (whitelist.indexOf(actor.name)>-1) {
+				if (whitelist.indexOf(actor.name)>-1 || mods.indexOf(actor.name)>-1 ) {
 					var playerd = contentPieces[2];	
 						if (contentPieces.length > 3){
 							for (i=3; i <= contentPieces.length-1;i++) {		
@@ -376,6 +478,20 @@ connection.on('message', function (message,actor,scope) {
 				break;
 			case 'cats': // sends multiple cats to the user.
 				reply = "<br/>"+cats()+"<br/>"+cats()+"<br/>"+cats()+"<br/>"+cats()+"<br/>"+cats();
+				break;
+			case 'chat':
+				if(whitelist.indexOf(actor.name)>-1){
+				if (startchat == false){
+					startchat = true;
+				connection.user.channel.sendMessage("<br/>Chat mode has been enabled! To chat with the bot, preface your chat with the @ symbol like this @hi bot!");
+				incoming.disconnect();
+				incoming.connect(); }
+				else {
+					startchat = false;
+				connection.user.channel.sendMessage("<br/>Chat mode has been disabled! :c");
+				incoming.disconnect();}}
+				else {
+				reply = tohelp; }
 				break;
 			case 'draft': // draftstart=1 when draft is active, playerd defines the player to draft in the tournament.
 				if (draftstart == 0) {
@@ -411,10 +527,15 @@ connection.on('message', function (message,actor,scope) {
 					reply = 'The draft has been completed! Thanks for drafting! C:';}
 				break;
 			case 'find': // gives a url to a player on the server, playerd defines user to find, case-insensitive.
+				if (playerd != undefined){				
+				if (playerd == 'Cryanide'){
+				playerd = 'Cyanide';}
 				if (usersl.indexOf(playerd.toLowerCase()) > -1){
 				playerd = usersf[usersl.indexOf(playerd.toLowerCase())];}
 				if (connection.userByName(playerd) == undefined){
-				reply = 'Sorry, a player with that name could not be found.';}
+					if (playerd == 'Cyanide'){
+					playerd = 'Cryanide';}
+				reply = 'Sorry, '+playerd+' could not be found.';}
 				else {
 					var parentc = [];
 					parentc.unshift(connection.userByName(playerd).channel.name);
@@ -427,7 +548,12 @@ connection.on('message', function (message,actor,scope) {
 					console.log('test');
 					console.log(mumbleurl);
 					console.log(parentc);
+					if (playerd == 'Cyanide'){
+					playerd = 'Cryanide';}					
 					reply = '<br/>'+playerd+' was found in <a href="'+mumbleurl+'"><span style="color:#39a5dd">'+parentc[parentc.length-1]+'</span></a>';}
+				}
+				else {
+				reply = '<br/> A user could not be found! Please make sure to specify a user in the command like this: !find Cryanide';}
 				break;
 			case 'getmail': // manual getmail command, playerd is uneeded in this case.
 				getmail(actor);
@@ -497,9 +623,15 @@ connection.on('message', function (message,actor,scope) {
 				playerd = 'sphere';}
 				else{
 				playerd = playerd.toLowerCase();}
+				if (playerd == 'maptest' || playerd == 'maptest2' || playerd == 'maptest3'){
+					groupbuild = 'http://'+playerd+'.newcompte.fr/groups/create';
+				groupsend = 'http://'+playerd+'.newcompte.fr/groups/';}
+				else if (playerd == 'test'){
+					groupbuild = 'test';
+				groupdsend = 'test';}
+				else {
 				groupbuild = 'http://tagpro-'+playerd+'.koalabeast.com/groups/create';
-				groupsend = 'http://tagpro-'+playerd+'.koalabeast.com/groups/';
-				groupid;
+				groupsend = 'http://tagpro-'+playerd+'.koalabeast.com/groups/';}
 				request(
 					{ method: 'POST'
 					, uri: groupbuild
@@ -508,7 +640,7 @@ connection.on('message', function (message,actor,scope) {
 					, body : JSON.stringify({public: "off"})}]}
 					, function (error, response, body) {
 					if (response != null){
-					groupid = body.replace("Found. Redirecting to /groups/","");
+					groupid = body.split("/groups/")[body.split("/groups/").length-1];
 					console.log(groupsend+groupid);
 					reply = '<br/>Here is your '+playerd+' group:<br/><br/><a href="'+groupsend+groupid+'"><span style="color:#39a5dd">'+groupsend+groupid+'</span></a>';}
 					else {
@@ -549,7 +681,7 @@ connection.on('message', function (message,actor,scope) {
 				reply = 'TToC, or the TagPro Tournament of Champions is a regular tournament hosted on the NA TagPro Mumble Server. Signups are usually released at 9:30 PM CST, with the draft starting at around 10:15 PM CST. I am a bot designed to run seasons of TToC. If you have any further questions, feel free to message Poeticalto on the Mumble server or /u/Poeticalto on Reddit.';
 				break;
 			case 'lock': // prevents users from entering the channel [note move to does not work if the bot does not have permissions to move]
-				if (whitelist.indexOf(actor.name) > -1){
+				if (whitelist.indexOf(actor.name) > -1 || mods.indexOf(actor.name)){
 				if (lockchannel.indexOf(actor.channel.name) == -1 && lockschannel.indexOf(actor.channel.name) == -1){				
 				connection.channelByName(actor.channel.name).sendMessage(actor.name+' has put this channel on lockdown! No new users will be allowed unless moved by a whitelisted user.');
 				console.log(actor.channel.name+' has been put on lockdown');
@@ -587,7 +719,7 @@ connection.on('message', function (message,actor,scope) {
 				actor.sendMessage(tohelp);}
 				break;
 			case 'kick': // kicks player from the server, playerd defines reason.
-				if (whitelist.indexOf(actor.name)>-1) {
+				if (whitelist.indexOf(actor.name)>-1 || mods.indexOf(actor.name) >-1 ) {
 					var playerd = contentPieces[2];	
 						if (contentPieces.length > 3){
 							for (i=3; i <= contentPieces.length-1;i++) {		
@@ -601,8 +733,7 @@ connection.on('message', function (message,actor,scope) {
 				reply = tohelp;}
 				break;
 			case 'mail': // creates mail to send to another user.		
-				if (playerd == undefined){
-				if (blacklist.indexOf(actor.name) == -1){
+			if (blacklist.indexOf(actor.name) == -1 && playerd != undefined){
 				var mailusertemp = contentPieces[1];
 				var mailmestemp = contentPieces[2];
 				for (i=3; i <= contentPieces.length-1;i++) {		
@@ -612,13 +743,17 @@ connection.on('message', function (message,actor,scope) {
 				mailmessage.push(mailmestemp);
 				reply = 'Your mail has been successfully created! Your receiver will receive it when they enter the server or use the !getmail command! c:';
 				backup();}
+				else if (playerd == undefined){
+				reply = 'A mail message was not detected! Please add a message in the form !mail user command [Ex. !mail Cryanide hi]';
+				}
 				else {
-				reply = "You don't have permission to do that! :c";}}
-				else {
-				reply = "No message was detected, please put one in before sending! c:";}	
+				reply = "You don't have permission to do that! :c";}
 				break;
 			case 'map': // sends the map link for the tournament
 				reply = '<br/>The map for tonight is: <a href="'+ssmaplink+'"><b><i><span style="color:#00557f">'+ssmap+'</span></i></b></a>';
+				break;
+			case 'mods':
+				reply = '<br/> Here are the mods currently on: <br/>'+modsmum+'<br/>To find any of these mods, use the !find command! c:';
 				break;
 			case 'motd': // sends the message of the day
 				reply = motd;
@@ -805,6 +940,7 @@ connection.on('message', function (message,actor,scope) {
 				reply = tohelp;
 				break;
 }
+
 	if (command != 'getmail' || command != 'group' || command != 'lock' || command != 'lock+' || command != 'here' || command != 'trade' || reply != ''){
 		console.log(reply);
 		actor.sendMessage(reply);}
@@ -832,11 +968,11 @@ user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you wan
 	}});
 
    connection.on('user-move', function(user, fromChannel, toChannel, actor) { // user-move is the event emitted when a user switches channels
-	if ((lockchannel.indexOf(toChannel.name) > -1 || lockschannel.indexOf(toChannel.name) > -1) && actor.name != 'TToC_BOT' && whitelist.indexOf(actor.name) == -1){ // prevents user from entering if channel is locked.
+	if ((lockchannel.indexOf(toChannel.name) > -1 || lockschannel.indexOf(toChannel.name) > -1) && actor.name != 'TToC_BOT' && (whitelist.indexOf(actor.name) == -1 || mods.indexOf(actor.name) == -1)){ // prevents user from entering if channel is locked.
 		user.moveToChannel('TToC');
 		user.sendMessage('Sorry, you cannot enter this channel right now. :c');
 		connection.channelByName(toChannel.name).sendMessage(user.name+' was prevented from entering this channel!');}
-	else if (lockschannel.indexOf(fromChannel.name) > -1 && actor.name != 'TToC_BOT' && whitelist.indexOf(actor.name) == -1){ // prevents user from leaving is channel is on super lockdown.
+	else if (lockschannel.indexOf(fromChannel.name) > -1 && actor.name != 'TToC_BOT' && (whitelist.indexOf(actor.name) == -1 || mods.indexOf(actor.name) == -1)){ // prevents user from leaving is channel is on super lockdown.
 		user.moveToChannel(fromChannel.name);
 		user.sendMessage('Sorry, you cannot leave this channel right now. :c');
 		connection.channelByName(fromChannel.name).sendMessage(user.name+' was prevented from leaving this channel!');}
@@ -844,7 +980,11 @@ user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you wan
 	connection.user.channel.sendMessage('Welcome to '+toChannel.name+' '+user.name+'!');}
 	if(mailuser.indexOf(user.name)>-1){
 	user.sendMessage("This is an automated reminder from TToC_BOT that you have some mail! Message !getmail to me when you're ready to receive it! c:");}
-});
+	if (toChannel.name == 'In-Game Moderators Assistance Room' && mods.indexOf(user.name) == -1){
+	user.sendMessage('<br/>Welcome to the In-Game Moderators Assistance Room! If you want a list of mods currently on Mumble, use the !mods command. <br/><br/>If there is not a mod available, try going to the IRC channel by <a href="http://webchat.freenode.net/?channels=tpmods"><b><span style="color:#39a5dd">clicking here</span></b></a>, where a mod is almost always availble to help there! c:');
+	reply = '[NA Mumble] '+user.name+' is waiting in the In-Game Moderators Assistance Room!';
+	sendtoslack(slackchannel,reply);}
+	});
 
 function sheetsetup() { // sets up the form and sheet for a season.
 	console.log('setupsheet has been activated!');
@@ -1070,5 +1210,14 @@ function getmail(actor) { // gets mail from arrays
 	backup();}
 	else{
 	actor.sendMessage("Sorry, you don't have any mail. :c");}}
+	
+function sendtoslack(cid,message) {
+		web.chat.postMessage(cid,message, function(err, res){
+		if (err) {
+		console.log('Error:', err);}
+		else {
+		console.log('Message sent: ', res);}})
+}
+
 
 });
