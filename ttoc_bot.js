@@ -28,6 +28,7 @@ var tohelp = 'Sorry, I did not recognize that. Use !help for a list of public co
 var sadbot = "<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)";
 var mumbleurl = 'mumble.koalabeast.com';
 var bot_info = 'TToC, or the TagPro Tournament of Champions is a regular tournament hosted on the NA TagPro Mumble Server. Signups are usually released at 9:30 PM CST, with the draft starting at around 10:15 PM CST. I am a bot designed to run seasons of TToC. If you have any further questions, feel free to message Poeticalto on the Mumble server or /u/Poeticalto on Reddit.'
+var bot_comment = help;
 
 // The following are defaults for the various functions
 var mailuser = [];
@@ -354,7 +355,7 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
     connection.on( 'initialized', function () {
         console.log('connection ready');
 		connection.user.setSelfDeaf(true); // mute/deafens the bot
-		connection.user.setComment(help); // sets the comment for the bot
+		connection.user.setComment(bot_comment); // sets the comment for the bot
     });
     
 	// Initialize slack/groupme connections

@@ -24,7 +24,7 @@ ttoc-mumble-bot requires a certificate in order to connect to a mumble server, b
 
 You can use the following command to generate a certificate: <pre><code> openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem </code></pre>
 
-ttoc-mumble-bot saves all information in .txt files. I'm working on making a better system, but this works for now. All .txt files which don't have API info are created on first launch by the bot.
+ttoc-mumble-bot saves all information in .txt files. I'm working on making a better system, but this works for now. All .txt files which don't have API info are created on first launch by the bot if they don't already exist.
 
 Info on how to set up the three APIs can be found in later sections of this readme.
 
@@ -99,9 +99,13 @@ Google API/Google Sheets requires an OAuth token for any attempt to run scripts/
 
 If you have never created a project via Google API, [consult this guide.](https://developers.google.com/apps-script/guides/rest/quickstart/nodejs)
 
-ttoc-mumble-bot is natively set up to communicate with the [TToC Spreadsheet,](https://docs.google.com/spreadsheets/d/1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4/edit#gid=115661595) but if you want to make your own TagPro Tournament, you can make a copy of [this spreadsheet.]()
+ttoc-mumble-bot is natively set up to communicate with the [TToC Spreadsheet,](https://docs.google.com/spreadsheets/d/1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4/edit#gid=115661595) but if you want to make your own TagPro Tournament, you can make a copy of [this spreadsheet.]() Making a copy of this spreadsheet will also create a copy of the backbone scripts used to operate the spreadsheet.
 
-In order to work with the Google API, the options section must be adjusted with links to both the scripts and the spreadsheet being used.
+If you only want the backbone scripts, [you can find them here.]() You will have to change the code to match your setup, but it is well commented with its function.
+
+NOTE: Because the bot communicates with the Google API to run scripts on the cloud, your scripts must be 'Deployed as an API Executable' through the Publish menu in the script editor.
+
+The options section must be adjusted with links to both the scripts and the spreadsheet being used.
 
 ---
 
@@ -189,7 +193,7 @@ Here is a list of whitelist commands:
 
 !lock - prevents users from entering the actor's channel. Users on the moderators group or whitelist can bypass the lock, as well as any users moved by a member of those groups.
 
-!lock+ - prevents users from entering or leaving the actor's channel. Users on the moderators group or whitelist can bypass the lock, as well as any users moved by a member of those groups.
+!lock+ - prevents users from entering or leaving the actor's channel. Users on the moderators group or whitelist can bypass the lock, as well as any users moved by a member of those groups. Also known as the hostage command.
 
 !kick user reason - kicks user from the Mumble Server. The actor is noted in the reason.
 
