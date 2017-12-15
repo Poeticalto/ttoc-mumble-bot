@@ -22,9 +22,25 @@ While API keys are required for each of these APIS, the bot will function (albei
 
 ttoc-mumble-bot requires a certificate in order to connect to a mumble server.
 
-You can use <pre><code>openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem</code></pre> to generate the certificate.
+You can use the following command to generate a certificate: <pre><code>openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem</code></pre>
 
-ttoc-mumble-bot saves all information in .txt files. I'll fix it at some point, but for now it works.
+ttoc-mumble-bot saves all information in .txt files. I'm working on making a better system, but this works for now. All .txt files which don't have API info are created on first launch by the bot.
+
+Here's how each .txt file is structured:
+
+blacklist.txt = This .txt file holds mumble users on the blacklist, one per line.
+
+greylist.txt = This .txt file holds mumble users on the greylist, one per line.
+
+groupmekey.txt = This .txt file holds API info for the [GroupMe API](https://dev.groupme.com/docs/v3) as follows:
+
+Line # | Content | Description
+:---: | :---: | :---:
+1 | ACCESS_TOKEN | This is the access token for your account, not the bot.
+2 | USER_ID | This is your user id, not the bot.
+3 | GMBOT | This is the name of your groupme bot.
+4 | USER_NAME | This is your name in the group, can be used to filter out your messages.
+5 | GROUP_ID | This is the group to listen to.
 
 ---
 
