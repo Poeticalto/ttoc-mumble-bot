@@ -20,6 +20,7 @@ var API = GroupMe.Stateless;
 // CUSTOM SETTINGS FOR THE BOT
 var botname = 'TToC_BOT';
 var bot_home = 'Meep is God'; // This is used for the !home command to return the bot to a predefined location.
+var botmove = 'TToC'; // This is used to move users when a channel is on lockdown.
 var scriptId = 'MR8ANgNM86TUijo7WF5u3bAUVXR8RJHBv'; // This ID corresponds to the TToC scripts
 var spreadsheetId = '1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4'; // This ID goes to the TToC Spreadsheet
 var help = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!greet</b> <b><span style="color:#aa0000">message </span></b>- Sets a greeting for the user that will be sent on connect.<br/><b>!greetcat</b> - '+botname+' will greet the user with a cat that will be sent on connect.<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets '+botname+' send messages again.<br/><b>!time</b> - Gives user the time of the draft';
@@ -1037,7 +1038,7 @@ user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you wan
 
    connection.on('user-move', function(user, fromChannel, toChannel, actor) { // user-move is the event emitted when a user switches channels
 	if ((lockchannel.indexOf(toChannel.name) > -1 || lockschannel.indexOf(toChannel.name) > -1) && actor.name != botname && (whitelist.indexOf(actor.name) == -1 || mods.indexOf(actor.name) == -1)){ // prevents user from entering if channel is locked.
-		user.moveToChannel('TToC');
+		user.moveToChannel(botmove);
 		user.sendMessage('Sorry, you cannot enter this channel right now. :c');
 		connection.channelByName(toChannel.name).sendMessage(user.name+' was prevented from entering this channel!');}
 	else if (lockschannel.indexOf(fromChannel.name) > -1 && actor.name != botname && (whitelist.indexOf(actor.name) == -1 || mods.indexOf(actor.name) == -1)){ // prevents user from leaving is channel is on super lockdown.
