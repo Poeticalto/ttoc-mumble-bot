@@ -20,11 +20,13 @@ While API keys are required for each of these APIS, the bot will function (albei
 
 ## Setup
 
-ttoc-mumble-bot requires a certificate in order to connect to a mumble server.
+ttoc-mumble-bot requires a certificate in order to connect to a mumble server, but doesn't require anything else to be functional.
 
 You can use the following command to generate a certificate: <pre><code>openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem</code></pre>
 
 ttoc-mumble-bot saves all information in .txt files. I'm working on making a better system, but this works for now. All .txt files which don't have API info are created on first launch by the bot.
+
+Info on how to set up the three APIS can be found in later sections of this readme.
 
 Here's how each .txt file is structured:
 
@@ -41,6 +43,41 @@ Line # | Content | Description
 3 | GMBOT | This is the name of your groupme bot.
 4 | USER_NAME | This is your name in the group, can be used to filter out your messages.
 5 | GROUP_ID | This is the group to listen to.
+
+mailmessage.txt = This .txt file is part of the mail system and holds the message to send to other Mumble users, one per line.
+
+mailsender.txt = This .txt file is part of the mail system and holds the sender of the message, one per line.
+
+mailuser.txt = This .txt file is part of the mail system and holds the receiver of the message, one per line.
+
+moderators.txt = This .txt file holds the mumble users in the moderators group, one per line.
+
+motd.txt = This .txt file holds motd messages for the motd system, one per line.
+
+slacktoken.txt = This .txt file holds API info for the [Slack API](https://api.slack.com/custom-integrations/web) as follows:
+
+Line # | Content | Description
+:---: | :---: | :---:
+1 | slacktoken | This uses a [legacy token](https://api.slack.com/custom-integrations/legacy-tokens) to communicate with slack.
+2 | slackchannel | This is the channel id for the Slack Channel receiving messages.
+
+sslink.txt = This .txt file holds information from the spreadsheet for The TagPro Tournament of Champions. Its format is as follows:
+
+Line # | Content | Description
+:---: | :---: | :---:
+1 | name [unused in code] | Name/identifier of the tournament
+2 | seasonnum | Season # of the tournament
+3 | server [unused in code] | Server of the tournament
+4 | ssmap | Name of the map being played
+5 | ssmaplink | link to a .png of the map being played
+6 | ssform | link to the form of the tournament
+7 | sslink | link to the tournament spreadsheet
+
+welcomemessage.txt = This .txt file is part of the greeting system and holds user greetings, one per line.
+
+welcomeuser.txt = This .txt file is part of the greeting system and holds users associated with greetings, one per line.
+
+whitelist.txt = This .txt holds mumble users on the whitelist, one per line.
 
 ---
 
