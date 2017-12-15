@@ -14,7 +14,7 @@ Slack API - used to send automated messages on user kick/ban
 
 GroupMe API- used as a chat bridge to connect a group and a mumble channel
 
-While API keys are required for each of these APIS, the bot will function (albeit without the commands which use the APIS) just fine without them.
+While API keys are required for each of these APIS, the bot will function (albeit without the commands which use the APIs) just fine without them.
 
 ---
 
@@ -26,7 +26,7 @@ You can use the following command to generate a certificate: <pre><code>openssl 
 
 ttoc-mumble-bot saves all information in .txt files. I'm working on making a better system, but this works for now. All .txt files which don't have API info are created on first launch by the bot.
 
-Info on how to set up the three APIS can be found in later sections of this readme.
+Info on how to set up the three APIs can be found in later sections of this readme.
 
 Here's how each .txt file is structured:
 
@@ -93,6 +93,38 @@ Users: Regular users have access to public commands.
 
 ---
 
+## Connecting to the Google API
+
+Google API/Google Sheets requires an OAuth token for any attempt to run scripts/work on spreadsheets.
+
+If you have never created a project via Google API, [consult this guide.](https://developers.google.com/apps-script/guides/rest/quickstart/nodejs)
+
+ttoc-mumble-bot is natively set up to communicate with the [TToC Spreadsheet,](https://docs.google.com/spreadsheets/d/1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4/edit#gid=115661595) but if you want to make your own TagPro Tournament, you can make a copy of [this spreadsheet.]()
+
+In order to work with the Google API, the options section must be adjusted with links to both the scripts and the spreadsheet being used.
+
+---
+
+## Connecting to the Slack API
+
+Slack requires an API token to utilize the API, [which can be retrieved here.](legacy token](https://api.slack.com/custom-integrations/legacy-tokens))
+
+In order to send messages to a channel, you need a channel ID, which can be found by visiting slack in a web browser and going to said channel.
+
+[Click here if you need some more info on the node library for Slack.](https://github.com/slackapi/node-slack-sdk)
+
+---
+
+## Connecting to the GroupMe API
+
+GroupMe requires an API token to utilize the API, [which can be retrieved here.](https://dev.groupme.com/bots)
+
+Follow the table above to see how to set up the .txt file for the GroupMe API.
+
+[Click here if you need more info on the node library for GroupMe.](https://github.com/njoubert/node-groupme)
+
+---
+
 ## Public Commands
 
 Here is a list of public commands:
@@ -100,6 +132,8 @@ Here is a list of public commands:
 !cat - Gives one cat.
 
 !cats - Want more cats? How about five?
+
+!find user - If the user is on the Mumble Server, a link will be provided to move to their channel. User is case-insensitive.
 
 !greet message - Sets a greeting for the user that will be sent on connect.
 
@@ -119,6 +153,8 @@ Here is a list of public commands:
 
 !map - Gives user the map for the current season
 
+!mods - Lists the mods currently connected to the Mumble Server.
+
 !motd - Gives the current motd of the bot.
 
 !qak - qak
@@ -130,3 +166,55 @@ Here is a list of public commands:
 !stop - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets TToC_BOT send messages again.
 
 !time - Gives user the time of the draft.
+
+---
+
+## Whitelist Commands/Behaviors
+
+Here is a list of whitelist commands:
+
+!backup - redundant command since backup happens every time a .txt file is changed, but it's kept just in case.
+
+!ban user reason - bans user from the Mumble Server. The actor is noted in the reason.
+
+!blacklist user- adds user to the blacklist.
+
+!chat - activates/deactivates the GroupMe bridge. Will send messages back and forth between a GroupMe group and the Mumble Channel.
+
+!ggadd url name - This isn't a whitelist command but is disabled by default. Adds a link to the bot which can be accessed by the !gg command.
+
+!here - moves the bot to the actor's channel.
+
+!home - moves the bot to its predefined home.
+
+!lock - prevents users from entering the actor's channel. Users on the moderators group or whitelist can bypass the lock, as well as any users moved by a member of those groups.
+
+!lock+ - prevents users from entering or leaving the actor's channel. Users on the moderators group or whitelist can bypass the lock, as well as any users moved by a member of those groups.
+
+!kick user reason - kicks user from the Mumble Server. The actor is noted in the reason.
+
+!setgreet user message - allows a whitelisted user to set a custom greeting for any Mumble user.
+
+!setgreetcat user - allows a whitelisted user to set a custom cat greeting for any Mumble user.
+
+!setupdraft - Connects to the Google Scripts API and sets up a draft board.
+
+!setupsheet - Connects to the Google Scripts API and sets up a new season for the tournament.
+
+!trade captain1 captain2 -trades the position of two captains on the draft board.
+
+!updatelinks - Connects to the Google Sheets API and retrieves links to everything.
+
+!updatemotd line# - Allows a user to set custom motd messages as the active one.
+
+!whitelist user - Adds user to the whitelist.
+
+### Whitelist non-commands
+
+Whitelisted users also have some fun behavior relating to the bot:
+
+Giving priority speaker to a user will move the user to the same channel as the bot. This functionality also works if you do it on yourself.
+
+Giving priority speaker to the bot will move the bot to the same channel as the user.
+
+---
