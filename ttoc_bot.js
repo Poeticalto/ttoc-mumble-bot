@@ -39,17 +39,20 @@ var sslink;
 var whitelist = ['Poeticalto','Poeticaltwo']; 
 var blacklist = []; 
 var greylist = [];
+var mods = [];
 var welcomeuser;
-var welcomemessage; 
+var welcomemessage;
+var slackauth = false;
 var slackchannel = undefined; 
-var slacktoken = undefined; 
-var mods = undefined;
+var slacktoken = undefined;
+var groupmeauth = false; 
 var ACCESS_TOKEN = undefined; 
 var GROUP_ID = undefined; 
 var USER_NAME = undefined; 
 var GMBOT = undefined; 
 var USER_ID = undefined;
 var bot_id = null;
+var gauth = false;
 var gappkey;
 
 // for each file, replaces the defaults if it exists.
@@ -90,6 +93,7 @@ if (fs.existsSync('slacktoken.txt')){
 slacktoken = fs.readFileSync('slacktoken.txt').toString().split("\n");
 slackchannel = slacktoken[1];													// slackchannel is the channel to send notifs to on slack
 slacktoken = slacktoken[0];														// slacktoken is the API key to talk to slack
+slackauth = true;
 console.log('Slack keys imported from slacktoken.txt!');}
 if (fs.existsSync('moderators.txt')){
 mods = fs.readFileSync('moderators.txt').toString().split("\n");				// mods is the mod list for the bot
@@ -101,6 +105,7 @@ USER_NAME = ACCESS_TOKEN[3];													// USER_NAME is your groupme name in th
 GMBOT = ACCESS_TOKEN[2];														// GMBOT is the name of your groupme bot
 USER_ID = ACCESS_TOKEN[1];														// USER_ID is your user id [not the bot id]
 ACCESS_TOKEN = ACCESS_TOKEN[0];														// ACCESS_TOKEN is your groupme access token
+groupmeauth = true;
 console.log('GroupMe keys imported from groupmekey.txt!');}
 // Defines the certificates to connect to the mumble server through node-mumble
 var options = {
@@ -113,6 +118,7 @@ var options = {
 // https://developers.google.com/apps-script/guides/rest/quickstart/nodejs
 
 // Load client secrets from a local file.
+if (fs.existsSync('client_secret.json')){
 fs.readFile('client_secret.json', function processClientSecrets(err, content) {
   if (err) {
     console.log('Error loading client secret file: ' + err);
@@ -121,7 +127,9 @@ fs.readFile('client_secret.json', function processClientSecrets(err, content) {
   // Authorize a client with the loaded credentials, then call the
   // Google Apps Script Execution API.
   gappkey = content;
+  gauth = true;
 });
+}
 
 function authorize(credentials, callback) {
   var clientSecret = credentials.installed.client_secret;
@@ -317,8 +325,16 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
     });
     
 	// Initialize slack/groupme connections
-	var web = new WebClient(slacktoken);
-	var incoming = new GroupMe.IncomingStream(ACCESS_TOKEN, USER_ID, null);
+	if (slackauth == true){
+	var web = new WebClient(slacktoken);}
+	else {
+	console.log('Slack token was not imported, you will not be able to use Slack functionality at this time. :c');
+	var web;}
+	if (groupmeauth == true){
+	var incoming = new GroupMe.IncomingStream(ACCESS_TOKEN, USER_ID, null);}
+	else{
+	console.log('GroupMe auth was not imported, you will not be able to use GroupMe functionality at this time. :c');
+	var incoming;}
 	
     incoming.on('connected', function() { // gets remaining info needed for bot to run.
         console.log("[IncomingStream 'connected']");
@@ -357,10 +373,12 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
 	connection.on('userRemove', function (data) {
 	if (data.actor != null && data.ban == false){
 	reply = '[NA Mumble] '+connection.userBySession(data.actor).name+' kicked '+sessionsu[sessions.indexOf(data.session)]+': '+data.reason;
-	sendtoslack(slackchannel,reply);}
+	if (slackauth == true){
+	sendtoslack(slackchannel,reply);}}
 	else if (data.actor != null && data.ban == true) {
 	reply = '[NA Mumble] '+connection.userBySession(data.actor).name+' banned '+sessionsu[sessions.indexOf(data.session)]+': '+data.reason;
-	sendtoslack(slackchannel,reply);}
+	if (slackauth == true){
+	sendtoslack(slackchannel,reply);}}
 	})
 
 var users = [];
@@ -429,8 +447,6 @@ connection.on('user-priority-speaker', function(user, status, actor) {
 	connection.user.channel.sendMessage(actor.name+' has moved '+user.name+' to '+connection.user.channel.name+'!');}}
 });
 
-
-
 connection.on('message', function (message,actor,scope) {	
 	console.log(actor.name);
 	reply = "";
@@ -452,14 +468,12 @@ connection.on('message', function (message,actor,scope) {
 		playerd = playerd + ' '+contentPieces[i];}}
 	if (playerd == undefined){
 		connection.user.channel.sendMessage("Sorry, there was nothing to respond to!");}
-	else {
+	else if (groupmeauth == true){
 		playerd = '@zo '+playerd;
 		function hi(){
 		console.log("Success!");}
 		API.Messages.create(ACCESS_TOKEN,GROUP_ID,{message:{ text:playerd, attachments: [{type:"mentions", user_ids: [46185459], loci: [[0,3]] }]}},hi);
 	}
-		
-		
 		console.log(playerd);}
  	if (isCommand && privateMessage) {
 		switch( command ) {
@@ -501,6 +515,7 @@ connection.on('message', function (message,actor,scope) {
 				break;
 			case 'chat':
 				if(whitelist.indexOf(actor.name)>-1){
+				if (groupmeauth == true){
 				if (startchat == false){
 					startchat = true;
 				connection.user.channel.sendMessage("<br/>Chat mode has been enabled! To chat with the bot, preface your chat with the @ symbol like this @hi bot!");
@@ -510,6 +525,8 @@ connection.on('message', function (message,actor,scope) {
 					startchat = false;
 				connection.user.channel.sendMessage("<br/>Chat mode has been disabled! :c");
 				incoming.disconnect();}}
+				else{
+				connection.user.channel.sendMessage("GroupMe functionality has not been enabled! Chat mode is not activated. :c");}}
 				else {
 				reply = tohelp; }
 				break;
@@ -999,7 +1016,8 @@ user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you wan
 	if (toChannel.name == 'In-Game Moderators Assistance Room' && mods.indexOf(user.name) == -1){
 	user.sendMessage('<br/>Welcome to the In-Game Moderators Assistance Room! If you want a list of mods currently on Mumble, use the !mods command. <br/><br/>If there is not a mod available, try going to the IRC channel by <a href="http://webchat.freenode.net/?channels=tpmods"><b><span style="color:#39a5dd">clicking here</span></b></a>, where a mod is almost always availble to help there! c:');
 	reply = '[NA Mumble] '+user.name+' is waiting in the In-Game Moderators Assistance Room!';
-	sendtoslack(slackchannel,reply);}
+	if (slackauth == true){
+	sendtoslack(slackchannel,reply);}}
 	});
 
 function sheetsetup() { // sets up the form and sheet for a season.
