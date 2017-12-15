@@ -2,6 +2,8 @@
 
 ---
 
+## General Info
+
 ttoc-mumble-bot is a bot written in node.js designed for the TagPro Tournament of Champions and operated through the NA TagPro Mumble Server.
 
 This bot is designed to utilize three apis in addition to the node-mumble package [used to connect to the mumble server]:
@@ -16,7 +18,19 @@ While API keys are required for each of these APIS, the bot will function (albei
 
 ---
 
-There are also three groups of users associated with the bot:
+## Setup
+
+ttoc-mumble-bot requires a certificate in order to connect to a mumble server.
+
+You can use <pre><code>openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem</code></pre> to generate the certificate.
+
+ttoc-mumble-bot saves all information in .txt files. I'll fix it at some point, but for now it works.
+
+---
+
+## User Groups
+
+There are three groups of users recognized by the bot:
 
 Whitelist: Whitelisted users have access to all commands.
 
@@ -25,6 +39,8 @@ Moderators: Moderators have access to public commands, lock, and kicking/banning
 Users: Regular users have access to public commands.
 
 ---
+
+## Public Commands
 
 Here is a list of public commands:
 
