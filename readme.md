@@ -1,6 +1,24 @@
 # ttoc-mumble-bot 
 
-This is a bot designed for the TagPro Tournament of Champions through a mumble server.
+ttoc-mumble-bot is a bot written in node.js designed for the TagPro Tournament of Champions and operated through the NA TagPro Mumble Server.
+
+This bot is designed to utilize three apis in addition to the node-mumble package:
+
+Google API- used to communicate with the TToC spreadsheet and run seasons
+
+Slack API - used to send automated messages on user kick/ban
+
+GroupMe API- used as a chat bridge to connect a group and a mumble channel
+
+While API keys are required for each of these APIS, the bot will function (albeit without the commands which use the APIS) just fine without them.
+
+There are also three groups of users associated with the bot:
+
+Whitelist: Whitelisted users have access to all commands.
+
+Moderators: Moderators have access to public commands, lock, and kicking/banning users through the bot. Mostly used as an identifier for TagPro mods.
+
+Users: Regular users have access to public commands.
 
 Here is a list of public commands:
 
