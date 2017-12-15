@@ -111,7 +111,9 @@ The options section must be adjusted with links to both the scripts and the spre
 
 ## Connecting to the Slack API
 
-Slack requires an API token to utilize the API, [which can be retrieved here.](legacy token](https://api.slack.com/custom-integrations/legacy-tokens))
+Slack requires an API token to utilize the API, [which can be retrieved here.](https://api.slack.com/custom-integrations/legacy-tokens)
+
+Right now, ttoc-mumble-bot is connected via a legacy token. Integration support will be added if it ever happens.
 
 In order to send messages to a channel, you need a channel ID, which can be found by visiting slack in a web browser and going to said channel.
 
@@ -222,3 +224,11 @@ Giving priority speaker to a user will move the user to the same channel as the 
 Giving priority speaker to the bot will move the bot to the same channel as the user.
 
 ---
+
+## Todo
+
+1. Ability to reset seasons
+
+2. Piping audio through node-mumble-audio
+
+3. Code cleanup/refactoring
