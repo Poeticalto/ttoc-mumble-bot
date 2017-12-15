@@ -19,12 +19,14 @@ var API = GroupMe.Stateless;
 
 // CUSTOM SETTINGS FOR THE BOT
 var botname = 'TToC_BOT';
+var bot_home = 'Meep is God'; // This is used for the !home command to return the bot to a predefined location.
 var scriptId = 'MR8ANgNM86TUijo7WF5u3bAUVXR8RJHBv'; // This ID corresponds to the TToC scripts
 var spreadsheetId = '1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4'; // This ID goes to the TToC Spreadsheet
 var help = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!greet</b> <b><span style="color:#aa0000">message </span></b>- Sets a greeting for the user that will be sent on connect.<br/><b>!greetcat</b> - '+botname+' will greet the user with a cat that will be sent on connect.<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets '+botname+' send messages again.<br/><b>!time</b> - Gives user the time of the draft';
 var tohelp = 'Sorry, I did not recognize that. Use !help for a list of public commands! c:';
 var sadbot = "<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)";
 var mumbleurl = 'mumble.koalabeast.com';
+var bot_info = 'TToC, or the TagPro Tournament of Champions is a regular tournament hosted on the NA TagPro Mumble Server. Signups are usually released at 9:30 PM CST, with the draft starting at around 10:15 PM CST. I am a bot designed to run seasons of TToC. If you have any further questions, feel free to message Poeticalto on the Mumble server or /u/Poeticalto on Reddit.'
 
 // The following are defaults for the various functions
 var mailuser = [];
@@ -60,15 +62,27 @@ var gappkey;
 if (fs.existsSync('whitelist.txt')) {
 whitelist = fs.readFileSync('whitelist.txt').toString().split("\n");			// whitelist is the superuser list for the bot
 console.log('Whitelist imported from whitelist.txt!');}
+else {
+fs.openSync('whitelist.txt', 'w');
+console.log('whitelist.txt was created!');}
 if (fs.existsSync('mailuser.txt')){
 mailuser = fs.readFileSync('mailuser.txt').toString().split("\n");      		//mailuser contains receivers of mail
 console.log('mailuser imported from mailuser.txt!');}
+else{
+fs.openSync('mailuser.txt','w');
+console.log('mailuser.txt was created!');}
 if (fs.existsSync('mailsender.txt')){
 mailsender = fs.readFileSync('mailsender.txt').toString().split("\n");   		//mailsender contains senders of mail
 console.log('mailsender imported from mailsender.txt!');}
+else{
+fs.openSync('mailsender.txt','w');
+console.log('mailsender.txt was created!');}
 if (fs.existsSync('mailmessage.txt')){
 mailmessage = fs.readFileSync('mailmessage.txt').toString().split("\n"); 		//mailmessage contains mail to send
 console.log('mailmessage imported from mailmessage.txt!');}
+else{
+fs.openSync('mailmessage.txt','w');
+console.log('mailmessage.txt was created!');}
 if (fs.existsSync('sslink.txt')){
 rows = fs.readFileSync('sslink.txt').toString().split("\n");
 seasonnum = rows[1]; 															// seasonnum refers to the season # of the tourney
@@ -77,18 +91,33 @@ ssmaplink = rows[4];															// ssmaplink is the link for the map
 sgnlink = rows[5];																// sgnlink is the signup link for the tourney
 sslink = rows[6];																// sslink is the spreadsheet link for the tourney
 console.log('Spreadsheet info imported from sslink.txt!');}
+else{
+fs.openSync('sslink.txt','w');
+console.log('sslink.txt was created!');}
 if (fs.existsSync('blacklist.txt')){
 blacklist = fs.readFileSync('blacklist.txt').toString().split("\n");			// blacklist is the bad user list for the bot
 console.log('Blacklist imported from blacklist.txt!');}
+else {
+fs.openSync('blacklist.txt','w');
+console.log('blacklist.txt was created!');}
 if (fs.existsSync('greylist.txt')){
 greylist = fs.readFileSync('greylist.txt').toString().split("\n");				// greylist prevents automated messages from the bot
 console.log('Greylist imported from greylist.txt!');}
+else {
+fs.openSync('greylist.txt','w');
+console.log('greylist.txt was created!');}
 if (fs.existsSync('welcomeuser.txt')){
 welcomeuser = fs.readFileSync('welcomeuser.txt').toString().split("\n");		// welcomeuser is the list of users who want welcome messages
 console.log('welcomeuser imported from welcomeuser.txt!');}
+else {
+fs.openSync('welcomeuser.txt','w');
+console.log('welcomeuser.txt was created!');}
 if (fs.existsSync('welcomemessage.txt')){
 welcomemessage = fs.readFileSync('welcomemessage.txt').toString().split("\n");	// welcomemessage is the message corresponding to the users who want welcomes
 console.log('welcomemessage imported from welcomemessage.txt!');}
+else {
+fs.openSync('welcomemessage.txt','w');
+console.log('welcomemessage.txt was created!');}
 if (fs.existsSync('slacktoken.txt')){
 slacktoken = fs.readFileSync('slacktoken.txt').toString().split("\n");
 slackchannel = slacktoken[1];													// slackchannel is the channel to send notifs to on slack
@@ -98,6 +127,9 @@ console.log('Slack keys imported from slacktoken.txt!');}
 if (fs.existsSync('moderators.txt')){
 mods = fs.readFileSync('moderators.txt').toString().split("\n");				// mods is the mod list for the bot
 console.log('moderators imported from moderators.txt!');}
+else {
+fs.openSync('moderators.txt','w');
+console.log('moderators.txt has been created!');}
 if (fs.existsSync('groupmekey.txt')){
 ACCESS_TOKEN = fs.readFileSync('groupmekey.txt').toString().split("\n");
 GROUP_ID = ACCESS_TOKEN[4];														// GROUP_ID is the group id to send groupme messages to
@@ -334,7 +366,7 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
 	var incoming = new GroupMe.IncomingStream(ACCESS_TOKEN, USER_ID, null);}
 	else{
 	console.log('GroupMe auth was not imported, you will not be able to use GroupMe functionality at this time. :c');
-	var incoming;}
+	var incoming=rl;}
 	
     incoming.on('connected', function() { // gets remaining info needed for bot to run.
         console.log("[IncomingStream 'connected']");
@@ -582,9 +614,6 @@ connection.on('message', function (message,actor,scope) {
 					var mumbleurl = 'mumble://mumble.koalabeast.com';
 				for (i = 0;i<parentc.length;i++){
 				mumbleurl = mumbleurl+'/'+parentc[i].replace(/ /g,"%20");}
-					console.log('test');
-					console.log(mumbleurl);
-					console.log(parentc);
 					if (playerd == 'Cyanide'){
 					playerd = 'Cryanide';}					
 					reply = '<br/>'+playerd+' was found in <a href="'+mumbleurl+'"><span style="color:#39a5dd">'+parentc[parentc.length-1]+'</span></a>';}
@@ -708,14 +737,17 @@ connection.on('message', function (message,actor,scope) {
 				break;
 			case 'home': // moves the bot back to a predefined home channel.
 				if (whitelist.indexOf(actor.name) > -1){
-					connection.user.moveToChannel('Meep is God');
-					connection.channelByName('Meep is God').sendMessage(actor.name+' has sent me to this channel!');
+					connection.user.moveToChannel(bot_home);
+					connection.channelByName(bot_home).sendMessage(actor.name+' has sent me to this channel!');
 				}
 				else {
 				actor.sendMessage(tohelp);}
 				break;
 			case 'info': // displays info about the bot
-				reply = 'TToC, or the TagPro Tournament of Champions is a regular tournament hosted on the NA TagPro Mumble Server. Signups are usually released at 9:30 PM CST, with the draft starting at around 10:15 PM CST. I am a bot designed to run seasons of TToC. If you have any further questions, feel free to message Poeticalto on the Mumble server or /u/Poeticalto on Reddit.';
+				reply = bot_info;
+				break;
+			case 'locklist':
+				reply = "Here are the channels currently on lockdown!";
 				break;
 			case 'lock': // prevents users from entering the channel [note move to does not work if the bot does not have permissions to move]
 				if (whitelist.indexOf(actor.name) > -1 || mods.indexOf(actor.name)){
@@ -755,7 +787,7 @@ connection.on('message', function (message,actor,scope) {
 				else {
 				actor.sendMessage(tohelp);}
 				break;
-			case 'kick': // kicks player from the server, playerd defines reason.
+			case 'kick': // kicks player from the server, playerd defines reason. [Bot needs permission to kick]
 				if (whitelist.indexOf(actor.name)>-1 || mods.indexOf(actor.name) >-1 ) {
 					var playerd = contentPieces[2];	
 						if (contentPieces.length > 3){
@@ -787,7 +819,10 @@ connection.on('message', function (message,actor,scope) {
 				reply = "You don't have permission to do that! :c";}
 				break;
 			case 'map': // sends the map link for the tournament
-				reply = '<br/>The map for tonight is: <a href="'+ssmaplink+'"><b><i><span style="color:#00557f">'+ssmap+'</span></i></b></a>';
+				if (setupstart == 1) {	
+				reply = '<br/>The map for tonight is: <a href="'+ssmaplink+'"><b><i><span style="color:#00557f">'+ssmap+'</span></i></b></a>';}
+				else {
+					reply = 'Signups have not been released yet, check back in a bit! c:';}
 				break;
 			case 'mods':
 				reply = '<br/> Here are the mods currently on: <br/>'+modsmum+'<br/>To find any of these mods, use the !find command! c:';
@@ -845,7 +880,7 @@ connection.on('message', function (message,actor,scope) {
 				}
 				break;
 			case 'setupdraft': // sets up the draft, playerd is uneeded.
-				if (whitelist.indexOf(actor.name)>-1) {
+				if (whitelist.indexOf(actor.name)>-1 && gauth == true) {
 					setupdraft = 1;
 					reply = 'Setting up draft now!';
 					draftsetup();}
@@ -853,7 +888,7 @@ connection.on('message', function (message,actor,scope) {
 					reply = tohelp;}
 				break;
 			case 'setupsheet': // sets up the form and sheet, playerd is uneeded.
-				if (whitelist.indexOf(actor.name)>-1) {
+				if (whitelist.indexOf(actor.name)>-1 && gauth == true) {
 					setupsheet = 1;
 					reply = 'Setting up sheet now!';
 					sheetsetup();
@@ -862,13 +897,13 @@ connection.on('message', function (message,actor,scope) {
 					reply = tohelp;}
 				break;
 			case 'signups': // replies with the signup link, playerd is uneeded.
-				if (setupstart !== 0) {				
+				if (setupstart == 1) {				
 					reply = '<a href="'+sgnlink+'"><b><span style="color:#aa0000"><br/>Click here for the signups!</span></b></a>';}
 				else {
 					reply = 'Signups have not been released yet, check back in a bit! c:';}				
 				break;
 			case 'spreadsheet': // replies with the spreadsheet link, playerd is uneeded.
-				if (setupstart !== 0) {				
+				if (setupstart == 1) {				
 					reply = '<br/><a href="'+sslink+'"><b><span style="color:#00007f">Click here for the spreadsheet!</span></b></a>';}
 				else {
 					reply = 'Signups have not been released yet, check back in a bit! c:';}				
@@ -892,13 +927,13 @@ connection.on('message', function (message,actor,scope) {
 				console.log(users[i]);}
 				break;
 			case 'time': // shows the time
-				if (setupstart !== 0) {
+				if (setupstart == 1) {
 				reply = 'TToC was treed at 9:30 PM CST and the draft will start at around 10:15 PM CST.';}
 				else {
 				reply = 'Signups have not been released yet, check back in a bit! c:';}	
 				break;
 			case 'trade': // trades two captains based on their position on the draft board. Requires two numbers for each trading party.
-				if (whitelist.indexOf(actor.name)>-1) {
+				if (whitelist.indexOf(actor.name)>-1 && gauth == true) {
 				values = [];
 				var tradec1 = contentPieces[1]-1;
 				var tradec2 = contentPieces[2]-1;
@@ -929,7 +964,7 @@ connection.on('message', function (message,actor,scope) {
 					reply = tohelp;}
 				break;
 			case 'updatelinks': // updates links from the spreadsheet, playerd is uneeded
-				if (whitelist.indexOf(actor.name)> -1){
+				if (whitelist.indexOf(actor.name)> -1 && gauth == true){
 				console.log('updating links!');
 				reply = 'Updating links!';
 				updatelinks();
