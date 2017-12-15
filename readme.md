@@ -6,9 +6,9 @@
 
 ttoc-mumble-bot is a bot written in node.js designed for the TagPro Tournament of Champions and operated through the NA TagPro Mumble Server.
 
-This bot is designed to utilize three apis in addition to the node-mumble package [used to connect to the mumble server]:
+This bot is designed to utilize three APIs in addition to the node-mumble package [used to connect to the mumble server]:
 
-Google API- used to communicate with the TToC spreadsheet and run seasons
+Google API- used to communicate with the TToC spreadsheet and run tournament seasons
 
 Slack API - used to send automated messages on user kick/ban
 
@@ -22,7 +22,7 @@ While API keys are required for each of these APIS, the bot will function (albei
 
 ttoc-mumble-bot requires a certificate in order to connect to a mumble server, but doesn't require anything else to be functional.
 
-You can use the following command to generate a certificate: <pre><code>openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem</code></pre>
+You can use the following command to generate a certificate: <pre><code> openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem </code></pre>
 
 ttoc-mumble-bot saves all information in .txt files. I'm working on making a better system, but this works for now. All .txt files which don't have API info are created on first launch by the bot.
 
