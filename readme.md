@@ -101,7 +101,7 @@ If you have never created a project via Google API, [consult this guide.](https:
 
 ttoc-mumble-bot is natively set up to communicate with the [TToC Spreadsheet,](https://docs.google.com/spreadsheets/d/1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4/edit#gid=115661595) but if you want to make your own TagPro Tournament, you can make a copy of [this spreadsheet.]() Making a copy of this spreadsheet will also create a copy of the backbone scripts used to operate the spreadsheet.
 
-If you only want the backbone scripts, [you can find them here.]() You will have to change the code to match your setup, but it is well commented with its function.
+If you only want the backbone scripts, [you can find them here.](https://gist.github.com/Poeticalto/ed06fab60c8ac8649e33f42aecbec837) You will have to change the code to match your setup, but it is well commented with its function.
 
 NOTE: Because the bot communicates with the Google API to run scripts on the cloud, your scripts must be 'Deployed as an API Executable' through the Publish menu in the script editor.
 
