@@ -153,6 +153,10 @@ Here is a list of public commands:
 
 !group server name - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.
 
+!groupc server map name - Gives a competitive group for the corresponding server and map. You can optionally set a name so other players can access it via the !gg command.
+
+!groupt name - Gives a competitive group that is set up for the tournament. You can optionally set a name so other players can access it via the !gg command.
+
 !help - Gives user the help message
 
 !info - Gives user info about me 

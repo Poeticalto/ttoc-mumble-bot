@@ -10,20 +10,19 @@ var sheets = google.sheets('v4');
 const readFile = require('fs-readfile-promise');
 var cats = require('cat-ascii-faces');
 var SCOPES = ['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/forms'];
-var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
-    process.env.USERPROFILE) + '/.credentials/';
+var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'script-nodejs-quickstart.json';
 var WebClient = require('@slack/client').WebClient;
 var GroupMe = require('groupme');
 var API = GroupMe.Stateless;
 
 // CUSTOM SETTINGS FOR THE BOT
-var botname = 'TToC_BOT';
+var botname = 'TToC_BOT'; 
 var bot_home = 'Meep is God'; // This is used for the !home command to return the bot to a predefined location.
 var botmove = 'TToC'; // This is used to move users when a channel is on lockdown.
 var scriptId = 'MR8ANgNM86TUijo7WF5u3bAUVXR8RJHBv'; // This ID corresponds to the TToC scripts
 var spreadsheetId = '1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4'; // This ID goes to the TToC Spreadsheet
-var help = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!greet</b> <b><span style="color:#aa0000">message </span></b>- Sets a greeting for the user that will be sent on connect.<br/><b>!greetcat</b> - '+botname+' will greet the user with a cat that will be sent on connect.<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets '+botname+' send messages again.<br/><b>!time</b> - Gives user the time of the draft';
+var help = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!find</b> <b><span style="color:#aa0000">user </span></b>- If the user is on the Mumble Server, a link will be provided to move to their channel. User is case-insensitive.<br/><b>!greet</b> <b><span style="color:#aa0000">message </span></b>- Sets a greeting for the user that will be sent on connect.<br/><b>!greetcat</b> - '+botname+' will greet the user with a cat that will be sent on connect.<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!groupc <span style="color:#aa0000">server </span><span style="color:#0000ff">map</span><span style="color:#aa0000"> </span><span style="color:#0000ff">name </span></b>- Gives a competitive group for the corresponding server and map. You can optionally set a name so other players can access it via the !gg command.<br/><b>!groupt <span style="color:#0000ff">name </span></b>- Gives a competitive group for the tournament. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!mods</b> - Gives the list of mods connected to the server.<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets '+botname+' send messages again.<br/><b>!time</b> - Gives user the time of the draft';
 var tohelp = 'Sorry, I did not recognize that. Use !help for a list of public commands! c:';
 var sadbot = "<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)";
 var mumbleurl = 'mumble.koalabeast.com';
@@ -712,8 +711,8 @@ connection.on('message', function (message,actor,scope) {
 				playerd = playerd.toLowerCase();}
 				createTagProGroup(playerd,ggadd,actor,true,contentPieces[2].toLowerCase());
 				break;
-			case 'groupt': // creates comp group
-				if (contentPieces.length >1){ // !groupt name
+			case 'groupt': // creates comp group for the tourney
+				if (contentPieces.length >1){
 				ggadd = contentPieces[1];}
 				else {
 				ggadd = false;}
