@@ -16,6 +16,8 @@ GroupMe API- used as a chat bridge to connect a group and a mumble channel
 
 While API keys are required for each of these APIS, the bot will function (albeit without the commands which use the APIs) just fine without them.
 
+ttoc-mumble-bot also has a [companion userscript found here](https://gist.github.com/Poeticalto/957bba503d33d3b14fd1d022b74c4fdb) which allows a user to create groups set up for competitive TagPro.
+
 ---
 
 ## Setup
@@ -223,7 +225,15 @@ Whitelisted users also have some fun behavior relating to the bot:
 
 Giving priority speaker to a user will move the user to the same channel as the bot. This functionality also works if you do it on yourself.
 
-Giving priority speaker to the bot will move the bot to the same channel as the user.
+Giving priority speaker to the bot when it isn't in the same channel as the user will move the bot to the same channel as the user.
+
+Giving priority speaker to the bot when it is in the same channel as the user will move the bot to its predefined home.
+
+---
+
+## Special Thanks
+
+Special thanks to Gem the TagPro dev for her invaluable help in debugging the bot. c:
 
 ---
 
