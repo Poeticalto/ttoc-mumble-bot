@@ -307,7 +307,6 @@ var playersr = [];
 var captains = [];
 var captainspick = [0];
 var picknum = 1;
-var setupsheet = 0;
 var setupdraft = 0;
 var wait = 0;
 var reply = '';
@@ -339,6 +338,7 @@ var modsmum = [];
 var sessions = [];
 var sessionsu = [];
 var startchat = false;
+var contentPieces;
 
 const rl = readline.createInterface({ // creates cmd interface to interact with the bot
   input: process.stdin,
@@ -472,9 +472,13 @@ if (channels.indexOf(state.channel_id) == -1){
 
 connection.on('user-priority-speaker', function(user, status, actor) {
 	if (whitelist.indexOf(actor.name)>-1 && status == true){
-	if ( user.name == botname){ // moves bot to the channel of the actor 
+	if ( user.name == botname && user.channel.name != actor.channel.name){ // moves bot to the channel of the actor 
 	user.moveToChannel(actor.channel);
 	actor.channel.sendMessage(actor.name+' has summoned me to this channel!');
+	}
+	else if ( user.name == botname && user.channel.name == actor.channel.name){ // moves bot to the channel of the actor 
+	user.moveToChannel(connection.channelByName(bot_home));
+	actor.channel.sendMessage(actor.name+' has sent me back home!');
 	}
 	else{ // moves player to the channel of the bot
 	user.moveToChannel(connection.user.channel);
@@ -488,7 +492,7 @@ connection.on('message', function (message,actor,scope) {
 	const content = message || '';
 	const isCommand = content[0] === '!';
 	const isChat = content[0] === '@';
-	const contentPieces = content.slice(1, content.length).split(' ');
+	contentPieces = content.slice(1, content.length).split(' ');
 	const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br")[0];
 	var playerd = contentPieces[1];	
 	if (contentPieces.length > 2){
@@ -679,52 +683,45 @@ connection.on('message', function (message,actor,scope) {
 				reply = botname+' will give you a cat each time you connect to the server! c:';
 				break;
 			case 'group': // creates group on a defined server. playerd is the server, ggadd is the optional group name which is stored on the bot.
-				if (contentPieces.length >2){
+				if (contentPieces.length >2){ // !group server name
 				ggadd = contentPieces[2];}
 				else {
 				ggadd = false;}
 				if (contentPieces.length > 3){
 					for (i=3; i <= contentPieces.length-1;i++) {		
 					ggadd = ggadd + ' '+contentPieces[i];}}
-				playerd = contentPieces[1]
+				playerd = contentPieces[1];
 				if (playerd == undefined) {
 				playerd = 'sphere';}
 				else{
 				playerd = playerd.toLowerCase();}
-				if (playerd == 'maptest' || playerd == 'maptest2' || playerd == 'maptest3'){
-					groupbuild = 'http://'+playerd+'.newcompte.fr/groups/create';
-				groupsend = 'http://'+playerd+'.newcompte.fr/groups/';}
-				else if (playerd == 'test'){
-					groupbuild = 'test';
-				groupdsend = 'test';}
+				createTagProGroup(playerd,ggadd,actor,false,"r");
+				break;
+			case 'groupc': // creates comp group
+				if (contentPieces.length >3){ // !groupc server map name
+				ggadd = contentPieces[3];}
 				else {
-				groupbuild = 'http://tagpro-'+playerd+'.koalabeast.com/groups/create';
-				groupsend = 'http://tagpro-'+playerd+'.koalabeast.com/groups/';}
-				request(
-					{ method: 'POST'
-					, uri: groupbuild
-					, multipart:
-					[{ 'follow_redirects': 'false'
-					, body : JSON.stringify({public: "off"})}]}
-					, function (error, response, body) {
-					if (response != null){
-					groupid = body.split("/groups/")[body.split("/groups/").length-1];
-					console.log(groupsend+groupid);
-					reply = '<br/>Here is your '+playerd+' group:<br/><br/><a href="'+groupsend+groupid+'"><span style="color:#39a5dd">'+groupsend+groupid+'</span></a>';}
-					else {
-					reply = '<br/> There was an error when creating your group. Check to make sure you put an actual server! c:';}})
-					function random3() {
-					console.log(reply);
-					actor.sendMessage(reply);
-					if (ggadd != false && blacklist.indexOf(actor.name) == -1){ // players on the blacklist will be able to make groups but not add them to the public list of groups
-						if (ggid.indexOf(ggadd) > -1){
-							gglink[ggid.indexOf(ggadd)] = groupsend+groupid;
-						}
-						else {
-							ggid.push(ggadd.toLowerCase());
-						gglink.push(groupsend+groupid);
-					}}}
-					setTimeout(random3,500);
+				ggadd = false;}
+				if (contentPieces.length > 4){
+					for (i=4; i <= contentPieces.length-1;i++) {		
+					ggadd = ggadd + ' '+contentPieces[i];}}
+				playerd = contentPieces[1];
+				if (playerd == undefined) {
+				playerd = 'sphere';}
+				else{
+				playerd = playerd.toLowerCase();}
+				createTagProGroup(playerd,ggadd,actor,true,contentPieces[2].toLowerCase());
+				break;
+			case 'groupt': // creates comp group
+				if (contentPieces.length >1){ // !groupt name
+				ggadd = contentPieces[1];}
+				else {
+				ggadd = false;}
+				if (contentPieces.length > 2){
+					for (i=2; i <= contentPieces.length-1;i++) {		
+					ggadd = ggadd + ' '+contentPieces[i];}}
+				playerd = 'sphere';
+				createTagProGroup(playerd,ggadd,actor,true,ssmap.replace(' ','_').toLowerCase());
 				break;
 			case 'help': // sends help info to the actor.
 				reply = help;
@@ -894,7 +891,7 @@ connection.on('message', function (message,actor,scope) {
 				break;
 			case 'setupsheet': // sets up the form and sheet, playerd is uneeded.
 				if (whitelist.indexOf(actor.name)>-1 && gauth == true) {
-					setupsheet = 1;
+					setupstart = 1;
 					reply = 'Setting up sheet now!';
 					sheetsetup();
 					signupsopen = true;}
@@ -973,6 +970,8 @@ connection.on('message', function (message,actor,scope) {
 				console.log('updating links!');
 				reply = 'Updating links!';
 				updatelinks();
+				setupstart = 1;
+				signupsopen = true;
 				}
 				else {
 					reply = tohelp;}
@@ -1263,5 +1262,43 @@ function sendtoslack(cid,message) {
 		console.log('Message sent: ', res);}})
 }
 
+function createTagProGroup(playerd,ggadd,actor,toggle,mapname){
+					if (playerd == 'maptest' || playerd == 'maptest2' || playerd == 'maptest3'){
+					groupbuild = 'http://'+playerd+'.newcompte.fr/groups/create';
+				groupsend = 'http://'+playerd+'.newcompte.fr/groups/';}
+				else if (playerd == 'test'){
+					groupbuild = 'test';
+				groupdsend = 'test';}
+				else {
+				groupbuild = 'http://tagpro-'+playerd+'.koalabeast.com/groups/create';
+				groupsend = 'http://tagpro-'+playerd+'.koalabeast.com/groups/';}
+				request(
+					{ method: 'POST'
+					, uri: groupbuild
+					, multipart:
+					[{ 'follow_redirects': 'false'
+					, body : JSON.stringify({public: "off"})}]}
+					, function (error, response, body) {
+					if (response != null){
+					groupid = body.split("/groups/")[body.split("/groups/").length-1];
+					if (toggle == true){
+					groupid = groupid+"/#tg-"+mapname;
+					}
+					console.log(groupsend+groupid);
+					reply = '<br/>Here is your '+playerd+' group:<br/><br/><a href="'+groupsend+groupid+'"><span style="color:#39a5dd">'+groupsend+groupid+'</span></a>';}
+					else {
+					reply = '<br/> There was an error when creating your group. Check to make sure you put an actual server! c:';}})
+					function random3() {
+					console.log(reply);
+					actor.sendMessage(reply);
+					if (ggadd != false && blacklist.indexOf(actor.name) == -1){ // players on the blacklist will be able to make groups but not add them to the public list of groups
+						if (ggid.indexOf(ggadd) > -1){
+							gglink[ggid.indexOf(ggadd)] = groupsend+groupid;
+						}
+						else {
+							ggid.push(ggadd.toLowerCase());
+						gglink.push(groupsend+groupid);
+					}}}
+setTimeout(random3,500);}
 
 });
