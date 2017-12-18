@@ -16,7 +16,7 @@ GroupMe API- used as a chat bridge to connect a group and a mumble channel
 
 While API keys are required for each of these APIS, the bot will function (albeit without the commands which use the APIs) just fine without them.
 
-ttoc-mumble-bot also has a [companion userscript found here](https://gist.github.com/Poeticalto/957bba503d33d3b14fd1d022b74c4fdb) which allows a user to create groups set up for competitive TagPro.
+ttoc-mumble-bot also has a [companion userscript found here](https://gist.github.com/Poeticalto/00de8353fce79cac9059b22f20242039) which allows a user to create groups set up for competitive TagPro.
 
 ---
 
