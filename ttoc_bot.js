@@ -64,28 +64,40 @@ var gappkey;
 // consult the readme for help on how to setup each .txt file.
 if (fs.existsSync('whitelist.txt')) {
     whitelist = fs.readFileSync('whitelist.txt').toString().split("\n");			// whitelist is the superuser list for the bot
-    console.log('Whitelist imported from whitelist.txt!');}
+    console.log('Whitelist imported from whitelist.txt!');
+}
 else {
     fs.openSync('whitelist.txt', 'w');
-    console.log('whitelist.txt was created!');}
+    console.log('whitelist.txt was created!');
+}
+
 if (fs.existsSync('mailuser.txt')){
     mailuser = fs.readFileSync('mailuser.txt').toString().split("\n");      		//mailuser contains receivers of mail
-    console.log('mailuser imported from mailuser.txt!');}
+    console.log('mailuser imported from mailuser.txt!');
+}
 else{
     fs.openSync('mailuser.txt','w');
-    console.log('mailuser.txt was created!');}
+    console.log('mailuser.txt was created!');
+}
+
 if (fs.existsSync('mailsender.txt')){
     mailsender = fs.readFileSync('mailsender.txt').toString().split("\n");   		//mailsender contains senders of mail
-    console.log('mailsender imported from mailsender.txt!');}
+    console.log('mailsender imported from mailsender.txt!');
+}
 else{
     fs.openSync('mailsender.txt','w');
-    console.log('mailsender.txt was created!');}
+    console.log('mailsender.txt was created!');
+}
+
 if (fs.existsSync('mailmessage.txt')){
     mailmessage = fs.readFileSync('mailmessage.txt').toString().split("\n"); 		//mailmessage contains mail to send
-    console.log('mailmessage imported from mailmessage.txt!');}
+    console.log('mailmessage imported from mailmessage.txt!');
+}
 else{
     fs.openSync('mailmessage.txt','w');
-    console.log('mailmessage.txt was created!');}
+    console.log('mailmessage.txt was created!');
+}
+
 if (fs.existsSync('sslink.txt')){
     rows = fs.readFileSync('sslink.txt').toString().split("\n");
     seasonnum = rows[1]; 															// seasonnum refers to the season # of the tourney
@@ -93,46 +105,66 @@ if (fs.existsSync('sslink.txt')){
     ssmaplink = rows[4];															// ssmaplink is the link for the map
     sgnlink = rows[5];																// sgnlink is the signup link for the tourney
     sslink = rows[6];																// sslink is the spreadsheet link for the tourney
-    console.log('Spreadsheet info imported from sslink.txt!');}
+    console.log('Spreadsheet info imported from sslink.txt!');
+}
 else{
     fs.openSync('sslink.txt','w');
-    console.log('sslink.txt was created!');}
+    console.log('sslink.txt was created!');
+}
+
 if (fs.existsSync('blacklist.txt')){
     blacklist = fs.readFileSync('blacklist.txt').toString().split("\n");			// blacklist is the bad user list for the bot
-    console.log('Blacklist imported from blacklist.txt!');}
+    console.log('Blacklist imported from blacklist.txt!');
+}
 else {
     fs.openSync('blacklist.txt','w');
-    console.log('blacklist.txt was created!');}
+    console.log('blacklist.txt was created!');
+}
+
 if (fs.existsSync('greylist.txt')){
     greylist = fs.readFileSync('greylist.txt').toString().split("\n");				// greylist prevents automated messages from the bot
-    console.log('Greylist imported from greylist.txt!');}
+    console.log('Greylist imported from greylist.txt!');
+}
 else {
     fs.openSync('greylist.txt','w');
-    console.log('greylist.txt was created!');}
+    console.log('greylist.txt was created!');
+}
+
 if (fs.existsSync('welcomeuser.txt')){
     welcomeuser = fs.readFileSync('welcomeuser.txt').toString().split("\n");		// welcomeuser is the list of users who want welcome messages
-    console.log('welcomeuser imported from welcomeuser.txt!');}
+    console.log('welcomeuser imported from welcomeuser.txt!');
+}
 else {
     fs.openSync('welcomeuser.txt','w');
-    console.log('welcomeuser.txt was created!');}
+    console.log('welcomeuser.txt was created!');
+}
+
 if (fs.existsSync('welcomemessage.txt')){
     welcomemessage = fs.readFileSync('welcomemessage.txt').toString().split("\n");	// welcomemessage is the message corresponding to the users who want welcomes
-    console.log('welcomemessage imported from welcomemessage.txt!');}
+    console.log('welcomemessage imported from welcomemessage.txt!');
+}
 else {
     fs.openSync('welcomemessage.txt','w');
-    console.log('welcomemessage.txt was created!');}
+    console.log('welcomemessage.txt was created!');
+}
+
 if (fs.existsSync('slacktoken.txt')){
     slacktoken = fs.readFileSync('slacktoken.txt').toString().split("\n");
     slackchannel = slacktoken[1];													// slackchannel is the channel to send notifs to on slack
     slacktoken = slacktoken[0];														// slacktoken is the API key to talk to slack
     slackauth = true;
-    console.log('Slack keys imported from slacktoken.txt!');}
+    console.log('Slack keys imported from slacktoken.txt!');
+}
+
 if (fs.existsSync('moderators.txt')){
     mods = fs.readFileSync('moderators.txt').toString().split("\n");				// mods is the mod list for the bot
-    console.log('moderators imported from moderators.txt!');}
+    console.log('moderators imported from moderators.txt!');
+}
 else {
     fs.openSync('moderators.txt','w');
-    console.log('moderators.txt has been created!');}
+    console.log('moderators.txt has been created!');
+}
+
 if (fs.existsSync('groupmekey.txt')){
     ACCESS_TOKEN = fs.readFileSync('groupmekey.txt').toString().split("\n");
     GROUP_ID = ACCESS_TOKEN[4];														// GROUP_ID is the group id to send groupme messages to
@@ -141,12 +173,13 @@ if (fs.existsSync('groupmekey.txt')){
     USER_ID = ACCESS_TOKEN[1];														// USER_ID is your user id [not the bot id]
     ACCESS_TOKEN = ACCESS_TOKEN[0];														// ACCESS_TOKEN is your groupme access token
     groupmeauth = true;
-    console.log('GroupMe keys imported from groupmekey.txt!');}
+    console.log('GroupMe keys imported from groupmekey.txt!');
+}
 // Defines the certificates to connect to the mumble server through node-mumble
 var options = {
     key: fs.readFileSync('botkey.pem'),
     cert: fs.readFileSync('botcerts.pem')
-};
+}
 
 // The following section is the GApps authorization stuff needed to create OAuth keys
 // It is taken from the quickstart for node.js, so check that out if you need help with it.
@@ -174,12 +207,14 @@ function authorize(credentials, callback) {
     fs.readFile(TOKEN_PATH, function(err, token) {
         if (err) {
             getNewToken(oauth2Client, callback);
-        } else {
+        } 
+        else {
             oauth2Client.credentials = JSON.parse(token);
             callback(oauth2Client);
         }
     });
 }
+
 function getNewToken(oauth2Client, callback) {
     var authUrl = oauth2Client.generateAuthUrl({
         access_type: 'offline',
@@ -206,7 +241,8 @@ function getNewToken(oauth2Client, callback) {
 function storeToken(token) {
     try {
         fs.mkdirSync(TOKEN_DIR);
-    } catch (err) {
+    } 
+    catch (err) {
         if (err.code != 'EEXIST') {
             throw err;
         }
@@ -242,7 +278,8 @@ function gscriptrun(auth) { // This function runs code from Google Scripts
                     console.log('\t%s: %s', trace.function, trace.lineNumber);
                 }
             }
-        } else {
+        } 
+        else {
             console.log('Success!');
         }
     });
@@ -264,7 +301,8 @@ function ssread(auth){// this function reads a range from the spreadsheet
         var testarr = response.values;
         if (testarr.length == 0) {
             console.log('No data found.');
-        } else {
+        } 
+        else {
             console.log('imported');
             console.log(testarr);
             for (var i = 0; i < testarr.length; i++) {
@@ -288,13 +326,12 @@ function sswrite(auth){// this function writes a range to the spreadsheet
         if(err) {
             // Handle error
             console.log(err);
-        } else {
+        } 
+        else {
             console.log('%d cells updated.', result.updatedCells);
         }
     });}
 // End of defining google apps scripts
-
-
 
 // Define global variables
 var drafted = 0;
@@ -359,15 +396,20 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
 
     // Initialize slack/groupme connections
     if (slackauth == true){
-        var web = new WebClient(slacktoken);}
+        var web = new WebClient(slacktoken);
+    }
     else {
         console.log('Slack token was not imported, you will not be able to use Slack functionality at this time. :c');
-        var web;}
+        var web;
+    }
+
     if (groupmeauth == true){
-        var incoming = new GroupMe.IncomingStream(ACCESS_TOKEN, USER_ID, null);}
+        var incoming = new GroupMe.IncomingStream(ACCESS_TOKEN, USER_ID, null);
+    }
     else{
         console.log('GroupMe auth was not imported, you will not be able to use GroupMe functionality at this time. :c');
-        var incoming=rl;}
+        var incoming=rl;
+    }
 
     incoming.on('connected', function() { // gets remaining info needed for bot to run.
         console.log("[IncomingStream 'connected']");
@@ -383,7 +425,6 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
                 console.log("[API.Bots.index return] Firing up bot!", bot_id);
             }
         });
-
     });
 
     incoming.on('disconnected', function() { // if disconnected from GroupMe API, attempts to reconnect.
@@ -400,18 +441,21 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
             && msg["data"]["subject"] 
             && msg["data"]["subject"]["text"]){ // error is thrown when attempting to access a message without data,subject, or text, so checks to make sure they all exist
             if (bot_id && msg["data"]["subject"]["name"] != USER_NAME&& msg["data"]["subject"]["group_id"] == GROUP_ID) {
-                connection.user.channel.sendMessage(msg["data"]["subject"]["text"]);}
+                connection.user.channel.sendMessage(msg["data"]["subject"]["text"]);
+            }
         }});
 
     connection.on('userRemove', function (data) {
         if (data.actor != null && data.ban == false){
             reply = '[NA Mumble] '+connection.userBySession(data.actor).name+' kicked '+sessionsu[sessions.indexOf(data.session)]+': '+data.reason;
             if (slackauth == true){
-                sendtoslack(slackchannel,reply);}}
+                sendtoslack(slackchannel,reply);
+            }}
         else if (data.actor != null && data.ban == true) {
             reply = '[NA Mumble] '+connection.userBySession(data.actor).name+' banned '+sessionsu[sessions.indexOf(data.session)]+': '+data.reason;
             if (slackauth == true){
-                sendtoslack(slackchannel,reply);}}
+                sendtoslack(slackchannel,reply);
+            }}
     })
 
     var users = [];
@@ -419,17 +463,21 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
     var usersl = [];
     connection.on( 'userState', function (state) {
         if (sessions.indexOf(state.session) > -1){
-            sessionsu[sessions.indexOf(state.session)] = state.name;}
+            sessionsu[sessions.indexOf(state.session)] = state.name;
+        }
         else {
             sessions.push(state.session);
-            sessionsu.push(state.name);}
+            sessionsu.push(state.name);
+        }
         if (users.indexOf(state.name) == -1 && greylist.indexOf(state.name) == -1){
             users.push(state.name);
             if (mods.indexOf(state.name) > -1 && modsmum.indexOf(state.name) == -1){ 
                 if (state.name == 'Cyanide'){
-                    modsmum.push('Cryanide');}
+                    modsmum.push('Cryanide');
+                }
                 else{
-                    modsmum.push(state.name);}}}
+                    modsmum.push(state.name);
+                }}}
         if (users.indexOf(null) >-1){
             users.splice(users.indexOf(null),1); //unsure where the null leaks in from, but this removes it	
         }
@@ -441,19 +489,25 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
 
     function updateuserarray(array1,array2){
         if (array1.indexOf(null) >-1){
-            array1.splice(array1.indexOf(null),1);}
+            array1.splice(array1.indexOf(null),1);
+        }
         for (i=0;i<array1.length; i++){
-            array2[i] = array1[i].toLowerCase();}}
+            array2[i] = array1[i].toLowerCase();
+        }}
 
     connection.on('user-disconnect', function(state) {
         if (modsmum.indexOf(state.name) > -1){ 
-            modsmum.splice(modsmum.indexOf(state.name),1);}
+            modsmum.splice(modsmum.indexOf(state.name),1);
+        }
         if (state.name == 'Cyanide'){
-            modsmum.splice(modsmum.indexOf('Cryanide'),1);}
+            modsmum.splice(modsmum.indexOf('Cryanide'),1);
+        }
         if (greylist.indexOf(state.name) == -1){
-            users.splice(users.indexOf(state.name),1);}
+            users.splice(users.indexOf(state.name),1);
+        }
         if (users.indexOf(null) >-1){
-            users.splice(users.indexOf(null),1);}
+            users.splice(users.indexOf(null),1);
+        }
         if (usersf.indexOf(state.name) > -1) {
             usersf.splice(usersf.indexOf(state.name),1);
             updateuserarray(usersf,usersl);
@@ -461,7 +515,8 @@ mumble.connect( mumbleurl, options, function ( error, connection ) {
     });
 
     rl.on('line', (input) => {
-        connection.user.channel.sendMessage(input);}) //allows user to chat as the bot via command line
+        connection.user.channel.sendMessage(input);
+    }) //allows user to chat as the bot via command line
 
     /* var channels = [];
 connection.on( 'channelState', function (state) {
@@ -481,7 +536,8 @@ if (channels.indexOf(state.channel_id) == -1){
             }
             else{ // moves player to the channel of the bot
                 user.moveToChannel(connection.user.channel);
-                connection.user.channel.sendMessage(actor.name+' has moved '+user.name+' to '+connection.user.channel.name+'!');}}
+                connection.user.channel.sendMessage(actor.name+' has moved '+user.name+' to '+connection.user.channel.name+'!');
+            }}
     });
 
     connection.on('message', function (message,actor,scope) {	
@@ -496,44 +552,53 @@ if (channels.indexOf(state.channel_id) == -1){
         var playerd = contentPieces[1];	
         if (contentPieces.length > 2){
             for (i=2; i <= contentPieces.length-1;i++) {		
-                playerd = playerd + ' '+contentPieces[i];}} // arg playerd may have multiple words, so combine everything afters command into one var
+                playerd = playerd + ' '+contentPieces[i];
+            }} // arg playerd may have multiple words, so combine everything afters command into one var
         console.log(message);
         if (privateMessage == false && isChat == true && startchat == true){
             var playerd = contentPieces[0];	
             if (contentPieces.length > 1){
                 for (i=1; i <= contentPieces.length-1;i++) {		
-                    playerd = playerd + ' '+contentPieces[i];}}
+                    playerd = playerd + ' '+contentPieces[i];
+                }}
             if (playerd == undefined){
-                connection.user.channel.sendMessage("Sorry, there was nothing to respond to!");}
+                connection.user.channel.sendMessage("Sorry, there was nothing to respond to!");
+            }
             else if (groupmeauth == true){
                 playerd = '@zo '+playerd;
                 function hi(){
                     console.log("Success!");}
                 API.Messages.create(ACCESS_TOKEN,GROUP_ID,{message:{ text:playerd, attachments: [{type:"mentions", user_ids: [46185459], loci: [[0,3]] }]}},hi);
             }
-            console.log(playerd);}
+            console.log(playerd);
+        }
         if (isCommand && privateMessage) {
             switch( command ) {
                 case 'backup': // this case is uneeded since function backup runs after each write/splice, but is kept as a redundant measure.
                     if (whitelist.indexOf(actor.name)>-1) {					
                         backup();
-                        reply = "Everything has been backed up!";}
+                        reply = "Everything has been backed up!";
+                    }
                     else {
-                        reply = tohelp;}
+                        reply = tohelp;
+                    }
                     break;
                 case 'ban': // bans player from the server, playerd defines the reason and lists the actor name at the end.
                     if (whitelist.indexOf(actor.name)>-1 || mods.indexOf(actor.name)>-1 ) {
                         var playerd = contentPieces[2];	
                         if (contentPieces.length > 3){
                             for (i=3; i <= contentPieces.length-1;i++) {		
-                                playerd = playerd + ' '+contentPieces[i];}}
+                                playerd = playerd + ' '+contentPieces[i];
+                            }}
                         if (playerd == undefined){
-                            playerd = '';}
+                            playerd = '';
+                        }
                         playerd = playerd + ' [banned by '+actor.name+']';
                         connection.userByName(contentPieces[1]).ban(playerd);
                     }
                     else {
-                        reply = tohelp;}
+                        reply = tohelp;
+                    }
                     break;
                 case 'blacklist': // adds user to the blacklist, playerd defines the user.
                     if (whitelist.indexOf(actor.name)>-1) {
@@ -542,7 +607,8 @@ if (channels.indexOf(state.channel_id) == -1){
                         backup();
                     }
                     else {
-                        reply = tohelp;}
+                        reply = tohelp;
+                    }
                     break;
                 case 'cat': // sends a cat to the user.
                     reply = cats();
@@ -557,30 +623,37 @@ if (channels.indexOf(state.channel_id) == -1){
                                 startchat = true;
                                 connection.user.channel.sendMessage("<br/>Chat mode has been enabled! To chat with the bot, preface your chat with the @ symbol like this @hi bot!");
                                 incoming.disconnect();
-                                incoming.connect(); }
+                                incoming.connect(); 
+                            }
                             else {
                                 startchat = false;
                                 connection.user.channel.sendMessage("<br/>Chat mode has been disabled! :c");
-                                incoming.disconnect();}}
+                                incoming.disconnect();
+                            }}
                         else{
-                            connection.user.channel.sendMessage("GroupMe functionality has not been enabled! Chat mode is not activated. :c");}}
+                            connection.user.channel.sendMessage("GroupMe functionality has not been enabled! Chat mode is not activated. :c");
+                        }}
                     else {
-                        reply = tohelp; }
+                        reply = tohelp; 
+                    }
                     break;
                 case 'draft': // draftstart=1 when draft is active, playerd defines the player to draft in the tournament.
                     if (draftstart == 0) {
                         reply = tohelp;
                     }
                     else if (actor.channel.name != connection.user.channel.name) { // to prevent spam, captain must be in the same channel as the bot to draft
-                        reply = 'You are not a captain, please do not use this command.';}
+                        reply = 'You are not a captain, please do not use this command.';
+                    }
                     else if (playersr.length !== 0 && draftstart == 1 && drafted == 1) {
-                        reply = 'A pick is currently being processed, please wait...';}
+                        reply = 'A pick is currently being processed, please wait...';
+                    }
                     else if (playersr.length !== 0 && draftstart == 1 && drafted == 0) {
                         playerdindex = playersr.indexOf(playerd);
                         if (playerdindex > -1) {
                             playersr.splice(playerdindex,1); 
                             drafted = 1;
-                            draftplayer(playerd);}
+                            draftplayer(playerd);
+                        }
                         /*else if (isNumber(playerd) == true && playerd > 0 && playerd < 120) {
 					var playerdi = playerd;
 					if (players.length <= playerdi-draftmod){
@@ -594,44 +667,56 @@ if (channels.indexOf(state.channel_id) == -1){
 					reply = 'That player has already been taken! :c';}}}
 					*/		// this is supposed to allow captains to draft by row number, unsure how to implement			
                         else if (players.indexOf(playerd) == -1){
-                            reply = 'That player has already been taken! :c';}					
+                            reply = 'That player has already been taken! :c';
+                        }					
                         else {
-                            reply = 'That player does not exist! Please make sure spelling/capitalization is correct!';}}
+                            reply = 'That player does not exist! Please make sure spelling/capitalization is correct!';
+                        }}
                     else {
-                        reply = 'The draft has been completed! Thanks for drafting! C:';}
+                        reply = 'The draft has been completed! Thanks for drafting! C:';
+                    }
                     break;
                 case 'find': // gives a url to a player on the server, playerd defines user to find, case-insensitive.
                     if (playerd != undefined){				
                         if (playerd == 'Cryanide'){
-                            playerd = 'Cyanide';}
+                            playerd = 'Cyanide';
+                        }
                         if (usersl.indexOf(playerd.toLowerCase()) > -1){
-                            playerd = usersf[usersl.indexOf(playerd.toLowerCase())];}
+                            playerd = usersf[usersl.indexOf(playerd.toLowerCase())];
+                        }
                         if (connection.userByName(playerd) == undefined){
                             if (playerd == 'Cyanide'){
-                                playerd = 'Cryanide';}
-                            reply = 'Sorry, '+playerd+' could not be found.';}
+                                playerd = 'Cryanide';
+                            }
+                            reply = 'Sorry, '+playerd+' could not be found.';
+                        }
                         else {
                             var parentc = [];
                             parentc.unshift(connection.userByName(playerd).channel.name);
                             parentc.unshift(connection.userByName(playerd).channel.parent.name);
                             while (connection.channelByName(parentc[0]).parent.name != 'North American TagPro Mumble'){
-                                parentc.unshift(connection.channelByName(parentc[0]).parent.name);}
+                                parentc.unshift(connection.channelByName(parentc[0]).parent.name);
+                            }
                             var mumbleurl = 'mumble://mumble.koalabeast.com';
                             for (i = 0;i<parentc.length;i++){
-                                mumbleurl = mumbleurl+'/'+parentc[i].replace(/ /g,"%20");}
+                                mumbleurl = mumbleurl+'/'+parentc[i].replace(/ /g,"%20");
+                            }
                             if (playerd == 'Cyanide'){
-                                playerd = 'Cryanide';}					
+                                playerd = 'Cryanide';
+                            }					
                             reply = '<br/>'+playerd+' was found in <a href="'+mumbleurl+'"><span style="color:#39a5dd">'+parentc[parentc.length-1]+'</span></a>';}
                     }
                     else {
-                        reply = '<br/> A user could not be found! Please make sure to specify a user in the command like this: !find Cryanide';}
+                        reply = '<br/> A user could not be found! Please make sure to specify a user in the command like this: !find Cryanide';
+                    }
                     break;
                 case 'getmail': // manual getmail command, playerd is uneeded in this case.
                     getmail(actor);
                     break;
                 case 'gg': // gg = getgroup, playerd defines the name of the group to retrieve from the bot.
                     if (playerd == undefined){
-                        reply = "Please type a group name to find!";}
+                        reply = "Please type a group name to find!";
+                    }
                     else if (ggid.indexOf(playerd.toLowerCase()) > -1){
                         reply = '<br/>Here is the '+playerd.toLowerCase()+' group:<br/><br/><a href="'+gglink[ggid.indexOf(playerd.toLowerCase())]+'"><span style="color:#39a5dd">'+gglink[ggid.indexOf(playerd.toLowerCase())]+'</span></a>'
                     }
@@ -640,27 +725,33 @@ if (channels.indexOf(state.channel_id) == -1){
                     }
                     break;
                     /*case 'ggadd': // ggadd allows actors to add their own group to the bot, allowing others to retrieve it with the !gg command
-				if (contentPieces.length >2){
-				ggadd = contentPieces[2];}
-				else {
-				ggadd = false;}
-				if (contentPieces.length > 3){
-					for (i=3; i <= contentPieces.length-1;i++) {		
-					ggadd = ggadd + ' '+contentPieces[i];}}
-				playerd = contentPieces[1].toLowerCase();
-				if (ggadd == false){
-				reply = "Sorry, a name was not specified to save under. Please try again.";}
-				else {
-					if (ggid.indexOf(ggadd) > -1){
-							gglink[ggid.indexOf(ggadd)] = groupsend+groupid;
+					if (contentPieces.length >2){
+						ggadd = contentPieces[2];
 						}
 					else {
-						ggid.push(ggadd);
-						gglink.push(groupsend+groupid);}}
-				break;*/ //commented out until I figure out if it should be added or not.
+						ggadd = false;
+						}
+					if (contentPieces.length > 3){
+						for (i=3; i <= contentPieces.length-1;i++) {		
+							ggadd = ggadd + ' '+contentPieces[i];
+							}}
+					playerd = contentPieces[1].toLowerCase();
+					if (ggadd == false){
+						reply = "Sorry, a name was not specified to save under. Please try again.";
+						}
+					else {
+						if (ggid.indexOf(ggadd) > -1){
+							gglink[ggid.indexOf(ggadd)] = groupsend+groupid;
+							}
+						else {
+							ggid.push(ggadd);
+							gglink.push(groupsend+groupid);
+							}}
+					break;*/ //commented out until I figure out if it should be added or not.
                 case 'greet': // defines a greeting for the actor which is sent on every connection to the server, playerd defines the message.
                     if (playerd == undefined){
-                        reply = 'No greeting was found, please create a message for the bot to send to you when you connect!';}
+                        reply = 'No greeting was found, please create a message for the bot to send to you when you connect!';
+                    }
                     else {
                         if (welcomeuser.indexOf(actor.name) > -1){
                             welcomemessage[welcomeuser.indexOf(actor.name)] = playerd;
@@ -670,55 +761,71 @@ if (channels.indexOf(state.channel_id) == -1){
                             welcomemessage.push(playerd);
                         }
                         backup();
-                        reply = 'Your greeting has been set! '+botname+' will send you this message each time you connect to the server! c:';}
+                        reply = 'Your greeting has been set! '+botname+' will send you this message each time you connect to the server! c:';
+                    }
                     break;
                 case 'greetcat': // sets the greeting for the actor to a cat which is sent on every connection to the server, playerd is uneeded in this context.
                     if (welcomeuser.indexOf(actor.name) > -1){
-                        welcomemessage[welcomeuser.indexOf(actor.name)] = 'this_is_supposed_to_be_a_cat-217253';}
+                        welcomemessage[welcomeuser.indexOf(actor.name)] = 'this_is_supposed_to_be_a_cat-217253';
+                    }
                     else {
                         welcomeuser.push(actor.name);
-                        welcomemessage.push('this_is_supposed_to_be_a_cat-217253');}
+                        welcomemessage.push('this_is_supposed_to_be_a_cat-217253');
+                    }
                     backup();
                     reply = botname+' will give you a cat each time you connect to the server! c:';
                     break;
                 case 'group': // creates group on a defined server. playerd is the server, ggadd is the optional group name which is stored on the bot.
                     if (contentPieces.length >2){ // !group server name
-                        ggadd = contentPieces[2];}
+                        ggadd = contentPieces[2];
+                    }
                     else {
-                        ggadd = false;}
+                        ggadd = false;
+                    }
                     if (contentPieces.length > 3){
                         for (i=3; i <= contentPieces.length-1;i++) {		
-                            ggadd = ggadd + ' '+contentPieces[i];}}
+                            ggadd = ggadd + ' '+contentPieces[i];
+                        }}
                     playerd = contentPieces[1];
                     if (playerd == undefined) {
-                        playerd = 'sphere';}
+                        playerd = 'sphere';
+                    }
                     else{
-                        playerd = playerd.toLowerCase();}
+                        playerd = playerd.toLowerCase();
+                    }
                     createTagProGroup(playerd,ggadd,actor,false,"r");
                     break;
                 case 'groupc': // creates comp group
                     if (contentPieces.length >3){ // !groupc server map name
-                        ggadd = contentPieces[3];}
+                        ggadd = contentPieces[3];
+                    }
                     else {
-                        ggadd = false;}
+                        ggadd = false;
+                    }
                     if (contentPieces.length > 4){
                         for (i=4; i <= contentPieces.length-1;i++) {		
-                            ggadd = ggadd + ' '+contentPieces[i];}}
+                            ggadd = ggadd + ' '+contentPieces[i];
+                        }}
                     playerd = contentPieces[1];
                     if (playerd == undefined) {
-                        playerd = 'sphere';}
+                        playerd = 'sphere';
+                    }
                     else{
-                        playerd = playerd.toLowerCase();}
+                        playerd = playerd.toLowerCase();
+                    }
                     createTagProGroup(playerd,ggadd,actor,true,contentPieces[2].toLowerCase());
                     break;
                 case 'groupt': // creates comp group for the tourney
                     if (contentPieces.length >1){
-                        ggadd = contentPieces[1];}
+                        ggadd = contentPieces[1];
+                    }
                     else {
-                        ggadd = false;}
+                        ggadd = false;
+                    }
                     if (contentPieces.length > 2){
                         for (i=2; i <= contentPieces.length-1;i++) {		
-                            ggadd = ggadd + ' '+contentPieces[i];}}
+                            ggadd = ggadd + ' '+contentPieces[i];
+                        }}
                     playerd = 'sphere';
                     createTagProGroup(playerd,ggadd,actor,true,ssmap.replace(' ','_').toLowerCase());
                     break;
@@ -731,7 +838,8 @@ if (channels.indexOf(state.channel_id) == -1){
                         actor.channel.sendMessage(actor.name+' has summoned me to this channel!');
                     }
                     else {
-                        actor.sendMessage(tohelp);}
+                        actor.sendMessage(tohelp);
+                    }
                     break;
                 case 'home': // moves the bot back to a predefined home channel.
                     if (whitelist.indexOf(actor.name) > -1){
@@ -739,7 +847,8 @@ if (channels.indexOf(state.channel_id) == -1){
                         connection.channelByName(bot_home).sendMessage(actor.name+' has sent me to this channel!');
                     }
                     else {
-                        actor.sendMessage(tohelp);}
+                        actor.sendMessage(tohelp);
+                    }
                     break;
                 case 'info': // displays info about the bot
                     reply = bot_info;
@@ -752,75 +861,91 @@ if (channels.indexOf(state.channel_id) == -1){
                         if (lockchannel.indexOf(actor.channel.name) == -1 && lockschannel.indexOf(actor.channel.name) == -1){				
                             connection.channelByName(actor.channel.name).sendMessage(actor.name+' has put this channel on lockdown! No new users will be allowed unless moved by a whitelisted user.');
                             console.log(actor.channel.name+' has been put on lockdown');
-                            lockchannel.push(actor.channel.name);}
+                            lockchannel.push(actor.channel.name);
+                        }
                         else if (lockchannel.indexOf(actor.channel.name) == -1 && lockschannel.indexOf(actor.channel.name) > -1){
                             connection.channelByName(actor.channel.name).sendMessage(actor.name+' has downgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
                             lockchannel.push(actor.channel.name);
                             console.log(actor.channel.name+' has been downgraded to lockdown');
-                            lockschannel.splice(lockschannel.indexOf(actor.channel.name),1);}
+                            lockschannel.splice(lockschannel.indexOf(actor.channel.name),1);
+                        }
                         else if (lockchannel.indexOf(actor.channel.name) > -1 || lockschannel.indexOf(actor.channel.name) > -1){
                             connection.channelByName(actor.channel.name).sendMessage(actor.name+' has lifted the channel lockdown! Users may now freely enter and leave.');
                             lockchannel.splice(lockchannel.indexOf(actor.channel.name),1);
                             lockschannel.splice(lockschannel.indexOf(actor.channel.name),1);
-                            console.log(actor.channel.name+' has been removed from lockdown');}}
+                            console.log(actor.channel.name+' has been removed from lockdown');
+                        }}
                     else {
-                        actor.sendMessage(tohelp);}
+                        actor.sendMessage(tohelp);
+                    }
                     break;
                 case 'lock+': // prevents users from entering or leaving the channel [note, move back does not work if bot does not have permissions to move]
                     if (whitelist.indexOf(actor.name) > -1){
                         if (lockchannel.indexOf(actor.channel.name) == -1 && lockschannel.indexOf(actor.channel.name) == -1){				
                             connection.channelByName(actor.channel.name).sendMessage(actor.name+' has put this channel on super lockdown! No new users will be allowed to enter or leave unless moved by a whitelisted user.');
                             lockschannel.push(actor.channel.name);
-                            console.log(actor.channel.name+' has been put on lockdown+');}
+                            console.log(actor.channel.name+' has been put on lockdown+');
+                        }
                         else if (lockchannel.indexOf(actor.channel.name) > -1 && lockschannel.indexOf(actor.channel.name) == -1){
                             connection.channelByName(actor.channel.name).sendMessage(actor.name+' has upgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
                             console.log(actor.channel.name+' has been upgraded to lockdown+');
                             lockschannel.push(actor.channel.name);
-                            lockchannel.splice(lockschannel.indexOf(actor.channel.name),1);}
+                            lockchannel.splice(lockschannel.indexOf(actor.channel.name),1);
+                        }
                         else if (lockchannel.indexOf(actor.channel.name) > -1 || lockschannel.indexOf(actor.channel.name) > -1){
                             connection.channelByName(actor.channel.name).sendMessage(actor.name+' has lifted the channel lockdown! Users may now freely enter and leave.');
                             console.log(actor.channel.name+' has been removed from lockdown+');
                             lockchannel.splice(lockchannel.indexOf(actor.channel.name),1);
-                            lockschannel.splice(lockschannel.indexOf(actor.channel.name),1);}}
+                            lockschannel.splice(lockschannel.indexOf(actor.channel.name),1);
+                        }}
                     else {
-                        actor.sendMessage(tohelp);}
+                        actor.sendMessage(tohelp);
+                    }
                     break;
                 case 'kick': // kicks player from the server, playerd defines reason. [Bot needs permission to kick]
                     if (whitelist.indexOf(actor.name)>-1 || mods.indexOf(actor.name) >-1 ) {
                         var playerd = contentPieces[2];	
                         if (contentPieces.length > 3){
                             for (i=3; i <= contentPieces.length-1;i++) {		
-                                playerd = playerd + ' '+contentPieces[i];}}
+                                playerd = playerd + ' '+contentPieces[i];
+                            }}
                         if (playerd == undefined){
-                            playerd = '';}
+                            playerd = '';
+                        }
                         playerd = playerd + ' [kicked by '+actor.name+']';
                         connection.userByName(contentPieces[1]).kick(playerd);
                     }
                     else {
-                        reply = tohelp;}
+                        reply = tohelp;
+                    }
                     break;
                 case 'mail': // creates mail to send to another user.		
                     if (blacklist.indexOf(actor.name) == -1 && playerd != undefined){
                         var mailusertemp = contentPieces[1];
                         var mailmestemp = contentPieces[2];
                         for (i=3; i <= contentPieces.length-1;i++) {		
-                            mailmestemp = mailmestemp + ' '+contentPieces[i];}
+                            mailmestemp = mailmestemp + ' '+contentPieces[i];
+                        }
                         mailuser.push(mailusertemp);
                         mailsender.push(actor.name);
                         mailmessage.push(mailmestemp);
                         reply = 'Your mail has been successfully created! Your receiver will receive it when they enter the server or use the !getmail command! c:';
-                        backup();}
+                        backup();
+                    }
                     else if (playerd == undefined){
                         reply = 'A mail message was not detected! Please add a message in the form !mail user command [Ex. !mail Cryanide hi]';
                     }
                     else {
-                        reply = "You don't have permission to do that! :c";}
+                        reply = "You don't have permission to do that! :c";
+                    }
                     break;
                 case 'map': // sends the map link for the tournament
                     if (setupstart == 1) {	
-                        reply = '<br/>The map for tonight is: <a href="'+ssmaplink+'"><b><i><span style="color:#00557f">'+ssmap+'</span></i></b></a>';}
+                        reply = '<br/>The map for tonight is: <a href="'+ssmaplink+'"><b><i><span style="color:#00557f">'+ssmap+'</span></i></b></a>';
+                    }
                     else {
-                        reply = 'Signups have not been released yet, check back in a bit! c:';}
+                        reply = 'Signups have not been released yet, check back in a bit! c:';
+                    }
                     break;
                 case 'mods':
                     reply = '<br/> Here are the mods currently on: <br/>'+modsmum+'<br/>To find any of these mods, use the !find command! c:';
@@ -840,23 +965,30 @@ if (channels.indexOf(state.channel_id) == -1){
                 case 'setgreet': // allows a whitelisted actor to set a greeting for a specific user
                     if(whitelist.indexOf(actor.name)>-1){
                         if (contentPieces.length >2){
-                            ggadd = contentPieces[2];}
+                            ggadd = contentPieces[2];
+                        }
                         else {
-                            ggadd = false;}
+                            ggadd = false;
+                        }
                         if (contentPieces.length > 3){
                             for (i=3; i <= contentPieces.length-1;i++) {		
-                                ggadd = ggadd + ' '+contentPieces[i];}}
+                                ggadd = ggadd + ' '+contentPieces[i];
+                            }}
                         playerd = contentPieces[1];
                         if (playerd == undefined){
-                            reply = 'No greeting was found, please create a message for the bot to send to you when you connect!';}
+                            reply = 'No greeting was found, please create a message for the bot to send to you when you connect!';
+                        }
                         else {
                             if (welcomeuser.indexOf(playerd) > -1){
-                                welcomemessage[welcomeuser.indexOf(playerd)] = ggadd;}
+                                welcomemessage[welcomeuser.indexOf(playerd)] = ggadd;
+                            }
                             else {
                                 welcomeuser.push(playerd);
-                                welcomemessage.push(ggadd);}
+                                welcomemessage.push(ggadd);
+                            }
                             backup();
-                            reply = 'Greeting has been set for '+playerd+'! They will receive this message each time they connect. c:';}
+                            reply = 'Greeting has been set for '+playerd+'! They will receive this message each time they connect. c:';
+                        }
                     }
                     else{
                         reply = tohelp;
@@ -866,15 +998,19 @@ if (channels.indexOf(state.channel_id) == -1){
                     if(whitelist.indexOf(actor.name)>-1){
                         playerd = contentPieces[1];
                         if (playerd == undefined){
-                            reply = 'No greeting was found, please create a message for the bot to send to you when you connect!';}
+                            reply = 'No greeting was found, please create a message for the bot to send to you when you connect!';
+                        }
                         else {
                             if (welcomeuser.indexOf(playerd) > -1){
-                                welcomemessage[welcomeuser.indexOf(playerd)] = 'this_is_supposed_to_be_a_cat-217253';}
+                                welcomemessage[welcomeuser.indexOf(playerd)] = 'this_is_supposed_to_be_a_cat-217253';
+                            }
                             else {
                                 welcomeuser.push(playerd);
-                                welcomemessage.push('this_is_supposed_to_be_a_cat-217253');}
+                                welcomemessage.push('this_is_supposed_to_be_a_cat-217253');
+                            }
                             backup();
-                            reply = 'Greeting has been set for '+playerd+'! They will receive a cat each time they connect. c:';}
+                            reply = 'Greeting has been set for '+playerd+'! They will receive a cat each time they connect. c:';
+                        }
                     }
                     else{
                         reply = tohelp;
@@ -884,7 +1020,8 @@ if (channels.indexOf(state.channel_id) == -1){
                     if (whitelist.indexOf(actor.name)>-1 && gauth == true) {
                         setupdraft = 1;
                         reply = 'Setting up draft now!';
-                        draftsetup();}
+                        draftsetup();
+                    }
                     else {
                         reply = tohelp;}
                     break;
@@ -893,21 +1030,27 @@ if (channels.indexOf(state.channel_id) == -1){
                         setupstart = 1;
                         reply = 'Setting up sheet now!';
                         sheetsetup();
-                        signupsopen = true;}
+                        signupsopen = true;
+                    }
                     else {
-                        reply = tohelp;}
+                        reply = tohelp;
+                    }
                     break;
                 case 'signups': // replies with the signup link, playerd is uneeded.
                     if (setupstart == 1) {				
-                        reply = '<a href="'+sgnlink+'"><b><span style="color:#aa0000"><br/>Click here for the signups!</span></b></a>';}
+                        reply = '<a href="'+sgnlink+'"><b><span style="color:#aa0000"><br/>Click here for the signups!</span></b></a>';
+                    }
                     else {
-                        reply = 'Signups have not been released yet, check back in a bit! c:';}				
+                        reply = 'Signups have not been released yet, check back in a bit! c:';
+                    }				
                     break;
                 case 'spreadsheet': // replies with the spreadsheet link, playerd is uneeded.
                     if (setupstart == 1) {				
-                        reply = '<br/><a href="'+sslink+'"><b><span style="color:#00007f">Click here for the spreadsheet!</span></b></a>';}
+                        reply = '<br/><a href="'+sslink+'"><b><span style="color:#00007f">Click here for the spreadsheet!</span></b></a>';
+                    }
                     else {
-                        reply = 'Signups have not been released yet, check back in a bit! c:';}				
+                        reply = 'Signups have not been released yet, check back in a bit! c:';
+                    }				
                     break;
                 case 'startdraft': // starts the draft and retrieves players, to be done after trades are complete, playerd is uneeded.
                     draftstart();
@@ -916,22 +1059,27 @@ if (channels.indexOf(state.channel_id) == -1){
                     if (greylist.indexOf(actor.name) == -1){
                         greylist.push(actor.name);
                         backup();
-                        reply = "You've been added to the greylist! You will no longer receive automated messages from TToC_BOT when you connect.";}
+                        reply = "You've been added to the greylist! You will no longer receive automated messages from TToC_BOT when you connect.";
+                    }
                     else {
                         greylist.splice(greylist.indexOf(actor.name),1);
                         backup();
-                        reply = "You've been removed from the greylist! You will now receive automated message from "+botname+" when you connect.";}
+                        reply = "You've been removed from the greylist! You will now receive automated message from "+botname+" when you connect.";
+                    }
                     break;
                 case 'stream': // test case right now, but allows for treeing the motd, playerd is uneeded.
                     for (i=0; i < users.length; i++){
                         //connection.userByName(users[i]).sendMessage('this is a quick test of the '+botname+' tree function, please ignore c:');
-                        console.log(users[i]);}
+                        console.log(users[i]);
+                    }
                     break;
                 case 'time': // shows the time
                     if (setupstart == 1) {
-                        reply = 'TToC was treed at 9:30 PM CST and the draft will start at around 10:15 PM CST.';}
+                        reply = 'TToC was treed at 9:30 PM CST and the draft will start at around 10:15 PM CST.';
+                    }
                     else {
-                        reply = 'Signups have not been released yet, check back in a bit! c:';}	
+                        reply = 'Signups have not been released yet, check back in a bit! c:';
+                    }	
                     break;
                 case 'trade': // trades two captains based on their position on the draft board. Requires two numbers for each trading party.
                     if (whitelist.indexOf(actor.name)>-1 && gauth == true) {
@@ -941,7 +1089,8 @@ if (channels.indexOf(state.channel_id) == -1){
                         if (tradec1 > tradec2){
                             playerd = tradec2;
                             tradec2 = tradec1;
-                            tradec1 = playerd;}
+                            tradec1 = playerd;
+                        }
                         tradec1 = captains[tradec1];
                         tradec2 = captains[tradec2];
                         captains[captains.indexOf(tradec2)] = tradec1;
@@ -951,18 +1100,23 @@ if (channels.indexOf(state.channel_id) == -1){
                         for (i=0;i<6;i++){
                             values.push([captains[i]]);}
                         function random8() {
-                            authorize(JSON.parse(gappkey), sswrite);}
+                            authorize(JSON.parse(gappkey), sswrite);
+                        }
                         random8();
                         connection.user.channel.sendMessage('Successfully switched captains '+tradec1+' and '+tradec2+'!');	
-                        connection.channelByName('Spectating Lounge [Open to all]').sendMessage('Successfully switched captains '+tradec1+' and '+tradec2+'!');}
+                        connection.channelByName('Spectating Lounge [Open to all]').sendMessage('Successfully switched captains '+tradec1+' and '+tradec2+'!');
+                    }
                     else {
-                        reply = tohelp;}
+                        reply = tohelp;
+                    }
                     break;
                 case 'tree': // incomplete, allows a whitelisted user to tree out signups, playerd is uneeded
                     if(whitelist.indexOf(actor.name)>-1) {
-                        reply = 'look a tree';}
+                        reply = 'look a tree';
+                    }
                     else{
-                        reply = tohelp;}
+                        reply = tohelp;
+                    }
                     break;
                 case 'updatelinks': // updates links from the spreadsheet, playerd is uneeded
                     if (whitelist.indexOf(actor.name)> -1 && gauth == true){
@@ -973,7 +1127,8 @@ if (channels.indexOf(state.channel_id) == -1){
                         signupsopen = true;
                     }
                     else {
-                        reply = tohelp;}
+                        reply = tohelp;
+                    }
                     break;
                 case 'updatemotd': // updates var motd to a line on motd.txt, playerd defines which number to utilize, defaults to 0
                     if (whitelist.indexOf(actor.name)> -1){
@@ -985,9 +1140,11 @@ if (channels.indexOf(state.channel_id) == -1){
                             console.log(Number.isInteger(playerd));
                             console.log(motd.length);
                             if (Number.isInteger(playerd) == true && playerd <= motd.length-1 && playerd >= 0) {
-                                motd = motd[playerd];}
+                                motd = motd[playerd];
+                            }
                             else {
-                                motd = motd[0];}
+                                motd = motd[0];
+                            }
                             motd = motd+sadbot;
                             reply = 'motd has been updated and turned on!';					
                         }
@@ -997,15 +1154,18 @@ if (channels.indexOf(state.channel_id) == -1){
                             motd = "Sorry, there's no motd set right now!";}
                     }
                     else {
-                        reply = tohelp;}
+                        reply = tohelp;
+                    }
                     break;
                 case 'whitelist': // adds a user to the whitelist, which allows them to access whitelist only commands, playerd defines user to add
                     if (whitelist.indexOf(actor.name)>-1) {
                         whitelist.push(playerd);
                         reply = 'Added '+playerd+' to the whitelist!';
-                        backup();}
+                        backup();
+                    }
                     else{
-                        reply = tohelp;}
+                        reply = tohelp;
+                    }
                     break;
                 default:
                     reply = tohelp;
@@ -1024,15 +1184,20 @@ if (channels.indexOf(state.channel_id) == -1){
     connection.on('user-connect', function(user) { // user-connect is the event emitted when a user connects to the server
         if(mailuser.indexOf(user.name)>-1){ // sends mail if user has mail to collect.
             user.sendMessage("Howdy "+user.name+"! I've been keeping some cool mail from other people for you, let me go get it!");
-            getmail(user);}
+            getmail(user);
+        }
         if(signupsopen == true && greylist.indexOf(user.name) == -1){ // if a tournament is running, signups are sent to the player
-            user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you want to signup, message me !signups or !spreadsheet<br/><br/>(If you don't want these automated messages, message the !stop command to me)");}
+            user.sendMessage("<br/>TToC signups are currently open for "+ssmap+"! If you want to signup, message me !signups or !spreadsheet<br/><br/>(If you don't want these automated messages, message the !stop command to me)");
+        }
         else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == true){ // sends the motd if active
-            user.sendMessage(motd);}
+            user.sendMessage(motd);
+        }
         else if (welcomeuser.indexOf(user.name) > -1 && signupsopen == false && motdset == false){ // sends the user's predefined welcome message
             if (welcomemessage[welcomeuser.indexOf(user.name)] == 'this_is_supposed_to_be_a_cat-217253'){
-                user.sendMessage("<br/>"+botname+" sends a cat to say hi!<br/><br/>"+cats()+"<br/>");}
-            else {user.sendMessage(welcomemessage[welcomeuser.indexOf(user.name)]);}
+                user.sendMessage("<br/>"+botname+" sends a cat to say hi!<br/><br/>"+cats()+"<br/>");
+            }
+            else {user.sendMessage(welcomemessage[welcomeuser.indexOf(user.name)]);
+                 }
         }	
         else if(greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == false){ // default message sent to every player on connect.
             //user.sendMessage("<br/>"+botname+" sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");
@@ -1042,20 +1207,25 @@ if (channels.indexOf(state.channel_id) == -1){
         if ((lockchannel.indexOf(toChannel.name) > -1 || lockschannel.indexOf(toChannel.name) > -1) && actor.name != botname && (whitelist.indexOf(actor.name) == -1 || mods.indexOf(actor.name) == -1)){ // prevents user from entering if channel is locked.
             user.moveToChannel(botmove);
             user.sendMessage('Sorry, you cannot enter this channel right now. :c');
-            connection.channelByName(toChannel.name).sendMessage(user.name+' was prevented from entering this channel!');}
+            connection.channelByName(toChannel.name).sendMessage(user.name+' was prevented from entering this channel!');
+        }
         else if (lockschannel.indexOf(fromChannel.name) > -1 && actor.name != botname && (whitelist.indexOf(actor.name) == -1 || mods.indexOf(actor.name) == -1)){ // prevents user from leaving is channel is on super lockdown.
             user.moveToChannel(fromChannel.name);
             user.sendMessage('Sorry, you cannot leave this channel right now. :c');
-            connection.channelByName(fromChannel.name).sendMessage(user.name+' was prevented from leaving this channel!');}
+            connection.channelByName(fromChannel.name).sendMessage(user.name+' was prevented from leaving this channel!');
+        }
         else if (connection.user.channel.name == toChannel.name && user.name != botname && actor.name != botname) { // if user has mail, sends a message to remind them to collect it.
-            connection.user.channel.sendMessage('Welcome to '+toChannel.name+' '+user.name+'!');}
+            connection.user.channel.sendMessage('Welcome to '+toChannel.name+' '+user.name+'!');
+        }
         if(mailuser.indexOf(user.name)>-1){
-            user.sendMessage("This is an automated reminder from "+botname+" that you have some mail! Message !getmail to me when you're ready to receive it! c:");}
+            user.sendMessage("This is an automated reminder from "+botname+" that you have some mail! Message !getmail to me when you're ready to receive it! c:");
+        }
         if (toChannel.name == 'In-Game Moderators Assistance Room' && mods.indexOf(user.name) == -1){
             user.sendMessage('<br/>Welcome to the In-Game Moderators Assistance Room! If you want a list of mods currently on Mumble, use the !mods command. <br/><br/>If there is not a mod available, try going to the IRC channel by <a href="http://webchat.freenode.net/?channels=tpmods"><b><span style="color:#39a5dd">clicking here</span></b></a>, where a mod is almost always availble to help there! c:');
             reply = '[NA Mumble] '+user.name+' is waiting in the In-Game Moderators Assistance Room!';
             if (slackauth == true){
-                sendtoslack(slackchannel,reply);}}
+                sendtoslack(slackchannel,reply);
+            }}
     });
 
     function sheetsetup() { // sets up the form and sheet for a season.
@@ -1063,10 +1233,12 @@ if (channels.indexOf(state.channel_id) == -1){
         console.log('Running Form Setup Script');
         function random1() {
             scriptname = 'FormSetup';
-            authorize(JSON.parse(gappkey), gscriptrun);}
+            authorize(JSON.parse(gappkey), gscriptrun);
+        }
         function random2() {
             scriptname = 'SheetSetup';
-            authorize(JSON.parse(gappkey), gscriptrun);}
+            authorize(JSON.parse(gappkey), gscriptrun);
+        }
         random1();
         setTimeout(random2,15000);
 
@@ -1081,7 +1253,8 @@ if (channels.indexOf(state.channel_id) == -1){
         function random11(){
             ssreadfrom = "'S-"+seasonnum+"'!T3";
             rows = [];
-            authorize(JSON.parse(gappkey), ssread);}
+            authorize(JSON.parse(gappkey), ssread);
+        }
         function random12(){
             seasonsize = rows[0];
             console.log(seasonsize);
@@ -1091,9 +1264,11 @@ if (channels.indexOf(state.channel_id) == -1){
             ssreadfrom = "'S-"+seasonnum+"'!N6:N"+playerd;
             authorize(JSON.parse(gappkey), ssread);
             for (i=0;i<seasonsize;i++){
-                captains[i] = rows[i];}}
+                captains[i] = rows[i];
+            }}
         setTimeout(random11,10000);
-        setTimeout(random12,15000);}
+        setTimeout(random12,15000);
+    }
 
     function pickrefresh(){ // incomplete, if bot crashes during the draft, this is supposed to retrieve needed information
         /* 
@@ -1148,14 +1323,17 @@ if (channels.indexOf(state.channel_id) == -1){
                 break;
             default:
                 draftmod = -1;
-                break;}
+                break;
+        }
         playerd = parseInt(draftmod)+4*parseInt(seasonsize);
         ssreadfrom = "'S-"+seasonnum+"'!"+"M"+draftmod+":M"+playerd;
         authorize(JSON.parse(gappkey), ssread);
         players = rows;
         for (i=0;i<seasonsize;i++){
-            players.splice(players.indexOf(captains[i]),1);}
-        playersr = players;}
+            players.splice(players.indexOf(captains[i]),1);
+        }
+        playersr = players;
+    }
 
     function backup(){// backs up data.
         console.log('backing up data!');
@@ -1169,7 +1347,8 @@ if (channels.indexOf(state.channel_id) == -1){
         fs.writeFileSync('whitelist.txt',whitelist.join('\n'));
         fs.writeFileSync('welcomemessage.txt',welcomemessage.join('\n'));
         fs.writeFileSync('welcomeuser.txt',welcomeuser.join('\n'));
-        console.log('data has been backed up!');}
+        console.log('data has been backed up!');
+    }
 
     function draftplayer(playerd){ // interface with google sheets to write player name on the draft board
         console.log(playerd+' is being drafted!');
@@ -1177,14 +1356,17 @@ if (channels.indexOf(state.channel_id) == -1){
         seasonsize = 6;// tempvars for testing
         picknumround = picknum % seasonsize;
         if (picknumround == 0 && draftround == 1){
-            picknumround = seasonsize;}
+            picknumround = seasonsize;
+        }
         else if (picknumround == 0 && (draftround == 2 || draftround == 3)){
-            picknumround = 1;}
+            picknumround = 1;
+        }
         else if (draftround > 1 && picknumround != seasonsize){
             picknumround = seasonsize - picknumround+1;
         }
         if (picknum == seasonsize+1){
-            picknumround = seasonsize;}
+            picknumround = seasonsize;
+        }
         picknumrounddraft = picknumround+5;
         switch(draftround){
             case 1:
@@ -1195,24 +1377,30 @@ if (channels.indexOf(state.channel_id) == -1){
                 break;
             case 3:
                 picknumcolumn = 'Q';
-                break;}	
+                break;
+        }	
         ssreadfrom = "'S-"+seasonnum+"'!"+picknumcolumn+picknumrounddraft;
         values = [[playerd]];
         function random5() {
-            authorize(JSON.parse(gappkey), sswrite);}
+            authorize(JSON.parse(gappkey), sswrite);
+        }
         random5();	
         connection.user.channel.sendMessage(playerd+' has been drafted by '+captains[picknumround-1]+'!');	
         connection.channelByName('Spectating Lounge [Open to all]').sendMessage(playerd+' has been drafted by '+captains[picknumround-1]+'!');
         drafted = 0;
         picknum = picknum + 1;
         if (picknum == seasonsize){
-            draftround = 1;}
+            draftround = 1;
+        }
         else if (picknum == seasonsize * 2){
-            draftround = 2;}
+            draftround = 2;
+        }
         else if (picknum == seasonsize * 3){
-            draftround = 3;}
+            draftround = 3;
+        }
         else{
-            draftround = Math.floor(picknum/seasonsize)+1;}
+            draftround = Math.floor(picknum/seasonsize)+1;
+        }
     }
 
     function updatelinks() { // interface with google sheets to get links
@@ -1220,7 +1408,8 @@ if (channels.indexOf(state.channel_id) == -1){
         console.log('Retrieving links from the spreadsheet!');
         function random4() {
             ssreadfrom = "'Hall of Fame'!B17:B23";
-            authorize(JSON.parse(gappkey), ssread);}
+            authorize(JSON.parse(gappkey), ssread);
+        }
         function random6() {
             ssmaplink = rows[4];
             ssmap = rows[3];
@@ -1231,7 +1420,8 @@ if (channels.indexOf(state.channel_id) == -1){
             console.log(ssmaplink);
             console.log(seasonnum);
             console.log(sslink);
-            console.log(sgnlink);}
+            console.log(sgnlink);
+        }
         random4();
         setTimeout(random6,5000);
         setTimeout(backup,6000);
@@ -1247,30 +1437,38 @@ if (channels.indexOf(state.channel_id) == -1){
                 actor.sendMessage(mailmessage[messagegeti]);
                 mailuser.splice(messagegeti,1);
                 mailmessage.splice(messagegeti,1);
-                mailsender.splice(messagegeti,1);}
+                mailsender.splice(messagegeti,1);
+            }
             actor.sendMessage("That's all of your messages for now! If you want to reply to your mail, message me with the command !mail user message! Have a great day! c:");
-            backup();}
+            backup();
+        }
         else{
-            actor.sendMessage("Sorry, you don't have any mail. :c");}}
+            actor.sendMessage("Sorry, you don't have any mail. :c");
+        }}
 
     function sendtoslack(cid,message) {
         web.chat.postMessage(cid,message, function(err, res){
             if (err) {
-                console.log('Error:', err);}
+                console.log('Error:', err);
+            }
             else {
-                console.log('Message sent: ', res);}})
+                console.log('Message sent: ', res);
+            }})
     }
 
     function createTagProGroup(playerd,ggadd,actor,toggle,mapname){
         if (playerd == 'maptest' || playerd == 'maptest2' || playerd == 'maptest3'){
             groupbuild = 'http://'+playerd+'.newcompte.fr/groups/create';
-            groupsend = 'http://'+playerd+'.newcompte.fr/groups/';}
+            groupsend = 'http://'+playerd+'.newcompte.fr/groups/';
+        }
         else if (playerd == 'test'){
             groupbuild = 'test';
-            groupdsend = 'test';}
+            groupdsend = 'test';
+        }
         else {
             groupbuild = 'http://tagpro-'+playerd+'.koalabeast.com/groups/create';
-            groupsend = 'http://tagpro-'+playerd+'.koalabeast.com/groups/';}
+            groupsend = 'http://tagpro-'+playerd+'.koalabeast.com/groups/';
+        }
         request(
             { method: 'POST'
              , uri: groupbuild
@@ -1286,7 +1484,8 @@ if (channels.indexOf(state.channel_id) == -1){
                     console.log(groupsend+groupid);
                     reply = '<br/>Here is your '+playerd+' group:<br/><br/><a href="'+groupsend+groupid+'"><span style="color:#39a5dd">'+groupsend+groupid+'</span></a>';}
                 else {
-                    reply = '<br/> There was an error when creating your group. Check to make sure you put an actual server! c:';}})
+                    reply = '<br/> There was an error when creating your group. Check to make sure you put an actual server! c:';
+                }})
         function random3() {
             console.log(reply);
             actor.sendMessage(reply);
@@ -1298,6 +1497,6 @@ if (channels.indexOf(state.channel_id) == -1){
                     ggid.push(ggadd.toLowerCase());
                     gglink.push(groupsend+groupid);
                 }}}
-        setTimeout(random3,500);}
-
+        setTimeout(random3,500);
+    }
 });
