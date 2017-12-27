@@ -542,13 +542,14 @@ if (channels.indexOf(state.channel_id) == -1){
 
     connection.on('message', function (message,actor,scope) {	
         console.log(actor.name);
+        message = message.replace(/\n/g,""); // consolidates message to one line
         reply = "";
         const privateMessage = scope === 'private'; // scope defines how the bot received the message
         const content = message || '';
         const isCommand = content[0] === '!';
         const isChat = content[0] === '@';
         contentPieces = content.slice(1, content.length).split(' ');
-        const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br")[0];
+        const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br")[0].split("<p")[0];
         var playerd = contentPieces[1];	
         if (contentPieces.length > 2){
             for (i=2; i <= contentPieces.length-1;i++) {		
