@@ -927,7 +927,7 @@ if (channels.indexOf(state.channel_id) == -1){
                         for (i=3; i <= contentPieces.length-1;i++) {		
                             mailmestemp = mailmestemp + ' '+contentPieces[i];
                         }
-                        mailuser.push(mailusertemp);
+                        mailuser.push(mailusertemp.toLowerCase());
                         mailsender.push(actor.name);
                         mailmessage.push(mailmestemp);
                         reply = 'Your mail has been successfully created! Your receiver will receive it when they enter the server or use the !getmail command! c:';
@@ -1183,7 +1183,7 @@ if (channels.indexOf(state.channel_id) == -1){
     })
 
     connection.on('user-connect', function(user) { // user-connect is the event emitted when a user connects to the server
-        if(mailuser.indexOf(user.name)>-1){ // sends mail if user has mail to collect.
+        if(mailuser.indexOf(user.name.toLowerCase())>-1){ // sends mail if user has mail to collect.
             user.sendMessage("Howdy "+user.name+"! I've been keeping some cool mail from other people for you, let me go get it!");
             getmail(user);
         }
@@ -1218,7 +1218,7 @@ if (channels.indexOf(state.channel_id) == -1){
         else if (connection.user.channel.name == toChannel.name && user.name != botname && actor.name != botname) { // if user has mail, sends a message to remind them to collect it.
             connection.user.channel.sendMessage('Welcome to '+toChannel.name+' '+user.name+'!');
         }
-        if(mailuser.indexOf(user.name)>-1){
+        if(mailuser.indexOf(user.name.toLowerCase())>-1){
             user.sendMessage("This is an automated reminder from "+botname+" that you have some mail! Message !getmail to me when you're ready to receive it! c:");
         }
         if (toChannel.name == 'In-Game Moderators Assistance Room' && mods.indexOf(user.name) == -1){
@@ -1429,11 +1429,11 @@ if (channels.indexOf(state.channel_id) == -1){
     }
 
     function getmail(actor) { // gets mail from arrays
-        if(mailuser.indexOf(actor.name)>-1){
+        if(mailuser.indexOf(actor.name.toLowerCase())>-1){
             actor.sendMessage("Howdy "+actor.name+"! Let me go get your mail!");
             randomvar = 1;
-            while(mailuser.indexOf(actor.name)>-1) {	
-                var messagegeti = mailuser.indexOf(actor.name);
+            while(mailuser.indexOf(actor.name.toLowerCase())>-1) {	
+                var messagegeti = mailuser.indexOf(actor.name.toLowerCase());
                 actor.sendMessage('Message from: '+mailsender[messagegeti]);				
                 actor.sendMessage(mailmessage[messagegeti]);
                 mailuser.splice(messagegeti,1);
