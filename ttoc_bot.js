@@ -108,6 +108,7 @@ if (fs.existsSync('usergroups.txt')) {
     pseudoMods = splitParts[2].split(" ");
     greylist = splitParts[3].split(" ");
     blacklist = splitParts[4].split(" "); // custom groups can be added after this line.
+    console.log('user groups imported from usergroups.txt!');
 } else {
     fs.openSync('usergroups.txt', 'w');
     console.log('usergroups.txt was created!');
