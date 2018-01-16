@@ -26,15 +26,13 @@ ttoc-mumble-bot requires a certificate in order to connect to a mumble server, b
 
 You can use the following command to generate a certificate: <pre><code> openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem </code></pre>
 
+Using npm install may cause some issues with node-gyp rebuild if you haven't set it up before. Use the following command in Windows PowerShell to fix it: <pre><code> npm install -g windows-build-tools </code></pre>
+
 ttoc-mumble-bot saves all information in .txt files. I'm working on making a better system, but this works for now. All .txt files which don't have API info are created on first launch by the bot if they don't already exist.
 
 Info on how to set up the three APIs can be found in later sections of this readme.
 
 Here's how each .txt file is structured:
-
-blacklist.txt = This .txt file holds mumble users on the blacklist, one per line.
-
-greylist.txt = This .txt file holds mumble users on the greylist, one per line.
 
 groupmekey.txt = This .txt file holds API info for the [GroupMe API](https://dev.groupme.com/docs/v3) as follows:
 
@@ -51,8 +49,6 @@ mailmessage.txt = This .txt file is part of the mail system and holds the messag
 mailsender.txt = This .txt file is part of the mail system and holds the sender of the message, one per line.
 
 mailuser.txt = This .txt file is part of the mail system and holds the receiver of the message, one per line.
-
-moderators.txt = This .txt file holds the mumble users in the moderators group, one per line.
 
 motd.txt = This .txt file holds motd messages for the motd system, one per line.
 
@@ -74,6 +70,16 @@ Line # | Content | Description
 5 | ssmaplink | link to a .png of the map being played
 6 | ssform | link to the form of the tournament
 7 | sslink | link to the tournament spreadsheet
+
+usergroups.txt = This .txt file holds the user groups for the bot, each group on one line and each name separated by spaces. Its format is as follows:
+
+Line # | Content | Description
+:---: | :---: | :---:
+1 | whitelist | superusers of the bot, have access to all commands
+2 | mods | Public mods. In the code, members of this group can be found with the !mods command if they are on.
+3 | pseudoMods | Private mods. Have all the power of mods but none of the publicity.
+4 | greylist | Users who do not want automated messages from the bot.
+5 | blacklist | Bad users who cannot use commands with spam potential.
 
 welcomemessage.txt = This .txt file is part of the greeting system and holds user greetings, one per line.
 
