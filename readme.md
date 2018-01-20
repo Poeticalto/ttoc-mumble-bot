@@ -48,7 +48,7 @@ mail.txt = This .txt file holds the mail system for the bot. Each item is stored
 
 Piece # | Content | Description
 :---: | :---: | :---:
-1 | mailtime | A string containing the date and time in the form Month/Date/Year||Hour:Minute:Second[CST]
+1 | mailtime | A string containing the date and time in the form Month/Date/Year,Hour:Minute:Second[CST]
 2 | mailsender | The mumble user who sent the mail.
 3 | mailuser | The mumble user who will receive the mail. (case-insensitive)
 4 | mailmessage | The contents of the mail.
