@@ -44,11 +44,14 @@ Line # | Content | Description
 4 | USER_NAME | This is your name in the group, can be used to filter out your messages.
 5 | GROUP_ID | This is the group to listen to.
 
-mailmessage.txt = This .txt file is part of the mail system and holds the message to send to other Mumble users, one per line.
+mail.txt = This .txt file holds the mail system for the bot. Each item is stored on one line, and the line format is as follows (space between each piece):
 
-mailsender.txt = This .txt file is part of the mail system and holds the sender of the message, one per line.
-
-mailuser.txt = This .txt file is part of the mail system and holds the receiver of the message, one per line.
+Piece # | Content | Description
+:---: | :---: | :---:
+1 | mailtime | A string containing the date and time in the form Month/Date/Year||Hour:Minute:Second[CST]
+2 | mailsender | The mumble user who sent the mail.
+3 | mailuser | The mumble user who will receive the mail. (case-insensitive)
+4 | mailmessage | The contents of the mail.
 
 motd.txt = This .txt file holds motd messages for the motd system, one per line.
 
@@ -106,6 +109,8 @@ Users: Regular users have access to public commands.
 Google API/Google Sheets requires an OAuth token for any attempt to run scripts/work on spreadsheets.
 
 If you have never created a project via Google API, [consult this guide.](https://developers.google.com/apps-script/guides/rest/quickstart/nodejs)
+
+If you create the credentials through the quickstart, you can copy that json into the folder and rename it as gappAuth.json. Otherwise, this json will be set up the first time you try to access a Google Sheet when running the bot.
 
 ttoc-mumble-bot is natively set up to communicate with the [TToC Spreadsheet,](https://docs.google.com/spreadsheets/d/1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4/edit#gid=115661595) but if you want to make your own TagPro Tournament, you can make a copy of [this spreadsheet.]() Making a copy of this spreadsheet will also create a copy of the backbone scripts used to operate the spreadsheet.
 

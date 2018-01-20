@@ -3,6 +3,7 @@ botcerts.pem
 botkey.pem
 client_secret.json
 gappAuth.json
+mail.txt
 mailmessage.txt
 mailsender.txt
 mailuser.txt

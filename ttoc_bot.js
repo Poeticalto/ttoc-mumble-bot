@@ -17,7 +17,7 @@ var API = GroupMe.Stateless;
 // CUSTOM SETTINGS FOR THE BOT
 var botname = 'TToC_BOT'; // name of the bot, make sure it matches the certificate if you're importing it.
 var bot_home = 'Meep is God'; // This is used for the !home command to return the bot to a predefined location.
-var botmove = 'TToC'; // This is used to move users when a channel is on lockdown.
+var botmove = 'Administration Area'; // This is used to move users when a channel is on lockdown.
 var scriptId = 'MR8ANgNM86TUijo7WF5u3bAUVXR8RJHBv'; // This ID corresponds to the TToC scripts
 var spreadsheetId = '1eeYA5IVd-f3rjyUqToIwAa7ZSrnvnDXj5qE0f0hF_X4'; // This ID goes to the TToC Spreadsheet
 var help = '<b><br/></b>Here is a list of public commands:<b><br/>!cat</b> - Gives one cat.<br/><b>!cats</b> - Want more cats? How about five?<br/><b>!find</b> <b><span style="color:#aa0000">user </span></b>- If the user is on the Mumble Server, a link will be provided to move to their channel. User is case-insensitive.<br/><b>!greet</b> <b><span style="color:#aa0000">message </span></b>- Sets a greeting for the user that will be sent on connect.<br/><b>!greetcat</b> - ' + botname + ' will greet the user with a cat that will be sent on connect.<br/><b>!getmail</b> - Retrieves your mail.<br/><b>!gg <span style="color:#aa0000">name</span><span style="color:#0000ff"> </span></b>- Returns a group link if a group has been registered through the bot.<br/><b>!group <span style="color:#aa0000">server </span><span style="color:#0000ff">name</span></b> - Gives a TagPro group for the corresponding server. You can optionally set a name so other players can access it via the !gg command.<br/><b>!groupc <span style="color:#aa0000">server </span><span style="color:#0000ff">map</span><span style="color:#aa0000"> </span><span style="color:#0000ff">name </span></b>- Gives a competitive group for the corresponding server and map. You can optionally set a name so other players can access it via the !gg command.<br/><b>!groupt <span style="color:#0000ff">name </span></b>- Gives a competitive group for the tournament. You can optionally set a name so other players can access it via the !gg command.<br/><b>!help</b> - Gives user the help message<br/><b>!info</b> - Gives user info about me <br/><b>!mail<span style="color:#aa0000"> user </span><span style="color:#0000ff">message</span></b> - Stores a message for another user to get. They will receive it the next time they enter the server or when they use the !getmail command. The message should just be plain text.<br/><b>!map</b> - Gives user the map for the current season<br/><b>!mods</b> - Gives the list of mods connected to the server.<br/><b>!motd</b> - Gives the current motd of the bot.<br/><b>!qak</b> - qak<br/><b>!signups</b> - Gives user the signup link<br/><b>!spreadsheet</b> - Gives user the spreadsheet link<br/><b>!stop</b> - Adds user to the greylist, which stops the bot from sending automated messages. If done again, user is removed, which lets ' + botname + ' send messages again.<br/><b>!time</b> - Gives user the time of the draft';
@@ -34,6 +34,7 @@ var TOKEN_PATH = 'gappAuth.json';
 var mailuser = [];
 var mailsender = [];
 var mailmessage = [];
+var mailtime = [];
 var rows;
 var seasonnum;
 var ssmap;
@@ -59,32 +60,28 @@ var bot_id = null;
 var gauth = false;
 var gappkey;
 var splitParts;
+var splitMessage;
 
 // for each file, replaces the defaults if it exists.
 // consult the readme for help on how to setup each .txt file.
 
-if (fs.existsSync('mailuser.txt')) {
-    mailuser = fs.readFileSync('mailuser.txt').toString().split("\n"); //mailuser contains receivers of mail
-    console.log('mailuser imported from mailuser.txt!');
+if (fs.existsSync('mail.txt')) {
+    splitParts = fs.readFileSync('mail.txt').toString().split("\n");
+    for (var i = 0; i < splitParts.length; i++) {
+        if (splitParts[i].split(" ").length >= 4) {
+            mailtime.push(splitParts[i].split(" ")[0]);
+            mailsender.push(splitParts[i].split(" ")[1]);
+            mailuser.push(splitParts[i].split(" ")[2]);
+            splitMessage = "";
+            for (var j = 3; j < splitParts[i].split(" ").length; j++) {
+                splitMessage = splitMessage + ' ' + splitParts[i].split(" ")[j];
+            }
+            mailmessage.push(splitMessage);
+        }
+    }
 } else {
-    fs.openSync('mailuser.txt', 'w');
-    console.log('mailuser.txt was created!');
-}
-
-if (fs.existsSync('mailsender.txt')) {
-    mailsender = fs.readFileSync('mailsender.txt').toString().split("\n"); //mailsender contains senders of mail
-    console.log('mailsender imported from mailsender.txt!');
-} else {
-    fs.openSync('mailsender.txt', 'w');
-    console.log('mailsender.txt was created!');
-}
-
-if (fs.existsSync('mailmessage.txt')) {
-    mailmessage = fs.readFileSync('mailmessage.txt').toString().split("\n"); //mailmessage contains mail to send
-    console.log('mailmessage imported from mailmessage.txt!');
-} else {
-    fs.openSync('mailmessage.txt', 'w');
-    console.log('mailmessage.txt was created!');
+    fs.openSync('mail.txt', 'w');
+    console.log('mail.txt was created!');
 }
 
 if (fs.existsSync('sslink.txt')) {
@@ -513,7 +510,7 @@ if (channels.indexOf(state.channel_id) == -1){
         const isCommand = content[0] === '!';
         const isChat = content[0] === '@';
         contentPieces = content.slice(1, content.length).split(' ');
-        const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br")[0].split("<p")[0];
+        const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br")[0].split("<p")[0].toLowerCase();
         var playerd = contentPieces[1];
         if (contentPieces.length > 2) {
             for (i = 2; i <= contentPieces.length - 1; i++) {
@@ -887,6 +884,7 @@ if (channels.indexOf(state.channel_id) == -1){
                         for (i = 3; i <= contentPieces.length - 1; i++) {
                             mailmestemp = mailmestemp + ' ' + contentPieces[i];
                         }
+                        mailtime.push(getDateTime());
                         mailuser.push(mailusertemp.toLowerCase());
                         mailsender.push(actor.name);
                         mailmessage.push(mailmestemp);
@@ -917,9 +915,7 @@ if (channels.indexOf(state.channel_id) == -1){
                 case 'qak': // qak
                     reply = 'qak';
                     break;
-                case 'rjoin':
-                    break;
-
+                    // break point to add ranked pug commands later.
                 case 'setgreet': // allows a whitelisted actor to set a greeting for a specific user
                     if (whitelist.indexOf(actor.name) > -1) {
                         if (contentPieces.length > 2) {
@@ -1020,6 +1016,9 @@ if (channels.indexOf(state.channel_id) == -1){
                         //connection.userByName(users[i]).sendMessage('this is a quick test of the '+botname+' tree function, please ignore c:');
                         console.log(users[i]);
                     }
+                    break;
+                case 'test':
+                    reply = getDateTime();
                     break;
                 case 'time': // shows the time
                     if (setupstart == 1) {
@@ -1147,11 +1146,11 @@ if (channels.indexOf(state.channel_id) == -1){
     });
 
     connection.on('user-move', function(user, fromChannel, toChannel, actor) { // user-move is the event emitted when a user switches channels
-        if ((lockchannel.indexOf(toChannel.name) > -1 || lockschannel.indexOf(toChannel.name) > -1) && actor.name != botname && (whitelist.indexOf(actor.name) == -1 || mods.indexOf(actor.name) == -1 || pseudoMods.indexOf(actor.name) == -1)) { // prevents user from entering if channel is locked.
+        if ((lockchannel.indexOf(toChannel.name) > -1 || lockschannel.indexOf(toChannel.name) > -1) && actor.name != botname && (whitelist.indexOf(actor.name) == -1 && mods.indexOf(actor.name) == -1 && pseudoMods.indexOf(actor.name) == -1)) { // prevents user from entering if channel is locked.
             user.moveToChannel(botmove);
             user.sendMessage('Sorry, you cannot enter this channel right now. :c');
             connection.channelByName(toChannel.name).sendMessage(user.name + ' was prevented from entering this channel!');
-        } else if (lockschannel.indexOf(fromChannel.name) > -1 && actor.name != botname && (whitelist.indexOf(actor.name) == -1 || mods.indexOf(actor.name) == -1 || pseudoMods.indexOf(actor.name) == -1)) { // prevents user from leaving is channel is on super lockdown.
+        } else if (lockschannel.indexOf(fromChannel.name) > -1 && actor.name != botname && (whitelist.indexOf(actor.name) == -1 && mods.indexOf(actor.name) == -1 && pseudoMods.indexOf(actor.name) == -1)) { // prevents user from leaving is channel is on super lockdown.
             user.moveToChannel(fromChannel.name);
             user.sendMessage('Sorry, you cannot leave this channel right now. :c');
             connection.channelByName(fromChannel.name).sendMessage(user.name + ' was prevented from leaving this channel!');
@@ -1218,20 +1217,6 @@ if (channels.indexOf(state.channel_id) == -1){
         setTimeout(random12, 15000);
     }
 
-    function pickrefresh() { // incomplete, if bot crashes during the draft, this is supposed to retrieve needed information
-        /* 
-	TODO refresh the following vars:
-	spreadsheet link
-	form link
-	tree message
-	if draft has started:
-	players
-	playersr(duplicate of players)
-	captains
-	season size
-*/
-    }
-
     function draftstart() { // concludes trading period and starts draft
         console.log('draftstart has been activated!');
         console.log('Starting Draft!');
@@ -1286,10 +1271,12 @@ if (channels.indexOf(state.channel_id) == -1){
     function backup() { // backs up data.
         console.log('backing up data!');
         rows = ['TToC', seasonnum, 'Sphere', ssmap, ssmaplink, sgnlink, sslink];
+        splitParts = [];
+        for (var i = 0; i < mailtime.length; i++) {
+            splitParts[i] = mailtime[i] + ' ' + mailsender[i] + ' ' + mailuser[i] + ' ' + mailmessage[i];
+        }
+        fs.writeFileSync('mail.txt', splitParts.join('\n'));
         fs.writeFileSync('sslink.txt', rows.join('\n'));
-        fs.writeFileSync('mailuser.txt', mailuser.join('\n'));
-        fs.writeFileSync('mailmessage.txt', mailmessage.join('\n'));
-        fs.writeFileSync('mailsender.txt', mailsender.join('\n'));
         fs.writeFileSync('welcomemessage.txt', welcomemessage.join('\n'));
         fs.writeFileSync('welcomeuser.txt', welcomeuser.join('\n'));
         fs.writeFileSync('usergroups.txt', whitelist.join(' ') + '\n' + mods.join(' ') + '\n' + pseudoMods.join(' ') + '\n' + greylist.join(' ') + '\n' + blacklist.join(' '));
@@ -1379,8 +1366,9 @@ if (channels.indexOf(state.channel_id) == -1){
             randomvar = 1;
             while (mailuser.indexOf(actor.name.toLowerCase()) > -1) {
                 var messagegeti = mailuser.indexOf(actor.name.toLowerCase());
-                actor.sendMessage('Message from: ' + mailsender[messagegeti]);
+                actor.sendMessage('Message from: ' + mailsender[messagegeti] + ' {' + mailtime[messagegeti] + '}');
                 actor.sendMessage(mailmessage[messagegeti]);
+                mailtime.splice(messagegeti, 1);
                 mailuser.splice(messagegeti, 1);
                 mailmessage.splice(messagegeti, 1);
                 mailsender.splice(messagegeti, 1);
@@ -1447,4 +1435,21 @@ if (channels.indexOf(state.channel_id) == -1){
         }
         setTimeout(random3, 500);
     }
+
+    function getDateTime() {
+        var date = new Date();
+        var hour = date.getHours();
+        hour = (hour < 10 ? "0" : "") + hour;
+        var min = date.getMinutes();
+        min = (min < 10 ? "0" : "") + min;
+        var sec = date.getSeconds();
+        sec = (sec < 10 ? "0" : "") + sec;
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        month = (month < 10 ? "0" : "") + month;
+        var day = date.getDate();
+        day = (day < 10 ? "0" : "") + day;
+        return month + "/" + day + "/" + year + "||" + hour + ":" + min + ":" + sec + "[CST]";
+    }
+
 });
