@@ -28,8 +28,7 @@ var bot_info = 'TToC, or the TagPro Tournament of Champions is a regular tournam
 var bot_comment = help; // comment of the bot on the mumble server.
 
 // Location for the token used to verify Google oAuth. This was taken from the nodejs quickstart, so if you have the token saved elsewhere, change the DIR/PATH.
-var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/';
-var TOKEN_PATH = TOKEN_DIR + 'script-nodejs-quickstart.json';
+var TOKEN_PATH = 'gappAuth.json';
 
 // The following are defaults for the various functions of the bot.
 var mailuser = [];
@@ -212,13 +211,6 @@ function getNewToken(oauth2Client, callback) {
 }
 
 function storeToken(token) {
-    try {
-        fs.mkdirSync(TOKEN_DIR);
-    } catch (err) {
-        if (err.code != 'EEXIST') {
-            throw err;
-        }
-    }
     fs.writeFile(TOKEN_PATH, JSON.stringify(token));
     console.log('Token stored to ' + TOKEN_PATH);
 }
@@ -362,7 +354,7 @@ mumble.connect(mumbleurl, options, function(error, connection) {
     connection.authenticate(botname);
     connection.on('initialized', function() {
         console.log('connection ready');
-        connection.user.setSelfDeaf(true); // mute/deafens the bot
+        connection.user.setSelfDeaf(false); // mute/deafens the bot
         connection.user.setComment(bot_comment); // sets the comment for the bot
     });
 
@@ -823,9 +815,6 @@ if (channels.indexOf(state.channel_id) == -1){
                 case 'info': // displays info about the bot
                     reply = bot_info;
                     break;
-                case 'locklist':
-                    reply = "Here are the channels currently on lockdown!";
-                    break;
                 case 'lock': // prevents users from entering the channel [note move to does not work if the bot does not have permissions to move]
                     if (whitelist.indexOf(actor.name) > -1 || mods.indexOf(actor.name) > -1 || pseudoMods.indexOf(actor.name) > -1) {
                         if (lockchannel.indexOf(actor.channel.name) == -1 && lockschannel.indexOf(actor.channel.name) == -1) {
@@ -867,6 +856,12 @@ if (channels.indexOf(state.channel_id) == -1){
                     } else {
                         actor.sendMessage(tohelp);
                     }
+                    break;
+                case 'locklist':
+                    reply = "Here are the channels currently on lockdown: " + lockchannel;
+                    break;
+                case 'lock+list':
+                    reply = "Here are the channels currently on superlockdown: " + lockschannel;
                     break;
                 case 'kick': // kicks player from the server, playerd defines reason. [Bot needs permission to kick]
                     if (whitelist.indexOf(actor.name) > -1 || mods.indexOf(actor.name) > -1 || pseudoMods.indexOf(actor.name) > -1) {
@@ -922,9 +917,9 @@ if (channels.indexOf(state.channel_id) == -1){
                 case 'qak': // qak
                     reply = 'qak';
                     break;
-                case 'reset': // Incomplete, resets the bot
-                    reply = 'brb!';
+                case 'rjoin':
                     break;
+
                 case 'setgreet': // allows a whitelisted actor to set a greeting for a specific user
                     if (whitelist.indexOf(actor.name) > -1) {
                         if (contentPieces.length > 2) {

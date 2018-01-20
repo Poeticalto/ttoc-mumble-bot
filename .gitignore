@@ -2,6 +2,7 @@ node_modules/
 botcerts.pem
 botkey.pem
 client_secret.json
+gappAuth.json
 mailmessage.txt
 mailsender.txt
 mailuser.txt
