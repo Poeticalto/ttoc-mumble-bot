@@ -548,6 +548,9 @@ if (channels.indexOf(state.channel_id) == -1){
             }
             console.log(playerd);
         }
+        if (privateMessage == false && connection.user.channel.name == "Draft Channel") {
+            connection.channelByName('Spectating Lounge [Open to all]').sendMessage(actor.name + ': ' + message);
+        }
         if (isCommand && privateMessage) {
             switch (command) {
                 case 'backup': // this case is uneeded since function backup runs after each write/splice, but is kept as a redundant measure.
