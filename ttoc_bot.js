@@ -7,12 +7,53 @@ var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 var script = google.script('v1');
 var sheets = google.sheets('v4');
-const readFile = require('fs-readfile-promise');
 var cats = require('cat-ascii-faces');
 var SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/forms'];
 var WebClient = require('@slack/client').WebClient;
 var GroupMe = require('groupme');
 var API = GroupMe.Stateless;
+const path = require('path');
+const winston = require('winston');
+
+// Logger setup, all logs are stored in the logs folder.
+const mumbleLogger = winston.createLogger({
+  levels: {
+    error: 0,
+    chat: 1,
+	mlog: 2
+  },
+  transports: [
+    new winston.transports.File({
+      filename: path.join(__dirname,'/logs/','error.log'),
+      level: 'error'
+    }),
+    new winston.transports.File({
+      filename: path.join(__dirname,'/logs/','chat.log'),
+      level: 'chat'
+    }),
+    new winston.transports.File({
+      filename: path.join(__dirname,'/logs/','mlog.log'),
+      level: 'mlog'
+    })
+  ]
+});
+
+const rgamesLogger = winston.createLogger({
+  levels: {
+    rgames: 0
+  },
+  transports: [
+    new winston.transports.File({
+      filename: path.join(__dirname,'/logs/','rgames.log'),
+      level: 'rgames'
+    })
+  ]
+});
+
+mumbleLogger.exitOnError = false;
+mumbleLogger.emitErrs = false;
+rgamesLogger.exitOnError = false;
+rgamesLogger.emitErrs = false;
 
 // CUSTOM SETTINGS FOR THE BOT
 var botname = 'TToC_BOT'; // name of the bot, make sure it matches the certificate if you're importing it.
@@ -258,7 +299,7 @@ function ssread(auth) { // this function reads a range from the spreadsheet
             return;
         }
         console.log(ssreadfrom);
-        var testarr = response.values;
+        testarr = response.values;
         if (testarr.length == 0) {
             console.log('No data found.');
         } else {
@@ -335,6 +376,19 @@ var sessions = [];
 var sessionsu = [];
 var startchat = false;
 var contentPieces;
+var rQueue = [];
+var rPlayerList = [];
+var rPlayerServer = [];
+var rPlayerElo = [];
+var rPlayerGames = [];
+var rPlayerWins = [];
+var rPlayerLosses = [];
+var tpServers = ["centra","diameter","chord","orbit","origin","pi","radius","sphere"];
+var rGame01 = [];
+var rGame02 = [];
+var rGame03 = [];
+var rGame04 = [];
+var rGame05 = [];
 
 const rl = readline.createInterface({ // creates cmd interface to interact with the bot
     input: process.stdin,
@@ -350,6 +404,7 @@ mumble.connect(mumbleurl, options, function(error, connection) {
 
     connection.authenticate(botname);
     connection.on('initialized', function() {
+		mumbleLogger.chat("Bot has connected and is ready to go!",{ 'Timestamp': getDateTime() });
         console.log('connection ready');
         connection.user.setSelfDeaf(false); // mute/deafens the bot
         connection.user.setComment(bot_comment); // sets the comment for the bot
@@ -408,11 +463,13 @@ mumble.connect(mumbleurl, options, function(error, connection) {
     connection.on('userRemove', function(data) {
         if (data.actor != null && data.ban == false) {
             reply = '[NA Mumble] ' + connection.userBySession(data.actor).name + ' kicked ' + sessionsu[sessions.indexOf(data.session)] + ': ' + data.reason;
+			mumbleLogger.mlog(reply,{'Timestamp': getDateTime()});
             if (slackauth == true) {
                 sendtoslack(slackchannel, reply);
             }
         } else if (data.actor != null && data.ban == true) {
             reply = '[NA Mumble] ' + connection.userBySession(data.actor).name + ' banned ' + sessionsu[sessions.indexOf(data.session)] + ': ' + data.reason;
+			mumbleLogger.mlog(reply,{'Timestamp': getDateTime()});
             if (slackauth == true) {
                 sendtoslack(slackchannel, reply);
             }
@@ -432,11 +489,7 @@ mumble.connect(mumbleurl, options, function(error, connection) {
         if (users.indexOf(state.name) == -1 && greylist.indexOf(state.name) == -1) {
             users.push(state.name);
             if (mods.indexOf(state.name) > -1 && modsmum.indexOf(state.name) == -1) {
-                if (state.name == 'Cyanide') {
-                    modsmum.push('Cryanide');
-                } else {
                     modsmum.push(state.name);
-                }
             }
         }
         if (users.indexOf(null) > -1) {
@@ -458,11 +511,9 @@ mumble.connect(mumbleurl, options, function(error, connection) {
     }
 
     connection.on('user-disconnect', function(state) {
+		mumbleLogger.mlog(state.name+" has disconnected.",{'Timestamp': getDateTime()});
         if (modsmum.indexOf(state.name) > -1) {
             modsmum.splice(modsmum.indexOf(state.name), 1);
-        }
-        if (state.name == 'Cyanide') {
-            modsmum.splice(modsmum.indexOf('Cryanide'), 1);
         }
         if (greylist.indexOf(state.name) == -1) {
             users.splice(users.indexOf(state.name), 1);
@@ -487,6 +538,7 @@ if (channels.indexOf(state.channel_id) == -1){
 }); */ //used to get a list of channel ids, may be better as a tree function depending on the amount of channels on the server
 
     connection.on('user-priority-speaker', function(user, status, actor) {
+		mumbleLogger.mlog(user.name+" had priority speaker status changed to "+status+" by "+actor.name,{'Timestamp': getDateTime()});
         if (whitelist.indexOf(actor.name) > -1 && status == true) {
             if (user.name == botname && user.channel.name != actor.channel.name) { // moves bot to the channel of the actor 
                 user.moveToChannel(actor.channel);
@@ -500,7 +552,24 @@ if (channels.indexOf(state.channel_id) == -1){
             }
         }
     });
-
+	connection.on('user-mute', function(user,status,actor){
+		mumbleLogger.mlog(user.name+" changed mute status to "+status+" by "+actor.name,{'Timestamp': getDateTime()});
+	})
+	connection.on('user-deaf', function(user,status,actor){
+		mumbleLogger.mlog(user.name+" changed deaf status to "+status+" by "+actor.name,{'Timestamp': getDateTime()});
+	})
+	connection.on('user-recording', function(user,status){
+		mumbleLogger.mlog(user.name+" changed recording status to "+status,{'Timestamp': getDateTime()});
+	})
+	connection.on('self-mute', function(user,status){
+		mumbleLogger.mlog(user.name+" has set self-mute status to "+status,{'Timestamp': getDateTime()});
+	})
+	connection.on('self-deaf', function(user,status){
+		mumbleLogger.mlog(user.name+" has set self-deaf status to "+status,{'Timestamp': getDateTime()});
+	})
+	connection.on('user-suppress', function(user,status,actor){
+		mumbleLogger.mlog(user.name+" changed suppressed status to "+status+" by "+actor.name,{'Timestamp': getDateTime()});
+	})
     connection.on('message', function(message, actor, scope) {
         console.log(actor.name);
         message = message.replace(/\n/g, ""); // consolidates message to one line
@@ -512,6 +581,12 @@ if (channels.indexOf(state.channel_id) == -1){
         contentPieces = content.slice(1, content.length).split(' ');
         const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br")[0].split("<p")[0].toLowerCase();
         var playerd = contentPieces[1];
+		if (privateMessage){
+		mumbleLogger.chat('PM from '+actor.name+': '+message,{ 'Timestamp': getDateTime() });
+		}
+		else{
+		mumbleLogger.chat('CM from '+actor.name+': '+message,{ 'Timestamp': getDateTime() });
+		}
         if (contentPieces.length > 2) {
             for (i = 2; i <= contentPieces.length - 1; i++) {
                 playerd = playerd + ' ' + contentPieces[i];
@@ -527,6 +602,7 @@ if (channels.indexOf(state.channel_id) == -1){
             }
             if (playerd == undefined) {
                 connection.user.channel.sendMessage("Sorry, there was nothing to respond to!");
+				mumbleLogger.chat("Bot response: "+"Sorry, there was nothing to respond to!",{ 'Timestamp': getDateTime() });
             } else if (groupmeauth == true) {
                 playerd = '@zo ' + playerd;
 
@@ -550,6 +626,7 @@ if (channels.indexOf(state.channel_id) == -1){
         }
         if (privateMessage == false && connection.user.channel.name == "Draft Channel") {
             connection.channelByName('Spectating Lounge [Open to all]').sendMessage(actor.name + ': ' + message);
+			mumbleLogger.chat("Bot forwarded message to Spectating Lounge",{ 'Timestamp': getDateTime() });
         }
         if (isCommand && privateMessage) {
             switch (command) {
@@ -599,15 +676,18 @@ if (channels.indexOf(state.channel_id) == -1){
                             if (startchat == false) {
                                 startchat = true;
                                 connection.user.channel.sendMessage("<br/>Chat mode has been enabled! To chat with the bot, preface your chat with the @ symbol like this @hi bot!");
+								mumbleLogger.chat("Bot activated GroupMe Bridge",{ 'Timestamp': getDateTime() });
                                 incoming.disconnect();
                                 incoming.connect();
                             } else {
                                 startchat = false;
                                 connection.user.channel.sendMessage("<br/>Chat mode has been disabled! :c");
+								mumbleLogger.chat("Bot deactivated GroupMe Bridge",{ 'Timestamp': getDateTime() });
                                 incoming.disconnect();
                             }
                         } else {
                             connection.user.channel.sendMessage("GroupMe functionality has not been enabled! Chat mode is not activated. :c");
+							mumbleLogger.chat("Bot failed to activate GroupMe bridge due to lack of API key.",{ 'Timestamp': getDateTime() });
                         }
                     } else {
                         reply = tohelp;
@@ -650,16 +730,10 @@ if (channels.indexOf(state.channel_id) == -1){
                     break;
                 case 'find': // gives a url to a player on the server, playerd defines user to find, case-insensitive.
                     if (playerd != undefined) {
-                        if (playerd == 'Cryanide') {
-                            playerd = 'Cyanide';
-                        }
                         if (usersl.indexOf(playerd.toLowerCase()) > -1) {
                             playerd = usersf[usersl.indexOf(playerd.toLowerCase())];
                         }
                         if (connection.userByName(playerd) == undefined) {
-                            if (playerd == 'Cyanide') {
-                                playerd = 'Cryanide';
-                            }
                             reply = 'Sorry, ' + playerd + ' could not be found.';
                         } else {
                             var parentc = [];
@@ -671,9 +745,6 @@ if (channels.indexOf(state.channel_id) == -1){
                             var mumbleurl = 'mumble://mumble.koalabeast.com';
                             for (i = 0; i < parentc.length; i++) {
                                 mumbleurl = mumbleurl + '/' + parentc[i].replace(/ /g, "%20");
-                            }
-                            if (playerd == 'Cyanide') {
-                                playerd = 'Cryanide';
                             }
                             reply = '<br/>' + playerd + ' was found in <a href="' + mumbleurl + '"><span style="color:#39a5dd">' + parentc[parentc.length - 1] + '</span></a>';
                         }
@@ -693,30 +764,33 @@ if (channels.indexOf(state.channel_id) == -1){
                         reply = 'Sorry, a group with that name could not be found. :c';
                     }
                     break;
-                    /*case 'ggadd': // ggadd allows actors to add their own group to the bot, allowing others to retrieve it with the !gg command
-					if (contentPieces.length >2){
-						ggadd = contentPieces[2];
-						}
+                case 'ggadd': // ggadd allows actors to add their own group to the bot, allowing others to retrieve it with the !gg command
+					if (blacklist.indexOf(actor.name) > -1){
+						reply = "Sorry, you aren't allowed to use this command! :c";}
 					else {
-						ggadd = false;
-						}
-					if (contentPieces.length > 3){
-						for (i=3; i <= contentPieces.length-1;i++) {		
-							ggadd = ggadd + ' '+contentPieces[i];
-							}}
-					playerd = contentPieces[1].toLowerCase();
-					if (ggadd == false){
-						reply = "Sorry, a name was not specified to save under. Please try again.";
-						}
-					else {
-						if (ggid.indexOf(ggadd) > -1){
-							gglink[ggid.indexOf(ggadd)] = groupsend+groupid;
+						if (contentPieces.length >2){
+							ggadd = contentPieces[2];
 							}
 						else {
-							ggid.push(ggadd);
-							gglink.push(groupsend+groupid);
-							}}
-					break;*/ //commented out until I figure out if it should be added or not.
+							ggadd = false;
+							}
+						if (contentPieces.length > 3){
+							for (i=3; i <= contentPieces.length-1;i++) {		
+								ggadd = ggadd + ' '+contentPieces[i];
+								}}
+						playerd = contentPieces[1].toLowerCase();
+						if (ggadd == false){
+							reply = "Sorry, a name was not specified to save under. Please try again.";
+							}
+						else {
+							if (ggid.indexOf(ggadd) > -1){
+								gglink[ggid.indexOf(ggadd)] = groupsend+groupid;
+								}
+							else {
+								ggid.push(ggadd);
+								gglink.push(groupsend+groupid);
+					}}}
+					break;
                 case 'greet': // defines a greeting for the actor which is sent on every connection to the server, playerd defines the message.
                     if (playerd == undefined) {
                         reply = 'No greeting was found, please create a message for the bot to send to you when you connect!';
@@ -731,7 +805,7 @@ if (channels.indexOf(state.channel_id) == -1){
                         reply = 'Your greeting has been set! ' + botname + ' will send you this message each time you connect to the server! c:';
                     }
                     break;
-                case 'greetcat': // sets the greeting for the actor to a cat which is sent on every connection to the server, playerd is uneeded in this context.
+                case 'greetcat': // sets the greeting for the actor to a cat which is sent on every connection to the server, playerd is unneeded in this context.
                     if (welcomeuser.indexOf(actor.name) > -1) {
                         welcomemessage[welcomeuser.indexOf(actor.name)] = 'this_is_supposed_to_be_a_cat-217253';
                     } else {
@@ -800,8 +874,10 @@ if (channels.indexOf(state.channel_id) == -1){
                     if (whitelist.indexOf(actor.name) > -1) {
                         connection.user.moveToChannel(actor.channel);
                         actor.channel.sendMessage(actor.name + ' has summoned me to this channel!');
+						mumbleLogger.chat("Bot was summoned to "+actor.channel.name+" by "+actor.name,{ 'Timestamp': getDateTime() });
                     } else {
                         actor.sendMessage(tohelp);
+						mumbleLogger.chat("Bot response: "+tohelp,{ 'Timestamp': getDateTime() });
                     }
                     break;
                 case 'home': // moves the bot back to a predefined home channel.
@@ -810,6 +886,7 @@ if (channels.indexOf(state.channel_id) == -1){
                         connection.channelByName(bot_home).sendMessage(actor.name + ' has sent me to this channel!');
                     } else {
                         actor.sendMessage(tohelp);
+						mumbleLogger.chat("Bot response: "+tohelp,{ 'Timestamp': getDateTime() });
                     }
                     break;
                 case 'info': // displays info about the bot
@@ -819,21 +896,25 @@ if (channels.indexOf(state.channel_id) == -1){
                     if (whitelist.indexOf(actor.name) > -1 || mods.indexOf(actor.name) > -1 || pseudoMods.indexOf(actor.name) > -1) {
                         if (lockchannel.indexOf(actor.channel.name) == -1 && lockschannel.indexOf(actor.channel.name) == -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has put this channel on lockdown! No new users will be allowed unless moved by a whitelisted user.');
+							mumbleLogger.chat(actor.channel.name+" was put on lockdown by "+actor.name,{ 'Timestamp': getDateTime() });
                             console.log(actor.channel.name + ' has been put on lockdown');
                             lockchannel.push(actor.channel.name);
                         } else if (lockchannel.indexOf(actor.channel.name) == -1 && lockschannel.indexOf(actor.channel.name) > -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has downgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
                             lockchannel.push(actor.channel.name);
                             console.log(actor.channel.name + ' has been downgraded to lockdown');
+							mumbleLogger.chat(actor.channel.name+" has been downgraded to lockdown by "+actor.name,{ 'Timestamp': getDateTime() });
                             lockschannel.splice(lockschannel.indexOf(actor.channel.name), 1);
                         } else if (lockchannel.indexOf(actor.channel.name) > -1 || lockschannel.indexOf(actor.channel.name) > -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has lifted the channel lockdown! Users may now freely enter and leave.');
                             lockchannel.splice(lockchannel.indexOf(actor.channel.name), 1);
                             lockschannel.splice(lockschannel.indexOf(actor.channel.name), 1);
                             console.log(actor.channel.name + ' has been removed from lockdown');
+							mumbleLogger.chat(actor.channel.name+" has been removed from lockdown by "+actor.name,{ 'Timestamp': getDateTime() });
                         }
                     } else {
                         actor.sendMessage(tohelp);
+						mumbleLogger.chat("Bot response: "+tohelp,{ 'Timestamp': getDateTime() });
                     }
                     break;
                 case 'lock+': // prevents users from entering or leaving the channel [note, move back does not work if bot does not have permissions to move]
@@ -842,19 +923,23 @@ if (channels.indexOf(state.channel_id) == -1){
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has put this channel on super lockdown! No new users will be allowed to enter or leave unless moved by a whitelisted user.');
                             lockschannel.push(actor.channel.name);
                             console.log(actor.channel.name + ' has been put on lockdown+');
+							mumbleLogger.chat(actor.channel.name+" has been put on lockdown+ by "+actor.name,{ 'Timestamp': getDateTime() });
                         } else if (lockchannel.indexOf(actor.channel.name) > -1 && lockschannel.indexOf(actor.channel.name) == -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has upgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
                             console.log(actor.channel.name + ' has been upgraded to lockdown+');
+							mumbleLogger.chat(actor.channel.name+" has been upgraded to lockdown+ by "+actor.name,{ 'Timestamp': getDateTime() });
                             lockschannel.push(actor.channel.name);
                             lockchannel.splice(lockschannel.indexOf(actor.channel.name), 1);
                         } else if (lockchannel.indexOf(actor.channel.name) > -1 || lockschannel.indexOf(actor.channel.name) > -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has lifted the channel lockdown! Users may now freely enter and leave.');
                             console.log(actor.channel.name + ' has been removed from lockdown+');
+							mumbleLogger.chat(actor.channel.name+" has been removed from lockdown+ by "+actor.name,{ 'Timestamp': getDateTime() });
                             lockchannel.splice(lockchannel.indexOf(actor.channel.name), 1);
                             lockschannel.splice(lockschannel.indexOf(actor.channel.name), 1);
                         }
                     } else {
                         actor.sendMessage(tohelp);
+						mumbleLogger.chat("Bot response: "+tohelp,{ 'Timestamp': getDateTime() });
                     }
                     break;
                 case 'locklist':
@@ -894,7 +979,7 @@ if (channels.indexOf(state.channel_id) == -1){
                         reply = 'Your mail has been successfully created! Your receiver will receive it when they enter the server or use the !getmail command! c:';
                         backup();
                     } else if (playerd == undefined) {
-                        reply = 'A mail message was not detected! Please add a message in the form !mail user command [Ex. !mail Cryanide hi]';
+                        reply = 'A mail message was not detected! Please add a message in the form !mail user contents [Ex. !mail Cryanide hi]';
                     } else {
                         reply = "You don't have permission to do that! :c";
                     }
@@ -919,6 +1004,98 @@ if (channels.indexOf(state.channel_id) == -1){
                     reply = 'qak';
                     break;
                     // break point to add ranked pug commands later.
+				case 'reboot':
+					if (whitelist.indexOf(actor.name) > -1) {
+						process.exit(0);
+					}
+					else {
+						reply = tohelp;
+					}
+					break;
+				case 'rgames':
+					reply = "Here are the ranked games currently going on: ";
+					break;
+				case 'rjoin':
+					if (rQueue.indexOf(actor.name) == -1 && rQueue.length == 0 && rPlayerList.indexOf(actor.name) > -1){
+						rQueue.push(actor.name);
+						reply = "Welcome to the queue! There is 1 player in the queue!";
+					}
+					else if (rQueue.indexOf(actor.name) == -1 && rQueue.length < 7 && rPlayerList.indexOf(actor.name) > -1){
+						rQueue.push(actor.name);
+						reply = "Welcome to the queue! There are "+rQueue.length+" players in the queue!";
+					}
+					else if (rQueue.indexOf(actor.name) == -1 && rQueue.length == 7 && rPlayerList.indexOf(actor.name) > -1){
+						rQueue.push(actor.name);
+						reply = "Welcome to the queue! The game will start soon!";
+						rSetup();
+					}
+					else if (rQueue.indexOf(actor.name) == -1 && rQueue.length >= 8 && rPlayerList.indexOf(actor.name) > -1){
+						reply = "Sorry, a game is being setup right now. Please try again in a minute!";
+					}
+					else if (rPlayerList.indexOf(actor.name) == -1) {
+						reply = "Sorry, you haven't registered! Use !rregister server to sign up! [Ex. !rregister sphere]";
+					}
+					else {
+						reply = "You're already in the queue with "+rQueue.length+" players: "+rQueue;
+					}
+					break;
+				case 'rstats':
+					if (rPlayerList.indexOf(playerd) > -1){
+						reply = playerd+"'s current Elo is "+rPlayerElo[rPlayerList.indexOf(playerd)];
+					}
+					else if (rPlayerList.indexOf(actor.name) > -1){
+						reply = "Your current Elo is "+rPlayerElo[rPlayerList.indexOf(actor.name)];
+					}
+					else{
+						reply = "You're not registered! Sign up using !rregister server";
+					}
+					break;
+				case 'rleaders':
+					reply = "Here are the leaders: ";
+					break;
+				case 'rleave':
+					if (rQueue.indexOf(actor.name) > -1 && rQueue.length < 8){
+						reply = "You've been removed from the queue!";
+						rQueue.splice(rQueue.indexOf(actor.name),1);
+					}
+					else if (rQueue.indexOf(actor.name) > -1 && rQueue.length == 8){
+						reply = "Sorry, the game is about to start, you can't leave! :c";
+					}
+					else {
+						reply = "You're not in the queue!";
+					}
+					break;
+				case 'rqueue':
+					if (rQueue.length == 0){
+						reply = "There isn't anyone in the queue!";
+					}
+					else if (rQueue.length == 1){
+						reply = "There is 1 player in the queue: "+rQueue;
+					}
+					else {
+						reply = "There are "+rQueue.length+" players in the queue: " + rQueue;
+					}
+					break;
+				case 'rregister':
+					if (actor.isRegistered() == true && rPlayerList.indexOf(actor.name) == -1 && tpServers.indexOf(playerd.toLowerCase()) > -1){
+						rPlayerList.push(actor.name);
+						rPlayerServer.push(playerd);
+						rPlayerElo.push(1000);
+						rPlayerGames.push(0);
+						rPlayerWins.push(0);
+						rPlayerLosses.push(0);
+						reply = "Congrats, you've been registered successfully for "+playerd+"! Use !rjoin to join the queue!";
+					}
+					else if (actor.isRegistered() == true && rPlayerList.indexOf(actor.name) == -1){
+						reply = "Sorry, I couldn't process your server choice. Please make sure it is one of the following: "+tpServers;
+					}
+					else if (actor.isRegistered() == false){
+						reply = "Sorry, you must be authenticated on Mumble in order to register! If you need help authenticating, contact a Mumble mod.";
+					}
+					else if (rPlayerList.indexOf(actor.name) > -1){
+						reply = "You've already registered! Use !rjoin to join the queue!";
+					}
+					break;
                 case 'setgreet': // allows a whitelisted actor to set a greeting for a specific user
                     if (whitelist.indexOf(actor.name) > -1) {
                         if (contentPieces.length > 2) {
@@ -1055,7 +1232,7 @@ if (channels.indexOf(state.channel_id) == -1){
                         }
                         random8();
                         connection.user.channel.sendMessage('Successfully switched captains ' + tradec1 + ' and ' + tradec2 + '!');
-                        connection.channelByName('Spectating Lounge [Open to all]').sendMessage('Successfully switched captains ' + tradec1 + ' and ' + tradec2 + '!');
+                        connection.channelByName('Spectating Lounge [Open to all]').sendMessage('captains ' + tradec1 + ' and ' + tradec2 + ' have traded!');
                     } else {
                         reply = tohelp;
                     }
@@ -1119,6 +1296,7 @@ if (channels.indexOf(state.channel_id) == -1){
             var noReply = ['getmail', 'group', 'lock', 'lock+', 'here', 'trade', 'move'];
             if (noReply.indexOf(command) == -1 || reply != '') {
                 console.log(reply);
+				mumbleLogger.chat("Bot response: "+reply,{ 'Timestamp': getDateTime() });
                 actor.sendMessage(reply);
             }
         }
@@ -1126,29 +1304,36 @@ if (channels.indexOf(state.channel_id) == -1){
 
     connection.on('error', function(MumbleError) { //incomplete, error event when something goes wrong through mumble, need to add parsing of error
         console.log(MumbleError.name);
+		mumbleLogger.error("Mumble Error: "+MumbleError.name,{'Timestamp': getDateTime()});
     })
 
     connection.on('user-connect', function(user) { // user-connect is the event emitted when a user connects to the server
+		mumbleLogger.mlog(user.name+" has connected.",{'Timestamp': getDateTime()});
         if (mailuser.indexOf(user.name.toLowerCase()) > -1) { // sends mail if user has mail to collect.
             user.sendMessage("Howdy " + user.name + "! I've been keeping some cool mail from other people for you, let me go get it!");
             getmail(user);
+			mumbleLogger.chat("Bot retrieved mail for "+user.name,{ 'Timestamp': getDateTime() });
         }
         if (signupsopen == true && greylist.indexOf(user.name) == -1) { // if a tournament is running, signups are sent to the player
             user.sendMessage("<br/>TToC signups are currently open for " + ssmap + "! If you want to signup, message me !signups or !spreadsheet<br/><br/>(If you don't want these automated messages, message the !stop command to me)");
+			mumbleLogger.chat("Automated signups sent to "+user.name,{ 'Timestamp': getDateTime() });
         } else if (greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == true) { // sends the motd if active
             user.sendMessage(motd);
+			mumbleLogger.chat("motd sent to "+user.name,{ 'Timestamp': getDateTime() });
         } else if (welcomeuser.indexOf(user.name) > -1 && signupsopen == false && motdset == false) { // sends the user's predefined welcome message
             if (welcomemessage[welcomeuser.indexOf(user.name)] == 'this_is_supposed_to_be_a_cat-217253') {
                 user.sendMessage("<br/>" + botname + " sends a cat to say hi!<br/><br/>" + cats() + "<br/>");
             } else {
                 user.sendMessage(welcomemessage[welcomeuser.indexOf(user.name)]);
             }
+			mumbleLogger.chat("Bot sent custom welcome message to "+user.name,{ 'Timestamp': getDateTime() });
         } else if (greylist.indexOf(user.name) == -1 && signupsopen == false && motdset == false) { // default message sent to every player on connect.
             //user.sendMessage("<br/>"+botname+" sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");
         }
     });
 
     connection.on('user-move', function(user, fromChannel, toChannel, actor) { // user-move is the event emitted when a user switches channels
+		mumbleLogger.mlog(user.name+" was moved from "+fromChannel.name+" to "+toChannel.name+" by "+actor.name,{'Timestamp': getDateTime()});
         if ((lockchannel.indexOf(toChannel.name) > -1 || lockschannel.indexOf(toChannel.name) > -1) && actor.name != botname && (whitelist.indexOf(actor.name) == -1 && mods.indexOf(actor.name) == -1 && pseudoMods.indexOf(actor.name) == -1)) { // prevents user from entering if channel is locked.
             user.moveToChannel(botmove);
             user.sendMessage('Sorry, you cannot enter this channel right now. :c');
@@ -1285,7 +1470,11 @@ if (channels.indexOf(state.channel_id) == -1){
         fs.writeFileSync('usergroups.txt', whitelist.join(' ') + '\n' + mods.join(' ') + '\n' + pseudoMods.join(' ') + '\n' + greylist.join(' ') + '\n' + blacklist.join(' '));
         console.log('data has been backed up!');
     }
-
+	/*
+	function eloBackup(){
+		console.log('backing up ranked system!');
+		fs.writeFileSync('	
+	}*/
     function draftplayer(playerd) { // interface with google sheets to write player name on the draft board
         console.log(playerd + ' is being drafted!');
         seasonnum = 292;
@@ -1454,5 +1643,9 @@ if (channels.indexOf(state.channel_id) == -1){
         day = (day < 10 ? "0" : "") + day;
         return month + "/" + day + "/" + year + "||" + hour + ":" + min + ":" + sec + "[CST]";
     }
+	
+	function rSetup(){
+		rgamesLogger.rgames('this is sample game data',{'Timestamp':getDateTime()});
+	}
 
 });
