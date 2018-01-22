@@ -84,11 +84,12 @@ Line # | Content | Description
 4 | greylist | Users who do not want automated messages from the bot.
 5 | blacklist | Bad users who cannot use commands with spam potential.
 
-welcomemessage.txt = This .txt file is part of the greeting system and holds user greetings, one per line.
+welcome.txt = This .txt file holds the greeting system, each user on one line. Its line format is as follows:
 
-welcomeuser.txt = This .txt file is part of the greeting system and holds users associated with greetings, one per line.
-
-whitelist.txt = This .txt holds mumble users on the whitelist, one per line.
+Piece # | Content | Description
+:---: | :---: | :---:
+1 | welcomeuser | The Mumble user to greet.
+2 | welcomemessage | The message to greet the Mumble User with.
 
 ---
 

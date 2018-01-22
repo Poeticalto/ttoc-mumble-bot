@@ -86,8 +86,8 @@ var whitelist = ['Poeticalto', 'Poeticaltwo'];
 var blacklist = [];
 var greylist = [];
 var mods = [];
-var welcomeuser;
-var welcomemessage;
+var welcomeuser = [];
+var welcomemessage = [];
 var slackauth = false;
 var slackchannel = undefined;
 var slacktoken = undefined;
@@ -120,9 +120,29 @@ if (fs.existsSync('mail.txt')) {
             mailmessage.push(splitMessage);
         }
     }
+	console.log('mail system successfully imported!');
 } else {
     fs.openSync('mail.txt', 'w');
     console.log('mail.txt was created!');
+}
+
+if (fs.existsSync('welcome.txt')) {
+    splitParts = fs.readFileSync('welcome.txt').toString().split("\n");
+    for (var i = 0; i < splitParts.length; i++) {
+        if (splitParts[i].split(" ").length >= 4) {
+            welcomeuser.push(splitParts[i].split(" ")[0]);
+            splitMessage = "";
+            for (var j = 1; j < splitParts[i].split(" ").length; j++) {
+                splitMessage = splitMessage + ' ' + splitParts[i].split(" ")[j];
+            }
+            welcomemessage.push(splitMessage);
+        }
+    }
+	console.log(welcomeuser);
+	console.log(welcomemessage);
+} else {
+    fs.openSync('welcome.txt', 'w');
+    console.log('welcome.txt was created!');
 }
 
 if (fs.existsSync('sslink.txt')) {
@@ -149,22 +169,6 @@ if (fs.existsSync('usergroups.txt')) {
 } else {
     fs.openSync('usergroups.txt', 'w');
     console.log('usergroups.txt was created!');
-}
-
-if (fs.existsSync('welcomeuser.txt')) {
-    welcomeuser = fs.readFileSync('welcomeuser.txt').toString().split("\n"); // welcomeuser is the list of users who want welcome messages
-    console.log('welcomeuser imported from welcomeuser.txt!');
-} else {
-    fs.openSync('welcomeuser.txt', 'w');
-    console.log('welcomeuser.txt was created!');
-}
-
-if (fs.existsSync('welcomemessage.txt')) {
-    welcomemessage = fs.readFileSync('welcomemessage.txt').toString().split("\n"); // welcomemessage is the message corresponding to the users who want welcomes
-    console.log('welcomemessage imported from welcomemessage.txt!');
-} else {
-    fs.openSync('welcomemessage.txt', 'w');
-    console.log('welcomemessage.txt was created!');
 }
 
 if (fs.existsSync('slacktoken.txt')) {
@@ -632,7 +636,10 @@ if (channels.indexOf(state.channel_id) == -1){
             switch (command) {
                 case 'backup': // this case is uneeded since function backup runs after each write/splice, but is kept as a redundant measure.
                     if (whitelist.indexOf(actor.name) > -1) {
-                        backup();
+                        backupLinks();
+						backupMail();
+						backupUsers();
+						backupWelcome();
                         reply = "Everything has been backed up!";
                     } else {
                         reply = tohelp;
@@ -659,7 +666,7 @@ if (channels.indexOf(state.channel_id) == -1){
                     if (whitelist.indexOf(actor.name) > -1) {
                         blacklist.push(playerd);
                         reply = 'Added ' + playerd + ' to the blacklist!';
-                        backup();
+                        backupUsers();
                     } else {
                         reply = tohelp;
                     }
@@ -801,7 +808,7 @@ if (channels.indexOf(state.channel_id) == -1){
                             welcomeuser.push(actor.name);
                             welcomemessage.push(playerd);
                         }
-                        backup();
+                        backupWelcome();
                         reply = 'Your greeting has been set! ' + botname + ' will send you this message each time you connect to the server! c:';
                     }
                     break;
@@ -812,7 +819,7 @@ if (channels.indexOf(state.channel_id) == -1){
                         welcomeuser.push(actor.name);
                         welcomemessage.push('this_is_supposed_to_be_a_cat-217253');
                     }
-                    backup();
+                    backupWelcome();
                     reply = botname + ' will give you a cat each time you connect to the server! c:';
                     break;
                 case 'group': // creates group on a defined server. playerd is the server, ggadd is the optional group name which is stored on the bot.
@@ -977,7 +984,7 @@ if (channels.indexOf(state.channel_id) == -1){
                         mailsender.push(actor.name);
                         mailmessage.push(mailmestemp);
                         reply = 'Your mail has been successfully created! Your receiver will receive it when they enter the server or use the !getmail command! c:';
-                        backup();
+                        backupMail();
                     } else if (playerd == undefined) {
                         reply = 'A mail message was not detected! Please add a message in the form !mail user contents [Ex. !mail Cryanide hi]';
                     } else {
@@ -1118,7 +1125,7 @@ if (channels.indexOf(state.channel_id) == -1){
                                 welcomeuser.push(playerd);
                                 welcomemessage.push(ggadd);
                             }
-                            backup();
+                            backupWelcome();
                             reply = 'Greeting has been set for ' + playerd + '! They will receive this message each time they connect. c:';
                         }
                     } else {
@@ -1137,7 +1144,7 @@ if (channels.indexOf(state.channel_id) == -1){
                                 welcomeuser.push(playerd);
                                 welcomemessage.push('this_is_supposed_to_be_a_cat-217253');
                             }
-                            backup();
+                            backupWelcome();
                             reply = 'Greeting has been set for ' + playerd + '! They will receive a cat each time they connect. c:';
                         }
                     } else {
@@ -1183,11 +1190,11 @@ if (channels.indexOf(state.channel_id) == -1){
                 case 'stop': // adds users to the greylist, which prevents them from receiving automated messages from the bot, playerd is uneeded.
                     if (greylist.indexOf(actor.name) == -1) {
                         greylist.push(actor.name);
-                        backup();
+                        backupUsers();
                         reply = "You've been added to the greylist! You will no longer receive automated messages from TToC_BOT when you connect.";
                     } else {
                         greylist.splice(greylist.indexOf(actor.name), 1);
-                        backup();
+                        backupUsers();
                         reply = "You've been removed from the greylist! You will now receive automated message from " + botname + " when you connect.";
                     }
                     break;
@@ -1284,7 +1291,7 @@ if (channels.indexOf(state.channel_id) == -1){
                     if (whitelist.indexOf(actor.name) > -1) {
                         whitelist.push(playerd);
                         reply = 'Added ' + playerd + ' to the whitelist!';
-                        backup();
+                        backupUsers();
                     } else {
                         reply = tohelp;
                     }
@@ -1456,24 +1463,48 @@ if (channels.indexOf(state.channel_id) == -1){
         playersr = players;
     }
 
-    function backup() { // backs up data.
-        console.log('backing up data!');
+    function backupLinks() { // backs up data.
+        console.log('backing up spreadsheet links!');
         rows = ['TToC', seasonnum, 'Sphere', ssmap, ssmaplink, sgnlink, sslink];
-        splitParts = [];
+        fs.writeFileSync('sslink.txt', rows.join('\n'));
+        console.log('spreadsheet links have been backed up!');
+    }
+	
+	function backupMail(){
+		console.log('backing up mail system!');
+		splitParts = [];
         for (var i = 0; i < mailtime.length; i++) {
             splitParts[i] = mailtime[i] + ' ' + mailsender[i] + ' ' + mailuser[i] + ' ' + mailmessage[i];
         }
         fs.writeFileSync('mail.txt', splitParts.join('\n'));
-        fs.writeFileSync('sslink.txt', rows.join('\n'));
-        fs.writeFileSync('welcomemessage.txt', welcomemessage.join('\n'));
-        fs.writeFileSync('welcomeuser.txt', welcomeuser.join('\n'));
-        fs.writeFileSync('usergroups.txt', whitelist.join(' ') + '\n' + mods.join(' ') + '\n' + pseudoMods.join(' ') + '\n' + greylist.join(' ') + '\n' + blacklist.join(' '));
-        console.log('data has been backed up!');
-    }
+		console.log('mail system has been backed up!');
+	}
+	
+	function backupUsers(){
+		console.log('backing up usergroups!');
+		fs.writeFileSync('usergroups.txt', whitelist.join(' ') + '\n' + mods.join(' ') + '\n' + pseudoMods.join(' ') + '\n' + greylist.join(' ') + '\n' + blacklist.join(' '));
+		console.log('usergroups have been backed up!');
+	}
+	
+	function backupWelcome(){
+		console.log('backing up welcome system!');
+		splitParts = [];
+        for (var i = 0; i < welcomeuser.length; i++) {
+            splitParts[i] = welcomeuser[i] + ' ' + welcomemessage[i];
+        }		
+        fs.writeFileSync('welcome.txt', splitParts.join('\n'));
+		console.log('welcome system has been backed up!');
+	}
+	
 	/*
-	function eloBackup(){
+	function backupRanked(){
 		console.log('backing up ranked system!');
-		fs.writeFileSync('	
+		splitParts = [];
+        for (var i = 0; i < welcomeuser.length; i++) {
+            splitParts[i] = welcomeuser[i] + ' ' + welcomemessage[i];
+        }		
+        fs.writeFileSync('ranked.txt', splitParts.join('\n'));
+		console.log('Ranked system has been backed up!');
 	}*/
     function draftplayer(playerd) { // interface with google sheets to write player name on the draft board
         console.log(playerd + ' is being drafted!');
@@ -1549,7 +1580,7 @@ if (channels.indexOf(state.channel_id) == -1){
         }
         random4();
         setTimeout(random6, 5000);
-        setTimeout(backup, 6000);
+        setTimeout(backupLinks, 6000);
     }
 
     function getmail(actor) { // gets mail from arrays
@@ -1566,7 +1597,7 @@ if (channels.indexOf(state.channel_id) == -1){
                 mailsender.splice(messagegeti, 1);
             }
             actor.sendMessage("That's all of your messages for now! If you want to reply to your mail, message me with the command !mail user message! Have a great day! c:");
-            backup();
+            backupMail();
         } else {
             actor.sendMessage("Sorry, you don't have any mail. :c");
         }
