@@ -40,13 +40,18 @@ const mumbleLogger = winston.createLogger({
 
 const rgamesLogger = winston.createLogger({
   levels: {
-    rgames: 0
+    rgames: 0,
+	rqueue: 1
   },
   transports: [
     new winston.transports.File({
       filename: path.join(__dirname,'/logs/','rgames.log'),
       level: 'rgames'
-    })
+    }),
+    new winston.transports.File({
+      filename: path.join(__dirname,'/logs/','rqueue.log'),
+      level: 'rqueue'
+    })	
   ]
 });
 
@@ -67,6 +72,7 @@ var sadbot = "<br/><br/>(If you don't want these automated messages when you con
 var mumbleurl = 'mumble.koalabeast.com'; // url of the mumble server
 var bot_info = 'TToC, or the TagPro Tournament of Champions is a regular tournament hosted on the NA TagPro Mumble Server. Signups are usually released at 9:30 PM CST, with the draft starting at around 10:15 PM CST. I am a bot designed to run seasons of TToC. If you have any further questions, feel free to message Poeticalto on the Mumble server or /u/Poeticalto on Reddit.'
 var bot_comment = help; // comment of the bot on the mumble server.
+var rankedMaps = ['Transilio','EMERALD','Pilot','Cache','Wormy','Monarch'];
 
 // Location for the token used to verify Google oAuth. This was taken from the nodejs quickstart, so if you have the token saved elsewhere, change the DIR/PATH.
 var TOKEN_PATH = 'gappAuth.json';
@@ -102,6 +108,13 @@ var gauth = false;
 var gappkey;
 var splitParts;
 var splitMessage;
+var rPlayerList = [];
+var rPlayerServer = [];
+var rPlayerElo = [];
+var rPlayerGames = [];
+var rPlayerWins = [];
+var rPlayerLosses = [];
+var rPlayerBan = [];
 
 // for each file, replaces the defaults if it exists.
 // consult the readme for help on how to setup each .txt file.
@@ -126,6 +139,30 @@ if (fs.existsSync('mail.txt')) {
     console.log('mail.txt was created!');
 }
 
+if (fs.existsSync('ranked.txt')) {
+    splitParts = fs.readFileSync('ranked.txt').toString().split("\n");
+    for (var i = 0; i < splitParts.length; i++) {
+        if (splitParts[i].split(" ").length >= 4) {
+            rPlayerList.push(splitParts[i].split(" ")[0]);
+            rPlayerServer.push(splitParts[i].split(" ")[1]);
+            rPlayerElo.push(splitParts[i].split(" ")[2]);
+			rPlayerGames.push(splitParts[i].split(" ")[3]);
+			rPlayerWins.push(splitParts[i].split(" ")[4]);
+			rPlayerLosses.push(splitParts[i].split(" ")[5]);
+        }
+    }
+	console.log('ranked system successfully imported!');
+	console.log(rPlayerList);
+	console.log(rPlayerServer);
+	console.log(rPlayerElo);
+	console.log(rPlayerGames);
+	console.log(rPlayerWins);
+	console.log(rPlayerLosses);
+} else {
+    fs.openSync('ranked.txt', 'w');
+    console.log('ranked.txt was created!');
+}
+
 if (fs.existsSync('welcome.txt')) {
     splitParts = fs.readFileSync('welcome.txt').toString().split("\n");
     for (var i = 0; i < splitParts.length; i++) {
@@ -138,8 +175,7 @@ if (fs.existsSync('welcome.txt')) {
             welcomemessage.push(splitMessage);
         }
     }
-	console.log(welcomeuser);
-	console.log(welcomemessage);
+	console.log('welcome system successfully imported!');
 } else {
     fs.openSync('welcome.txt', 'w');
     console.log('welcome.txt was created!');
@@ -164,7 +200,8 @@ if (fs.existsSync('usergroups.txt')) {
     mods = splitParts[1].split(" ");
     pseudoMods = splitParts[2].split(" ");
     greylist = splitParts[3].split(" ");
-    blacklist = splitParts[4].split(" "); // custom groups can be added after this line.
+    blacklist = splitParts[4].split(" "); 
+	rPlayerBan = splitParts[5].split(" "); // custom groups can be added after this line.
     console.log('user groups imported from usergroups.txt!');
 } else {
     fs.openSync('usergroups.txt', 'w');
@@ -381,12 +418,6 @@ var sessionsu = [];
 var startchat = false;
 var contentPieces;
 var rQueue = [];
-var rPlayerList = [];
-var rPlayerServer = [];
-var rPlayerElo = [];
-var rPlayerGames = [];
-var rPlayerWins = [];
-var rPlayerLosses = [];
 var tpServers = ["centra","diameter","chord","orbit","origin","pi","radius","sphere"];
 var rGame01 = [];
 var rGame02 = [];
@@ -640,6 +671,7 @@ if (channels.indexOf(state.channel_id) == -1){
 						backupMail();
 						backupUsers();
 						backupWelcome();
+						backupRanked();
                         reply = "Everything has been backed up!";
                     } else {
                         reply = tohelp;
@@ -839,7 +871,7 @@ if (channels.indexOf(state.channel_id) == -1){
                     } else {
                         playerd = playerd.toLowerCase();
                     }
-                    createTagProGroup(playerd, ggadd, actor, false, "r");
+                    createTagProGroup(playerd, ggadd, actor, false, "r",[]);
                     break;
                 case 'groupc': // creates comp group
                     if (contentPieces.length > 3) { // !groupc server map name
@@ -858,7 +890,7 @@ if (channels.indexOf(state.channel_id) == -1){
                     } else {
                         playerd = playerd.toLowerCase();
                     }
-                    createTagProGroup(playerd, ggadd, actor, true, contentPieces[2].toLowerCase());
+                    createTagProGroup(playerd, ggadd, actor, true, contentPieces[2].toLowerCase(),[]);
                     break;
                 case 'groupt': // creates comp group for the tourney
                     if (contentPieces.length > 1) {
@@ -872,7 +904,7 @@ if (channels.indexOf(state.channel_id) == -1){
                         }
                     }
                     playerd = 'sphere';
-                    createTagProGroup(playerd, ggadd, actor, true, ssmap.replace(' ', '_').toLowerCase());
+                    createTagProGroup(playerd, ggadd, actor, true, ssmap.replace(' ', '_').toLowerCase(),[]);
                     break;
                 case 'help': // sends help info to the actor.
                     reply = help;
@@ -1025,14 +1057,17 @@ if (channels.indexOf(state.channel_id) == -1){
 				case 'rjoin':
 					if (rQueue.indexOf(actor.name) == -1 && rQueue.length == 0 && rPlayerList.indexOf(actor.name) > -1){
 						rQueue.push(actor.name);
+						rgamesLogger.rqueue(actor.name+" joined the queue ["+rQueue.length+" total]",{'Timestamp':getDateTime()});
 						reply = "Welcome to the queue! There is 1 player in the queue!";
 					}
 					else if (rQueue.indexOf(actor.name) == -1 && rQueue.length < 7 && rPlayerList.indexOf(actor.name) > -1){
 						rQueue.push(actor.name);
-						reply = "Welcome to the queue! There are "+rQueue.length+" players in the queue!";
+						rgamesLogger.rqueue(actor.name+" joined the queue ["+rQueue.length+" total]",{'Timestamp':getDateTime()});
+						reply = "Welcome to the queue! There are "+rQueue.length+" players in the queue: "+rQueue;
 					}
 					else if (rQueue.indexOf(actor.name) == -1 && rQueue.length == 7 && rPlayerList.indexOf(actor.name) > -1){
 						rQueue.push(actor.name);
+						rgamesLogger.rqueue(actor.name+" joined the queue ["+rQueue.length+" total]",{'Timestamp':getDateTime()});
 						reply = "Welcome to the queue! The game will start soon!";
 						rSetup();
 					}
@@ -1064,6 +1099,7 @@ if (channels.indexOf(state.channel_id) == -1){
 					if (rQueue.indexOf(actor.name) > -1 && rQueue.length < 8){
 						reply = "You've been removed from the queue!";
 						rQueue.splice(rQueue.indexOf(actor.name),1);
+						rgamesLogger.rqueue(actor.name+" left the queue.",{'Timestamp':getDateTime()});
 					}
 					else if (rQueue.indexOf(actor.name) > -1 && rQueue.length == 8){
 						reply = "Sorry, the game is about to start, you can't leave! :c";
@@ -1092,6 +1128,8 @@ if (channels.indexOf(state.channel_id) == -1){
 						rPlayerWins.push(0);
 						rPlayerLosses.push(0);
 						reply = "Congrats, you've been registered successfully for "+playerd+"! Use !rjoin to join the queue!";
+						rgamesLogger.rqueue(actor.name+" registered for the first time!",{'Timestamp':getDateTime()});
+						backupRanked();
 					}
 					else if (actor.isRegistered() == true && rPlayerList.indexOf(actor.name) == -1){
 						reply = "Sorry, I couldn't process your server choice. Please make sure it is one of the following: "+tpServers;
@@ -1287,6 +1325,134 @@ if (channels.indexOf(state.channel_id) == -1){
                         reply = tohelp;
                     }
                     break;
+				case 'vr':
+				case 'vred':
+					if (rGame01.indexOf(actor.name) > -1){
+						rGame01[13] += 1;
+						if (rGame01[13] > 4){
+							gameProcess(rGame01,true);
+						}
+					}
+					else if (rGame02.indexOf(actor.name) > -1){
+						rGame02[13] += 1;
+						if (rGame02[13] > 4){
+							gameProcess(rGame02,true);
+						}
+					}
+					else if (rGame03.indexOf(actor.name) > -1){
+						rGame03[13] += 1;
+						if (rGame03[13] > 4){
+							gameProcess(rGame03,true);
+						}
+					}
+					else if (rGame04.indexOf(actor.name) > -1){
+						rGame04[13] += 1;
+						if (rGame04[13] > 4){
+							gameProcess(rGame04,true);
+						}
+					}
+					else if (rGame05.indexOf(actor.name) > -1){
+						rGame05[13] += 1;
+						if (rGame05[13] > 4){
+							gameProcess(rGame05,true);
+						}
+					}
+					else {
+						reply = "You're not in a ranked game right now!";
+					}
+					break;
+				case 'vb'://14
+				case 'vblue':
+					if (rGame01.indexOf(actor.name) > -1){
+						rGame01[14] += 1;
+						if (rGame01[14] > 4){
+							gameProcess(rGame01,false);
+						}
+					}
+					else if (rGame02.indexOf(actor.name) > -1){
+						rGame02[14] += 1;
+						if (rGame02[14] > 4){
+							gameProcess(rGame02,false);
+						}
+					}
+					else if (rGame03.indexOf(actor.name) > -1){
+						rGame03[14] += 1;
+						if (rGame03[14] > 4){
+							gameProcess(rGame03,false);
+						}
+					}
+					else if (rGame04.indexOf(actor.name) > -1){
+						rGame04[14] += 1;
+						if (rGame04[14] > 4){
+							gameProcess(rGame04,false);
+						}
+					}
+					else if (rGame05.indexOf(actor.name) > -1){
+						rGame05[14] += 1;
+						if (rGame05[14] > 4){
+							gameProcess(rGame05,false);
+						}
+					}					
+					break;
+				case 'vv':
+				case 'vvoid':
+					if (parseInt(playerd) > 0 && parseInt(playerd) < 9){
+						playerd = playerd + 15;
+					}
+					else {
+						playerd = 'none';
+					}
+					if (rGame01.indexOf(actor.name) > -1){
+						rGame01[15] += 1;
+						if (playerd != 'none'){
+							rGame01[parseInt(playerd)] += 1;
+							playerd = rgame01[parseInt(playerd)-16];
+						}
+						if (rGame01[15] > 4){
+							gameProcess(rGame01,playerd);
+						}
+					}
+					else if (rGame02.indexOf(actor.name) > -1){
+						rGame02[15] += 1;
+						if (playerd != 'none'){
+							rGame02[parseInt(playerd)] += 1;
+							playerd = rgame02[parseInt(playerd)-16];
+						}
+						if (rGame02[15] > 4){
+							gameProcess(rGame02,playerd);
+						}
+					}
+					else if (rGame03.indexOf(actor.name) > -1){
+						rGame03[15] += 1;
+						if (playerd != 'none'){
+							rGame03[parseInt(playerd)] += 1;
+							playerd = rgame03[parseInt(playerd)-16];
+						}
+						if (rGame03[15] > 4){
+							gameProcess(rGame03,playerd);
+						}
+					}
+					else if (rGame04.indexOf(actor.name) > -1){
+						rGame04[15] += 1;
+						if (playerd != 'none'){
+							rGame04[parseInt(playerd)] += 1;
+							playerd = rgame04[parseInt(playerd)-16];
+						}
+						if (rGame04[15] > 4){
+							gameProcess(rGame04,playerd);
+						}
+					}
+					else if (rGame05.indexOf(actor.name) > -1){
+						rGame05[15] += 1;
+						if (playerd != 'none'){
+							rGame05[parseInt(playerd)] += 1;
+							playerd = rgame05[parseInt(playerd)-16];
+						}
+						if (rGame05[15] > 4){
+							gameProcess(rGame05,playerd);
+						}
+					}	
+					break;
                 case 'whitelist': // adds a user to the whitelist, which allows them to access whitelist only commands, playerd defines user to add
                     if (whitelist.indexOf(actor.name) > -1) {
                         whitelist.push(playerd);
@@ -1381,7 +1547,7 @@ if (channels.indexOf(state.channel_id) == -1){
         setTimeout(random2, 15000);
 
         updatelinks();
-        setTimeout(backup, 5000);
+        setTimeout(backupLinks, 5000);
     }
 
     function draftsetup() { // sets up a draft for a season.
@@ -1496,16 +1662,16 @@ if (channels.indexOf(state.channel_id) == -1){
 		console.log('welcome system has been backed up!');
 	}
 	
-	/*
 	function backupRanked(){
 		console.log('backing up ranked system!');
 		splitParts = [];
-        for (var i = 0; i < welcomeuser.length; i++) {
-            splitParts[i] = welcomeuser[i] + ' ' + welcomemessage[i];
-        }		
+        for (var i = 0; i < rPlayerList.length; i++) {
+            splitParts[i] = rPlayerList[i] + ' ' + rPlayerServer[i] + ' ' + rPlayerElo[i] + ' ' + rPlayerGames[i] + ' ' + rPlayerWins[i] + ' ' + rPlayerLosses[i];
+        }
         fs.writeFileSync('ranked.txt', splitParts.join('\n'));
 		console.log('Ranked system has been backed up!');
-	}*/
+	}
+	
     function draftplayer(playerd) { // interface with google sheets to write player name on the draft board
         console.log(playerd + ' is being drafted!');
         seasonnum = 292;
@@ -1613,7 +1779,7 @@ if (channels.indexOf(state.channel_id) == -1){
         })
     }
 
-    function createTagProGroup(playerd, ggadd, actor, toggle, mapname) {
+    function createTagProGroup(playerd, ggadd, actor, toggle, mapname,tempGame) {
         if (playerd == 'maptest' || playerd == 'maptest2' || playerd == 'maptest3') {
             groupbuild = 'http://' + playerd + '.newcompte.fr/groups/create';
             groupsend = 'http://' + playerd + '.newcompte.fr/groups/';
@@ -1637,26 +1803,48 @@ if (channels.indexOf(state.channel_id) == -1){
                 if (toggle == true) {
                     groupid = groupid + "/#tg-" + mapname;
                 }
-                console.log(groupsend + groupid);
                 reply = '<br/>Here is your ' + playerd + ' group:<br/><br/><a href="' + groupsend + groupid + '"><span style="color:#39a5dd">' + groupsend + groupid + '</span></a>';
-            } else {
+				if (tempGame.length > 0){
+					groupid = groupid + "/#rg-" + mapname;
+					reply = '<br/>Your ranked game is ready!<br/>Settings: 8 min game, Golden Cap OT<br/>Map: '+tempGame[12]+'<br/>'+'<a href="'+groupsend+groupid+'"><b><span style="color:#39a5dd">Click here for the group!</span></b></a>'+'<br/><br/>Red (P1-P4): '+tempGame[0]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[0])]+'], '+tempGame[1]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[1])]+'], '+tempGame[2]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[2])]+'], '+tempGame[3]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[3])]+'] ['+tempGame[8]+']<br/>Blue (P5-P8): '+tempGame[4]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[4])]+'], '+tempGame[5]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[5])]+'], '+tempGame[6]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[6])]+'], '+tempGame[7]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[7])]+'] ['+tempGame[9]+']<br/><br/>Vote using !vr, !vb, or !vv #<br/>Use <a href="https://gist.github.com/Poeticalto/00de8353fce79cac9059b22f20242039/raw/a5a6515e75ac210ec9798c00b532742646b4728f/TagPro_Competitive_Group_Maker.user.js"><b><span style="color:#39a5dd">this userscript</span></b></a> to set up groups automatically!<br/><br/>Good luck and have fun!';
+				}
+				console.log(groupsend + groupid);
+			} else {
+				if (tempGame.length > 0){
+				reply = '<br/>Your ranked game is ready!<br/>Settings: 8 min game, Golden Cap OT<br/>Map: '+tempGame[12]+'<br/>'+'<a href="'+'"><b><span style="color:#39a5dd">ERR creating group, play on '+tempGame[11]+'</span></b></a>'+'<br/><br/>Red (P1-P4): '+tempGame[0]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[0])]+'], '+tempGame[1]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[1])]+'], '+tempGame[2]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[2])]+'], '+tempGame[3]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[3])]+'] ['+tempGame[8]+']<br/>Blue (P5-P8): '+tempGame[4]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[4])]+'], '+tempGame[5]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[5])]+'], '+tempGame[6]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[6])]+'], '+tempGame[7]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[7])]+'] ['+tempGame[9]+']<br/><br/>Vote using !vr, !vb, or !vv #<br/>Use <a href="https://gist.github.com/Poeticalto/00de8353fce79cac9059b22f20242039/raw/a5a6515e75ac210ec9798c00b532742646b4728f/TagPro_Competitive_Group_Maker.user.js"><b><span style="color:#39a5dd">this userscript</span></b></a> to set up groups automatically!<br/><br/>Good luck and have fun!';
+				}
+				else{
                 reply = '<br/> There was an error when creating your group. Check to make sure you put an actual server! c:';
+				}
             }
         })
 
         function random3() {
             console.log(reply);
-            actor.sendMessage(reply);
-            if (ggadd != false && blacklist.indexOf(actor.name) == -1) { // players on the blacklist will be able to make groups but not add them to the public list of groups
+			if (tempGame.length > 0){
+				for (var i = 0;i < 7;i++){ 
+					connection.userByName(tempGame[i]).sendMessage(reply);
+				}
+			}
+			else{
+				actor.sendMessage(reply);
+			}
+            if (ggadd != false && (blacklist.indexOf(actor.name) == -1 || tempGame.length > 0)) { // players on the blacklist will be able to make groups but not add them to the public list of groups
                 if (ggid.indexOf(ggadd) > -1) {
                     gglink[ggid.indexOf(ggadd)] = groupsend + groupid;
                 } else {
-                    ggid.push(ggadd.toLowerCase());
+                    if (tempGame.length > 0) {
+					ggid.push(ggadd);
                     gglink.push(groupsend + groupid);
+					}
+					else {
+					ggid.push(ggadd.toLowerCase());
+                    gglink.push(groupsend + groupid);
+					}
                 }
             }
         }
-        setTimeout(random3, 500);
+        setTimeout(random3, 1000);
     }
 
     function getDateTime() {
@@ -1676,7 +1864,190 @@ if (channels.indexOf(state.channel_id) == -1){
     }
 	
 	function rSetup(){
-		rgamesLogger.rgames('this is sample game data',{'Timestamp':getDateTime()});
+		var rTempElo = [];
+		for (var i = 0; i < rQueue.length; i++){
+			rTempElo[i] = rPlayerElo[rPlayerList.indexOf(rQueue[i])];
+		}
+		bubbleSortElo(rTempElo,rQueue);
+		var tempRed = [rQueue[0]];
+		var tempRedElo = rTempElo[0];
+		var tempBlue = [];
+		var tempBlueElo = 0;
+		for (var i = 1;i<rQueue.length;i++){
+			if (tempRedElo > tempBlueElo && tempRed.length <= 4){
+				tempBlue.push(rQueue[i]);
+				tempBlueElo += rTempElo[i];
+			}
+			else {
+				tempRed.push(rQueue[i]);
+				tempRedElo += rTempElo[i];
+			}
+		}
+		tempRedElo = tempRedElo/4;
+		tempBlueElo = tempBlueElo/4;
+		var tempServer = 0;
+		for (var i = 0;i < rQueue.length;i++){
+			var tempIndex = rPlayerList.indexOf(rQueue[i]);
+			rPlayerGames[tempIndex] += 1;
+			switch (rPlayerServer[tempIndex]){
+				case 'centra':
+					tempserver -= 1;
+					break;
+				case 'origin':
+					tempserver += 1;
+					break;
+				case 'radius':
+					tempserver += 1;
+					break;
+				case 'pi':
+					tempserver += 1;
+					break;
+				case 'orbit':
+					tempserver += 2;
+					break;
+				case 'chord':
+					tempserver += 2;
+					break;
+				case 'diameter':
+					tempserver -= 2;
+					break;
+			}
+		}
+		if (tempServer <-12){
+			tempServer = 'diameter';
+		}
+		else if (tempServer < -5){
+			tempServer = 'centra';
+		}
+		else if (tempServer < 2){
+			tempServer = 'sphere';
+		}
+		else if (tempServer < 5){
+			tempServer = 'origin';
+		}
+		else if (tempServer <=12){
+			tempServer = 'radius';
+		}
+		else{
+			tempServer = 'orbit';
+		}
+		var randomIndex = Math.floor(Math.random() * rankedMaps.length); 
+		var tempMap = rankedMaps[randomIndex];
+		var tempId = rPlayerGames.reduce((accumulator, currentValue) => accumulator + currentValue)/8;
+		var tempGame = [tempRed[0],tempRed[1],tempRed[2],tempRed[3],tempBlue[0],tempBlue[1],tempBlue[2],tempBlue[3],tempRedElo,tempBlueElo,tempId,tempServer,tempMap,0,0,0,0,0,0,0,0,0,0,0]; 
+		if (rGame01.length == 0){
+			rGame01 = tempGame;
+		}
+		else if (rGame02.length == 0){
+			rGame02 = tempGame;
+		}
+		else if (rGame03.length == 0){
+			rGame03 = tempGame;
+		}
+		else if (rGame04.length == 0){
+			rGame04 = tempGame;
+		}
+		else if (rGame05.length == 0){
+			rGame05 = tempGame;
+		}
+		rgamesLogger.rgames(tempGame[10]+' starting with game data: '+tempGame,{'Timestamp':getDateTime()});
+		rQueue = [];
+		createTagProGroup(tempGame[11], tempGame[10], botname, false, tempGame[12],tempGame);
 	}
-
+	
+	function bubbleSortElo(array,arrayb) {
+		var done = false;
+		while (!done) {
+		done = true;
+		for (var i = 1; i < array.length; i += 1) {
+			if (array[i - 1] < array[i]) {
+				done = false;
+				var tmp = array[i-1];
+				var tmpb = arrayb[i-1];
+				array[i-1] = array[i];
+				arrayb[i-1] = arrayb[i];
+				array[i] = tmp;
+				arrayb[i] = tmpb;
+				}
+			}
+		}
+		rQueue = arrayb;
+		rTempElo = array;
+	}
+	
+	function calcElo(player,result,opponent){
+		console.log(player+result+opponent);
+		var oldElo = rPlayerElo[rPlayerList.indexOf(player)];
+		var newElo = 0;
+		var changeElo = 0;
+		var modElo = rPlayerWins[rPlayerList.indexOf(player)]+rPlayerLosses[rPlayerList.indexOf(player)];
+		if (modElo <= 10){
+			modElo = 80;
+		}
+		else if (modElo <= 25){
+			modElo = 40;
+		}
+		else{
+			modElo = 20;
+		}
+		if (result == true){
+			newElo = oldElo+modElo*1.5*(1-(1/(Math.pow(10,-(oldElo-opponent)/400)+1)));
+			rPlayerElo[rPlayerList.indexOf(player)] = newElo;
+			rPlayerWins[rPlayerList.indexOf(player)] += 1;
+			connection.userByName(player).sendMessage('<br/>Your ranked game has finished!<br/>Result: WIN<br/>Old Elo: '+oldElo+'<br/>New Elo : '+newElo+' ('+changeElo+')<br/>Thanks for playing! Rejoin the queue with !rjoin ! c:');
+		}
+		else if (result == false){
+			newElo = oldElo+modElo*1.5*(0-(1/(Math.pow(10,-(oldElo-opponent)/400)+1)));; // change to reflect lose equation
+			rPlayerElo[rPlayerList.indexOf(player)] = newElo;
+			rPlayerLosses[rPlayerList.indexOf(player)] += 1;
+			connection.userByName(player).sendMessage('<br/>Your ranked game has finished!<br/>Result: LOSS<br/>Old Elo: '+oldElo+'<br/>New Elo : '+newElo+' ('+changeElo+')<br/>Thanks for playing! Rejoin the queue with !rjoin ! c:');
+		}
+		else {
+			newElo = oldElo;
+			connection.userByName(player).sendMessage('<br/>Your ranked game has finished!<br/>Result: VOID due to '+opponent+'<br/>Old Elo: '+oldElo+'<br/>New Elo : '+newElo+' ('+changeElo+')<br/>Thanks for playing! Rejoin the queue with !rjoin ! c:');
+		}
+	}
+	
+	function gameProcess(process,result){
+		rgamesLogger.rgames(process[10]+' finished with result of '+result+' '+process,{'Timestamp':getDateTime()});
+		if (result == true || result == false){
+			if (result == true){
+				for (var i = 0; i < 4;i++){
+					calcElo(process[i],true,process[9]);
+					calcElo(process[i+4],false,process[8]);
+				}
+			}
+			else if (result == false) {
+				for (var i = 0; i < 4;i++){
+					calcElo(process[i],false,process[9]);
+					calcElo(process[i+4],true,process[8]);
+				}
+			}
+		}
+		else {
+			if (rPlayerList.indexOf(result) > -1){
+				rPlayerBan.push(result);
+			}
+			for (var i = 0; i < 8;i++){
+				calcElo(process[i],'voided',result);
+			}
+			
+		}
+		if (rGame01.indexOf(process[0]) > -1){
+			rGame01 = [];
+		}
+		else if (rGame02.indexOf(process[0]) > -1){
+			rGame02 = [];
+		}
+		else if (rGame03.indexOf(process[0]) > -1){
+			rGame03 = [];
+		}
+		else if (rGame04.indexOf(process[0]) > -1){
+			rGame04 = [];
+		}
+		else if (rGame05.indexOf(process[0]) > -1){
+			rGame05 = [];
+		}
+		setTimeout(backupRanked,5000);
+	}
 });
