@@ -55,6 +55,19 @@ Piece # | Content | Description
 
 motd.txt = This .txt file holds motd messages for the motd system, one per line.
 
+ranked.txt = This .txt file holds the ranked system for the bot. Each player is stored on one line, which each piece separated by a space in the following format:
+
+Piece # | Content | Description
+:---: | :---: | :---:
+1 | rPlayerList | Name of the player
+2 | rPlayerServer | Server of the player
+3 | rPlayerElo | Elo of the player
+4 | rPlayerGames | # of games played by player
+5 | rPlayerWins | # of wins by player
+6 | rPlayerLosses | # of losses by player
+
+Note: # of games in rPlayerGames includes games that are voided, so it may not be the same as wins+losses.
+
 slacktoken.txt = This .txt file holds API info for the [Slack API](https://api.slack.com/custom-integrations/web) as follows:
 
 Line # | Content | Description
@@ -183,6 +196,18 @@ Here is a list of public commands:
 
 !qak - qak
 
+!rgames - Gives a list of ranked games currently playing.
+
+!rjoin - Joins the ranked queue.
+
+!rstats player - Gets the stats of a player. Leave blank to retrieve your own.
+
+!rleaders - Gets the ranked leaders and their Elo.
+
+!rqueue - Gives the players currently in the queue.
+
+!rregister server - Registers the player for the ranked system on their preferred server.
+
 !signups - Gives user the signup link
 
 !spreadsheet - Gives user the spreadsheet link
@@ -249,7 +274,7 @@ Giving priority speaker to the bot when it is in the same channel as the user wi
 
 ## Special Thanks
 
-Special thanks to Gem the TagPro dev for her invaluable help in debugging the bot. c:
+Special thanks to Gem for her invaluable help in debugging the bot. c:
 
 ---
 
@@ -257,8 +282,4 @@ Special thanks to Gem the TagPro dev for her invaluable help in debugging the bo
 
 1. Ability to reset seasons
 
-2. Piping audio through node-mumble-audio
-
-2a. Music bot?
-
-3. Code cleanup/refactoring
+2. Code cleanup/refactoring
