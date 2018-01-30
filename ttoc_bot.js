@@ -156,7 +156,7 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','irc_info.txt'))) {
 	ircName = ircChannel[1];
 	ircPassword = ircChannel[3];
 	ircChannel = ircChannel[2];
-    ircAuth = false;
+    ircAuth = true;
     console.log('IRC server info imported from irc_info.txt!');
 }
 
