@@ -91,7 +91,7 @@ var botMoveTo = 'Meep is God';
 var help = 'I am a bot designed in node.js!';
 var tohelp = 'Sorry, I did not recognize that. Use !help for a list of public commands! c:';
 var botInfo = "I am a test bot using Poeticalto's ttoc-mumble-bot as a base!";
-var sadbot = "<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)";
+var greyMessage = "<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)";
 var scriptId = 'none';
 var spreadsheetId = 'none';
 var mailUser = [];
@@ -120,6 +120,7 @@ var groupmeUsername = undefined;
 var GMBOT = undefined;
 var groupmeUserId = undefined;
 var groupmeBotId = null;
+var groupmeListenId = undefined;
 var gAuth = false;
 var gappkey;
 var ircAuth = false;
@@ -136,6 +137,7 @@ var rankedMaps = ['Transilio','EMERALD','Pilot','Cache','Wormy','Monarch'];
 
 // for each file, replaces the defaults if it exists.
 // consult the readme for help on how to setup each .txt file.
+
 
 if (fs.existsSync(path.join(__dirname,'/bot_data/','gscript_info.txt'))) {
     rows = fs.readFileSync(path.join(__dirname,'/bot_data/','gscript_info.txt')).toString().split("\n");
@@ -154,7 +156,7 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','irc_info.txt'))) {
 	ircName = ircChannel[1];
 	ircPassword = ircChannel[3];
 	ircChannel = ircChannel[2];
-    ircAuth = true;
+    ircAuth = false;
     console.log('IRC server info imported from irc_info.txt!');
 }
 
@@ -187,11 +189,11 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','mumble_info.txt'))) {
 	help = rows[4];
 	tohelp = rows[5];
 	botInfo = rows[6];
-	sadbot = rows[7];
+	greyMessage = rows[7];
     console.log('Mumble info imported from mumble_info.txt!');
 } else {
     fs.openSync(path.join(__dirname,'/bot_data/','mumble_info.txt'), 'w');
-	fs.writeFileSync(path.join(__dirname,'/bot_data/','mumble_info.txt'),mumbleUrl + '\n' + botName + '\n' + botHome + '\n' + botMoveTo + '\n' + help+ '\n'+ tohelp + '\n' + botInfo + '\n' + sadbot + '\n');
+	fs.writeFileSync(path.join(__dirname,'/bot_data/','mumble_info.txt'),mumbleUrl + '\n' + botName + '\n' + botHome + '\n' + botMoveTo + '\n' + help+ '\n'+ tohelp + '\n' + botInfo + '\n' + greyMessage + '\n');
     console.log('mumble_info.txt was created!');
 }
 
@@ -273,6 +275,7 @@ if (fs.existsSync(path.join(__dirname,'/keys/','groupme_keys.txt'))) {
     groupmeUsername = groupmeAccessToken[3]; // groupmeUsername is your groupme name in the group, used to filter out messages
     GMBOT = groupmeAccessToken[2]; // GMBOT is the name of your groupme bot
     groupmeUserId = groupmeAccessToken[1]; // groupmeUserId is your user id [not the bot id]
+	groupmeListenId = groupmeAccessToken[5];
     groupmeAccessToken = groupmeAccessToken[0]; // groupmeAccessToken is your groupme access token
     groupmeAuth = true;
     console.log('GroupMe keys imported from groupme_keys.txt!');
@@ -484,6 +487,15 @@ const rl = readline.createInterface({ // creates cmd interface to interact with 
 // connect to the mumble server
 console.log('Connecting to Mumble Server');
 console.log('Connecting');
+if (groupmeAuth == true){
+request({
+            method: 'POST',
+            uri: 'https://api.groupme.com/v3/bots/post',
+            body: JSON.stringify({ "bot_id" : groupmeListenId,"text": 'Bot has been initialized!' })
+        }, function(error, response, body) {
+			console.log(body);
+		})
+}
 
 mumble.connect(mumbleUrl, options, function(error, connection) {
     if (error) { throw new Error(error); }
@@ -1493,7 +1505,7 @@ if (channels.indexOf(state.channel_id) == -1){
                             } else {
                                 motd = motd[0];
                             }
-                            motd = motd + sadbot;
+                            motd = motd + greyMessage;
                             reply = 'motd has been updated and turned on!';
                         } else {
                             motdSet = false;
