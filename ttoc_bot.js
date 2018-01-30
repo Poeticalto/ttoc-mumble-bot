@@ -16,46 +16,63 @@ var irc = require('irc');
 var script = google.script('v1');
 var sheets = google.sheets('v4');
 var SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/forms'];
-
+var now = new Date();
 
 // Logger setup, all logs are stored in the logs folder.
 const mumbleLogger = winston.createLogger({
-  levels: {
-    error: 0,
-    chat: 1,
-	mlog: 2
-  },
-  transports: [
-    new winston.transports.File({
-      filename: path.join(__dirname,'/logs/','error.log'),
-      level: 'error'
-    }),
-    new winston.transports.File({
-      filename: path.join(__dirname,'/logs/','chat.log'),
-      level: 'chat'
-    }),
-    new winston.transports.File({
-      filename: path.join(__dirname,'/logs/','mlog.log'),
-      level: 'mlog'
-    })
-  ]
+	levels: {
+		error: 0,
+		chat: 1,
+		mlog: 2
+	},
+	transports: [
+		new winston.transports.File({
+			filename: path.join(__dirname,'/logs/error','error_'+now.getMonth()+'-'+now.getDay()+'-'+now.getFullYear+'.log'),
+			level: 'error'
+		}),
+		new winston.transports.File({
+			filename: path.join(__dirname,'/logs/mumblechat','chat_'+now.getMonth()+'-'+now.getDay()+'-'+now.getFullYear+'.log'),
+			level: 'chat'
+		}),
+		new winston.transports.File({
+			filename: path.join(__dirname,'/logs/mumblelog','mlog_'+now.getMonth()+'-'+now.getDay()+'-'+now.getFullYear+'.log'),
+			level: 'mlog'
+		})
+	]
 });
 
 const rgamesLogger = winston.createLogger({
-  levels: {
-    rgames: 0,
-	rqueue: 1
-  },
-  transports: [
+	levels: {
+		rgames: 0,
+		rqueue: 1
+	},
+	transports: [
+		new winston.transports.File({
+			filename: path.join(__dirname,'/logs/rgames','rgames.log'),
+			level: 'rgames'
+		}),
+		new winston.transports.File({
+			filename: path.join(__dirname,'/logs/rqueue','rqueue_'+now.getMonth()+'-'+now.getDay()+'-'+now.getFullYear+'.log'),
+			level: 'rqueue'
+		})	
+	]
+});
+
+const ircLogger = winston.createLogger({
+	levels: {
+		chat : 1,
+		irclog: 2
+	},
+	transports: [
+		new winston.transports.File({
+			filename: path.join(__dirname,'/logs/irc','ircchat_'+now.getMonth()+'-'+now.getDay()+'-'+now.getFullYear+'.log'),
+			level: 'chat'
+		}),
     new winston.transports.File({
-      filename: path.join(__dirname,'/logs/','rgames.log'),
-      level: 'rgames'
-    }),
-    new winston.transports.File({
-      filename: path.join(__dirname,'/logs/','rqueue.log'),
-      level: 'rqueue'
-    })	
-  ]
+			filename: path.join(__dirname,'/logs/irc','rqueue_'+now.getMonth()+'-'+now.getDay()+'-'+now.getFullYear+'.log'),
+			level: 'irclog'
+		})	
+	]
 });
 
 mumbleLogger.exitOnError = false;
@@ -67,8 +84,6 @@ rgamesLogger.emitErrs = false;
 var TOKEN_PATH = path.join(__dirname,'/keys/','gappAuth.json');
 
 // The following are defaults for the various functions of the bot.
-
-
 var mumbleUrl = 'mumble.koalabeast.com';
 var botName = 'test_BOT';
 var botHome = 'Meep is God';
@@ -137,6 +152,7 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','irc_info.txt'))) {
     ircChannel = fs.readFileSync(path.join(__dirname,'/bot_data/','irc_info.txt')).toString().split("\n");
 	ircServer = ircChannel[0];
 	ircName = ircChannel[1];
+	ircPassword = ircChannel[3];
 	ircChannel = ircChannel[2];
     ircAuth = true;
     console.log('IRC server info imported from irc_info.txt!');
@@ -412,8 +428,8 @@ function sswrite(auth) { // this function writes a range to the spreadsheet
         }
     });
 }
-// End of defining google apps scripts
 
+// End of defining google apps scripts
 // Define global variables
 var drafted = 0;
 var draftStart = 0;
@@ -495,6 +511,13 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 	if (ircAuth == true){
 	var client = new irc.Client(ircServer, ircName, {
 		channels: [ircChannel],
+		sasl: true,
+		nick: ircName,
+		userName: ircName,
+		password: ircPassword,
+		stripColors: true,
+		showErrors: false,
+		autoRejoin: false
 		});
 	} else {
 		console.log('IRC info was not imported, you will not be able to use IRC functionality at this time. :c');
@@ -1152,7 +1175,9 @@ if (channels.indexOf(state.channel_id) == -1){
                     break;
 				case 'mod':
 					if (whitelist.indexOf(actor.name) > -1){
-						
+						pseudoMods.push(playerd);
+                        reply = 'Added ' + playerd + ' to the Pseudo Mod group!';
+                        backupUsers();
 					}
 					else {
 						reply = tohelp;

@@ -30,21 +30,11 @@ Using npm install may cause some issues with node-gyp rebuild if you haven't set
 
 ttoc-mumble-bot saves all information in .txt files. I'm working on making a better system, but this works for now. All .txt files which don't have API info are created on first launch by the bot if they don't already exist.
 
-Info on how to set up the three APIs can be found in later sections of this readme.
+### bot_info folder
 
-Here's how each .txt file is structured:
+The text files in the bot_info folder are created automatically the first time the bot is run. These files include systems and options integral to the bot. The structure of each of the .txt files is as follows:
 
-groupmekey.txt = This .txt file holds API info for the [GroupMe API](https://dev.groupme.com/docs/v3) as follows:
-
-Line # | Content | Description
-:---: | :---: | :---:
-1 | ACCESS_TOKEN | This is the access token for your account, not the bot.
-2 | USER_ID | This is your user id, not the bot.
-3 | GMBOT | This is the name of your groupme bot.
-4 | USER_NAME | This is your name in the group, can be used to filter out your messages.
-5 | GROUP_ID | This is the group to listen to.
-
-mail.txt = This .txt file holds the mail system for the bot. Each item is stored on one line, and the line format is as follows (space between each piece):
+mail_system.txt = This .txt file holds the mail system for the bot. Each item is stored on one line, and the line format is as follows (space between each piece):
 
 Piece # | Content | Description
 :---: | :---: | :---:
@@ -53,9 +43,9 @@ Piece # | Content | Description
 3 | mailuser | The mumble user who will receive the mail. (case-insensitive)
 4 | mailmessage | The contents of the mail.
 
-motd.txt = This .txt file holds motd messages for the motd system, one per line.
+motd_system.txt = This .txt file holds motd messages for the motd system, one per line.
 
-ranked.txt = This .txt file holds the ranked system for the bot. Each player is stored on one line, which each piece separated by a space in the following format:
+ranked_system.txt = This .txt file holds the ranked system for the bot. Each player is stored on one line, which each piece separated by a space in the following format:
 
 Piece # | Content | Description
 :---: | :---: | :---:
@@ -68,14 +58,7 @@ Piece # | Content | Description
 
 Note: # of games in rPlayerGames includes games that are voided, so it may not be the same as wins+losses.
 
-slacktoken.txt = This .txt file holds API info for the [Slack API](https://api.slack.com/custom-integrations/web) as follows:
-
-Line # | Content | Description
-:---: | :---: | :---:
-1 | slacktoken | This uses a [legacy token](https://api.slack.com/custom-integrations/legacy-tokens) to communicate with slack.
-2 | slackchannel | This is the channel id for the Slack Channel receiving messages.
-
-sslink.txt = This .txt file holds information from the spreadsheet for The TagPro Tournament of Champions. Its format is as follows:
+tournament_links.txt = This .txt file holds information from the spreadsheet for The TagPro Tournament of Champions. Its format is as follows:
 
 Line # | Content | Description
 :---: | :---: | :---:
@@ -96,13 +79,46 @@ Line # | Content | Description
 3 | pseudoMods | Private mods. Have all the power of mods but none of the publicity.
 4 | greylist | Users who do not want automated messages from the bot.
 5 | blacklist | Bad users who cannot use commands with spam potential.
+6 | rPlayerBan | players who are banned from using the ranked system.
+7 | ircBridgeBan | players who are banned from using the irc bridge.
 
-welcome.txt = This .txt file holds the greeting system, each user on one line. Its line format is as follows:
+welcome_system.txt = This .txt file holds the greeting system, each user on one line. Its line format is as follows:
 
 Piece # | Content | Description
 :---: | :---: | :---:
 1 | welcomeuser | The Mumble user to greet.
 2 | welcomemessage | The message to greet the Mumble User with.
+
+### keys folder
+
+The keys folder contains all certificates and api keys needed to connect to various APIs and servers. Info on how to set up the three APIs can be found in later sections of this readme. Following is the contents of each file.
+
+botcerts.pem = This .pem file is half of the Mumble certificate. It can be created by using the command listed at the top of the readme.
+
+botkeys.pem = This .pem file is the other half of the Mumble certificate. It can be created by using the command listed at the top of the readme.
+
+client_secret.json = This .json file contains your Authorization for Google Scripts.
+
+gappAuth.json = This .json file contains the oAuth keys for your scripts to run. If client_secret.json is present, this file will be created the first time you attempt to use the Google API.
+
+groupme_keys.txt = This .txt file holds API info for the [GroupMe API](https://dev.groupme.com/docs/v3) as follows:
+
+Line # | Content | Description
+:---: | :---: | :---:
+1 | ACCESS_TOKEN | This is the access token for your account, not the bot.
+2 | USER_ID | This is your user id, not the bot.
+3 | GMBOT | This is the name of your groupme bot.
+4 | USER_NAME | This is your name in the group, can be used to filter out your messages.
+5 | GROUP_ID | This is the group to listen to.
+
+
+slack_keys.txt = This .txt file holds API info for the [Slack API](https://api.slack.com/custom-integrations/web) as follows:
+
+Line # | Content | Description
+:---: | :---: | :---:
+1 | slacktoken | This uses a [legacy token](https://api.slack.com/custom-integrations/legacy-tokens) to communicate with slack.
+2 | slackchannel | This is the channel id for the Slack Channel receiving messages.
+
 
 ---
 
