@@ -516,7 +516,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     if (slackAuth == true) {
         var web = new WebClient(slackToken);
     } else {
-        console.log('Slack token was not imported, you will not be able to use Slack functionality at this time. :c');
+        console.log('Slack token was noot imported, you will not be able to use Slack functionality at this time. :c');
         var web;
     }
 	
@@ -1672,6 +1672,7 @@ if (channels.indexOf(state.channel_id) == -1){
     connection.on('error', function(MumbleError) { //incomplete, error event when something goes wrong through mumble, need to add parsing of error
         console.log(MumbleError.name);
 		mumbleLogger.error("Mumble Error: "+MumbleError.name,{'Timestamp': getDateTime()});
+		process.exit(0);		
     })
 
     connection.on('user-connect', function(user) { // user-connect is the event emitted when a user connects to the server
@@ -1993,7 +1994,7 @@ if (channels.indexOf(state.channel_id) == -1){
             uri: groupBuild,
             multipart: [{
                 'follow_redirects': 'false',
-                body: JSON.stringify({ public: "off" })
+                'body': JSON.stringify({ public: "off" })
             }]
         }, function(error, response, body) {
             if (response != null) {
