@@ -3,3 +3,5 @@ keys/
 logs/
 node_modules/
 sandbox.js
+ranked_bot.js
+help_bot.js

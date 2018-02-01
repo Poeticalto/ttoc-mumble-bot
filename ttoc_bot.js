@@ -41,22 +41,7 @@ const mumbleLogger = winston.createLogger({
 	]
 });
 
-const rgamesLogger = winston.createLogger({
-	levels: {
-		rgames: 0,
-		rqueue: 1
-	},
-	transports: [
-		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/rgames','rgames.log'),
-			level: 'rgames'
-		}),
-		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/rqueue','rqueue_'+now.getMonth()+'-'+now.getDay()+'-'+now.getFullYear+'.log'),
-			level: 'rqueue'
-		})	
-	]
-});
+
 
 const ircLogger = winston.createLogger({
 	levels: {
@@ -77,8 +62,6 @@ const ircLogger = winston.createLogger({
 
 mumbleLogger.exitOnError = false;
 mumbleLogger.emitErrs = false;
-rgamesLogger.exitOnError = false;
-rgamesLogger.emitErrs = false;
 
 // Location for the token used to verify Google oAuth. This was taken from the nodejs quickstart, so if you have the token saved elsewhere, change the DIR/PATH.
 var TOKEN_PATH = path.join(__dirname,'/keys/','gappAuth.json');
@@ -126,14 +109,6 @@ var gappkey;
 var ircAuth = false;
 var splitParts;
 var splitMessage;
-var rPlayerList = [];
-var rPlayerServer = [];
-var rPlayerElo = [];
-var rPlayerGames = [];
-var rPlayerWins = [];
-var rPlayerLosses = [];
-var rPlayerBan = [];
-var rankedMaps = ['Transilio','EMERALD','Pilot','Cache','Wormy','Monarch'];
 
 // for each file, replaces the defaults if it exists.
 // consult the readme for help on how to setup each .txt file.
@@ -156,7 +131,7 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','irc_info.txt'))) {
 	ircName = ircChannel[1];
 	ircPassword = ircChannel[3];
 	ircChannel = ircChannel[2];
-    ircAuth = true;
+    ircAuth = false;
     console.log('IRC server info imported from irc_info.txt!');
 }
 
@@ -195,24 +170,6 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','mumble_info.txt'))) {
     fs.openSync(path.join(__dirname,'/bot_data/','mumble_info.txt'), 'w');
 	fs.writeFileSync(path.join(__dirname,'/bot_data/','mumble_info.txt'),mumbleUrl + '\n' + botName + '\n' + botHome + '\n' + botMoveTo + '\n' + help+ '\n'+ tohelp + '\n' + botInfo + '\n' + greyMessage + '\n');
     console.log('mumble_info.txt was created!');
-}
-
-if (fs.existsSync(path.join(__dirname,'/bot_data/','ranked_system.txt'))) {
-    splitParts = fs.readFileSync(path.join(__dirname,'/bot_data/','ranked_system.txt')).toString().split("\n");
-    for (var i = 0; i < splitParts.length; i++) {
-        if (splitParts[i].split(" ").length >= 4) {
-            rPlayerList.push(splitParts[i].split(" ")[0]);
-            rPlayerServer.push(splitParts[i].split(" ")[1]);
-            rPlayerElo.push(splitParts[i].split(" ")[2]);
-			rPlayerGames.push(splitParts[i].split(" ")[3]);
-			rPlayerWins.push(splitParts[i].split(" ")[4]);
-			rPlayerLosses.push(splitParts[i].split(" ")[5]);
-        }
-    }
-	console.log('ranked system successfully imported!');
-} else {
-    fs.openSync(path.join(__dirname,'/bot_data/','ranked_system.txt'), 'w');
-    console.log('ranked_system.txt was created!');
 }
 
 if (fs.existsSync(path.join(__dirname,'/bot_data/','welcome_system.txt'))) {
@@ -449,7 +406,6 @@ var seasonSize;
 var seasonNum;
 var draftMod;
 var draftRound = 1;
-var greylist;
 var signupsOpen = false;
 var motdSet = false;
 var groupSend;
@@ -510,6 +466,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 	
 	process.on('uncaughtException', function (exception) {
 	console.log(exception);
+	process.exit(0);
 	});
 
     // Initialize slack/groupme connections
@@ -531,79 +488,76 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 		showErrors: false,
 		autoRejoin: false
 		});
-	} else {
+		client.addListener('error', function(message) {
+			console.error('ERROR: %s: %s', message.command, message.args.join(' '));
+		});
+
+		client.addListener('message#blah', function(from, message) {
+			console.log('<%s> %s', from, message);
+		});
+
+		client.addListener('message', function(from, to, message) {
+			console.log('%s => %s: %s', from, to, message);
+			console.log(message);
+			if (from == 'mods_slack1' && message.split(' ')[0] == '!ban'){
+				if (ircBridge.indexOf(message.split(' ')[1]) > -1){
+					ircBridgeBan.push(message.split(' ')[1]);
+					ircBridge.splice(ircBridge.indexOf(message.split(' ')[1]),1);
+					connection.userByName(message.split(' ')[1].sendMessage('You have been banned from using the NA Mumble Bridge!'));
+					client.say('#tpmods',message.split(' ')[1]+' has been banned from the NA Mumble Bridge!');
+					backupUsers();
+				}
+				else {
+					ircBridgeBan.push(message.split(' ')[1]);
+				}
+			}
+		
+			if (to.match(/^[#&]/)) {
+				for (var i=0; i < ircBridge.length ; i++){
+					const messageCheck = message || '';
+					const isMod = messageCheck[0] === '<';
+					if (from == 'mods_slack1' && isMod){
+						var tempMod =  message.split(' ')[0];
+						tempMod = tempMod.substring(1,tempMod.length-1);
+						var tempMessage = '';
+						if (message.split(' ').length > 2) {
+							for (i = 2; i <= message.split(' ').length - 1; i++) {
+								tempMessage = tempMessage + ' ' + message.split(' ')[i];
+							}
+						message = message.split(' ')[1];
+						connection.userByName(ircBridge[i]).sendMessage('#tpmods IRC Chat:<br/>[Mod]'+tempMod+': '+message);
+						}
+					else {
+						connection.userByName(ircBridge[i]).sendMessage('#tpmods IRC Chat:<br/>'+from+': '+message);
+					}
+					}
+				}
+			}	
+			else {
+			// private message
+			console.log('private message');
+			}
+			if (message == '!cat'){
+				client.say('#tpmods',cats());
+			}
+		
+		});
+		client.addListener('pm', function(nick, message) {
+			console.log('Got private message from %s: %s', nick, message);
+		});
+		client.addListener('join', function(channel, who) {
+			console.log('%s has joined %s', who, channel);
+		});
+		client.addListener('part', function(channel, who, reason) {
+			console.log('%s has left %s: %s', who, channel, reason);
+		});
+		client.addListener('kick', function(channel, who, by, reason) {
+			console.log('%s was kicked from %s by %s: %s', who, channel, by, reason);
+		});				
+		} else {
 		console.log('IRC info was not imported, you will not be able to use IRC functionality at this time. :c');
 		var client;
 	}
-	
-	client.addListener('error', function(message) {
-		console.error('ERROR: %s: %s', message.command, message.args.join(' '));
-	});
-
-	client.addListener('message#blah', function(from, message) {
-		console.log('<%s> %s', from, message);
-	});
-
-	client.addListener('message', function(from, to, message) {
-		console.log('%s => %s: %s', from, to, message);
-		console.log(message);
-		if (from == 'mods_slack1' && message.split(' ')[0] == '!ban'){
-			if (ircBridge.indexOf(message.split(' ')[1]) > -1){
-				ircBridgeBan.push(message.split(' ')[1]);
-				ircBridge.splice(ircBridge.indexOf(message.split(' ')[1]),1);
-				connection.userByName(message.split(' ')[1].sendMessage('You have been banned from using the NA Mumble Bridge!'));
-				client.say('#tpmods',message.split(' ')[1]+' has been banned from the NA Mumble Bridge!');
-				backupUsers();
-			}
-			else {
-				ircBridgeBan.push(message.split(' ')[1]);
-			}
-		}
-		
-		if (to.match(/^[#&]/)) {
-			for (var i=0; i < ircBridge.length ; i++){
-				const messageCheck = message || '';
-				const isMod = messageCheck[0] === '<';
-				
-				if (from == 'mods_slack1' && isMod){
-					var tempMod =  message.split(' ')[0];
-					tempMod = tempMod.substring(1,tempMod.length-1);
-					var tempMessage = '';
-					if (message.split(' ').length > 2) {
-						for (i = 2; i <= message.split(' ').length - 1; i++) {
-							tempMessage = tempMessage + ' ' + message.split(' ')[i];
-						}
-					message = message.split(' ')[1];
-					connection.userByName(ircBridge[i]).sendMessage('#tpmods IRC Chat:<br/>[Mod]'+tempMod+': '+message);
-				}
-				else {
-					connection.userByName(ircBridge[i]).sendMessage('#tpmods IRC Chat:<br/>'+from+': '+message);
-				}
-				}
-			}
-        }
-		else {
-        // private message
-        console.log('private message');
-		}
-		if (message == '!cat'){
-			client.say('#tpmods',cats());
-		}
-		
-	});
-	client.addListener('pm', function(nick, message) {
-		console.log('Got private message from %s: %s', nick, message);
-	});
-	client.addListener('join', function(channel, who) {
-		console.log('%s has joined %s', who, channel);
-	});
-	client.addListener('part', function(channel, who, reason) {
-		console.log('%s has left %s: %s', who, channel, reason);
-	});
-	client.addListener('kick', function(channel, who, by, reason) {
-		console.log('%s was kicked from %s by %s: %s', who, channel, by, reason);
-	});										
-	
     if (groupmeAuth == true) {
         var incoming = new GroupMe.IncomingStream(groupmeAccessToken, groupmeUserId, null);
     } else {
@@ -826,7 +780,6 @@ if (channels.indexOf(state.channel_id) == -1){
 						backupMail();
 						backupUsers();
 						backupWelcome();
-						backupRanked();
                         reply = "Everything has been backed up!";
                     } else {
                         reply = tohelp;
@@ -1196,27 +1149,6 @@ if (channels.indexOf(state.channel_id) == -1){
 					}
 					break;
 				case 'mods':
-					if (ircBridge.indexOf(actor.name) == -1 && actor.isRegistered() == true){
-					ircBridge.push(actor.name);
-						if (playerd == undefined){
-							client.say('#tpmods',actor.name+' has joined via the NA Mumble Bridge!');
-							reply = "<br/>You have been connected to the #tpmods IRC Channel! To communicate, simply PM me with your message and I'll forward it along!<br/>If you want to disconnect from the bridge, simply message !mods or disconnect from Mumble.";
-						}
-						else {
-							client.say('#tpmods',actor.name+' has joined via the NA Mumble Bridge with: '+playerd);
-							reply = "<br/>Your message has been sent to the #tpmods IRC Channel! To communicate further, simply PM me with your message and I'll forward it along!<br/>If you want to disconnect from the bridge, simply message !mods or disconnect from Mumble.";
-						}
-					}
-					else if (actor.isRegistered() == false){
-						reply = '<br/>Sorry, only registered Mumble users can use the NA Mumble Bridge.<br/>Register yourself by right clicking on your name and clicking register, or <a href="https://goo.gl/3ORahu"><b><span style="color:#39a5dd">click here</span></b></a> to go directly to the IRC channel via your browser!'
-					}
-					else {
-						ircBridge.splice(ircBridge.indexOf(actor.name),1);
-						reply = "You have disconnected from the #tpmods IRC Channel! If you need any help from a mod on Mumble, use the !modlist command to find a mod!";
-						client.say('#tpmods',actor.name+' has disconnected from the NA Mumble Bridge!');
-					}
-					break;
-                case 'modslist':
                     reply = '<br/> Here are the mods currently on: <br/>' + modsMumbleList + '<br/>To find any of these mods, use the !find command! c:';
                     break;
                 case 'motd': // sends the message of the day
@@ -1235,101 +1167,6 @@ if (channels.indexOf(state.channel_id) == -1){
 					}
 					else {
 						reply = tohelp;
-					}
-					break;
-				case 'rgames':
-					reply = "Here are the ranked games currently going on: ";
-					break;
-				case 'rjoin':
-					if (rQueue.indexOf(actor.name) == -1 && rQueue.length == 0 && rPlayerList.indexOf(actor.name) > -1){
-						rQueue.push(actor.name);
-						rgamesLogger.rqueue(actor.name+" joined the queue ["+rQueue.length+" total]",{'Timestamp':getDateTime()});
-						reply = "Welcome to the queue! There is 1 player in the queue!";
-					}
-					else if (rQueue.indexOf(actor.name) == -1 && rQueue.length < 7 && rPlayerList.indexOf(actor.name) > -1){
-						rQueue.push(actor.name);
-						rgamesLogger.rqueue(actor.name+" joined the queue ["+rQueue.length+" total]",{'Timestamp':getDateTime()});
-						reply = "Welcome to the queue! There are "+rQueue.length+" players in the queue: "+rQueue;
-					}
-					else if (rQueue.indexOf(actor.name) == -1 && rQueue.length == 7 && rPlayerList.indexOf(actor.name) > -1){
-						rQueue.push(actor.name);
-						rgamesLogger.rqueue(actor.name+" joined the queue ["+rQueue.length+" total]",{'Timestamp':getDateTime()});
-						reply = "Welcome to the queue! The game will start soon!";
-						rSetup();
-					}
-					else if (rQueue.indexOf(actor.name) == -1 && rQueue.length >= 8 && rPlayerList.indexOf(actor.name) > -1){
-						reply = "Sorry, a game is being setup right now. Please try again in a minute!";
-					}
-					else if (rPlayerList.indexOf(actor.name) == -1) {
-						reply = "Sorry, you haven't registered! Use !rregister server to sign up! [Ex. !rregister sphere]";
-					}
-					else {
-						reply = "You're already in the queue with "+rQueue.length+" players: "+rQueue;
-					}
-					break;
-				case 'rstats':
-					if (rPlayerList.indexOf(playerd) > -1){
-						reply = playerd+"'s current Elo is "+rPlayerElo[rPlayerList.indexOf(playerd)];
-					}
-					else if (rPlayerList.indexOf(actor.name) > -1){
-						reply = "Your current Elo is "+rPlayerElo[rPlayerList.indexOf(actor.name)];
-					}
-					else{
-						reply = "You're not registered! Sign up using !rregister server";
-					}
-					break;
-				case 'rleaders':
-					reply = "Here are the leaders: ";
-					break;
-				case 'rleave':
-					if (rQueue.indexOf(actor.name) > -1 && rQueue.length < 8){
-						reply = "You've been removed from the queue!";
-						rQueue.splice(rQueue.indexOf(actor.name),1);
-						rgamesLogger.rqueue(actor.name+" left the queue.",{'Timestamp':getDateTime()});
-					}
-					else if (rQueue.indexOf(actor.name) > -1 && rQueue.length == 8){
-						reply = "Sorry, the game is about to start, you can't leave! :c";
-					}
-					else {
-						reply = "You're not in the queue!";
-					}
-					break;
-				case 'rqueue':
-					if (rQueue.length == 0){
-						reply = "There isn't anyone in the queue!";
-					}
-					else if (rQueue.length == 1){
-						reply = "There is 1 player in the queue: "+rQueue;
-					}
-					else {
-						reply = "There are "+rQueue.length+" players in the queue: " + rQueue;
-					}
-					break;
-				case 'rregister':
-					if (playerd == undefined){
-						reply = "Sorry, I couldn't process your server choice. Please make sure it is one of the following: "+tpServers;
-					}
-					else{
-					if (actor.isRegistered() == true && rPlayerList.indexOf(actor.name) == -1 && tpServers.indexOf(playerd.toLowerCase()) > -1){
-						rPlayerList.push(actor.name);
-						rPlayerServer.push(playerd);
-						rPlayerElo.push(1000);
-						rPlayerGames.push(0);
-						rPlayerWins.push(0);
-						rPlayerLosses.push(0);
-						reply = "Congrats, you've been registered successfully for "+playerd+"! Use !rjoin to join the queue!";
-						rgamesLogger.rqueue(actor.name+" registered for the first time!",{'Timestamp':getDateTime()});
-						backupRanked();
-					}
-					else if (actor.isRegistered() == true && rPlayerList.indexOf(actor.name) == -1){
-						reply = "Sorry, I couldn't process your server choice. Please make sure it is one of the following: "+tpServers;
-					}
-					else if (actor.isRegistered() == false){
-						reply = "Sorry, you must be authenticated on Mumble in order to register! If you need help authenticating, contact a Mumble mod.";
-					}
-					else if (rPlayerList.indexOf(actor.name) > -1){
-						reply = "You've already registered! Use !rjoin to join the queue!";
-					}
 					}
 					break;
                 case 'setgreet': // allows a whitelisted actor to set a greeting for a specific user
@@ -1433,9 +1270,6 @@ if (channels.indexOf(state.channel_id) == -1){
                         console.log(users[i]);
                     }
                     break;
-                case 'test':
-                    reply = getDateTime();
-                    break;
                 case 'time': // shows the time
                     if (setupStart == 1) {
                         reply = 'TToC was treed at 9:30 PM CST and the draft will start at around 10:15 PM CST.';
@@ -1516,134 +1350,6 @@ if (channels.indexOf(state.channel_id) == -1){
                         reply = tohelp;
                     }
                     break;
-				case 'vr':
-				case 'vred':
-					if (rGame01.indexOf(actor.name) > -1){
-						rGame01[13] += 1;
-						if (rGame01[13] > 4){
-							gameProcess(rGame01,true);
-						}
-					}
-					else if (rGame02.indexOf(actor.name) > -1){
-						rGame02[13] += 1;
-						if (rGame02[13] > 4){
-							gameProcess(rGame02,true);
-						}
-					}
-					else if (rGame03.indexOf(actor.name) > -1){
-						rGame03[13] += 1;
-						if (rGame03[13] > 4){
-							gameProcess(rGame03,true);
-						}
-					}
-					else if (rGame04.indexOf(actor.name) > -1){
-						rGame04[13] += 1;
-						if (rGame04[13] > 4){
-							gameProcess(rGame04,true);
-						}
-					}
-					else if (rGame05.indexOf(actor.name) > -1){
-						rGame05[13] += 1;
-						if (rGame05[13] > 4){
-							gameProcess(rGame05,true);
-						}
-					}
-					else {
-						reply = "You're not in a ranked game right now!";
-					}
-					break;
-				case 'vb'://14
-				case 'vblue':
-					if (rGame01.indexOf(actor.name) > -1){
-						rGame01[14] += 1;
-						if (rGame01[14] > 4){
-							gameProcess(rGame01,false);
-						}
-					}
-					else if (rGame02.indexOf(actor.name) > -1){
-						rGame02[14] += 1;
-						if (rGame02[14] > 4){
-							gameProcess(rGame02,false);
-						}
-					}
-					else if (rGame03.indexOf(actor.name) > -1){
-						rGame03[14] += 1;
-						if (rGame03[14] > 4){
-							gameProcess(rGame03,false);
-						}
-					}
-					else if (rGame04.indexOf(actor.name) > -1){
-						rGame04[14] += 1;
-						if (rGame04[14] > 4){
-							gameProcess(rGame04,false);
-						}
-					}
-					else if (rGame05.indexOf(actor.name) > -1){
-						rGame05[14] += 1;
-						if (rGame05[14] > 4){
-							gameProcess(rGame05,false);
-						}
-					}					
-					break;
-				case 'vv':
-				case 'vvoid':
-					if (parseInt(playerd) > 0 && parseInt(playerd) < 9){
-						playerd = playerd + 15;
-					}
-					else {
-						playerd = 'none';
-					}
-					if (rGame01.indexOf(actor.name) > -1){
-						rGame01[15] += 1;
-						if (playerd != 'none'){
-							rGame01[parseInt(playerd)] += 1;
-							playerd = rgame01[parseInt(playerd)-16];
-						}
-						if (rGame01[15] > 4){
-							gameProcess(rGame01,playerd);
-						}
-					}
-					else if (rGame02.indexOf(actor.name) > -1){
-						rGame02[15] += 1;
-						if (playerd != 'none'){
-							rGame02[parseInt(playerd)] += 1;
-							playerd = rgame02[parseInt(playerd)-16];
-						}
-						if (rGame02[15] > 4){
-							gameProcess(rGame02,playerd);
-						}
-					}
-					else if (rGame03.indexOf(actor.name) > -1){
-						rGame03[15] += 1;
-						if (playerd != 'none'){
-							rGame03[parseInt(playerd)] += 1;
-							playerd = rgame03[parseInt(playerd)-16];
-						}
-						if (rGame03[15] > 4){
-							gameProcess(rGame03,playerd);
-						}
-					}
-					else if (rGame04.indexOf(actor.name) > -1){
-						rGame04[15] += 1;
-						if (playerd != 'none'){
-							rGame04[parseInt(playerd)] += 1;
-							playerd = rgame04[parseInt(playerd)-16];
-						}
-						if (rGame04[15] > 4){
-							gameProcess(rGame04,playerd);
-						}
-					}
-					else if (rGame05.indexOf(actor.name) > -1){
-						rGame05[15] += 1;
-						if (playerd != 'none'){
-							rGame05[parseInt(playerd)] += 1;
-							playerd = rgame05[parseInt(playerd)-16];
-						}
-						if (rGame05[15] > 4){
-							gameProcess(rGame05,playerd);
-						}
-					}	
-					break;
                 case 'whitelist': // adds a user to the whitelist, which allows them to access whitelist only commands, playerd defines user to add
                     if (whitelist.indexOf(actor.name) > -1) {
                         whitelist.push(playerd);
@@ -1720,13 +1426,6 @@ if (channels.indexOf(state.channel_id) == -1){
         }
         if (mailUser.indexOf(user.name.toLowerCase()) > -1) {
             user.sendMessage("This is an automated reminder from " + botName + " that you have some mail! Message !getmail to me when you're ready to receive it! c:");
-        }
-        if (toChannel.name == 'In-Game Moderators Assistance Room' && mods.indexOf(user.name) == -1) {
-            user.sendMessage('<br/>Welcome to the In-Game Moderators Assistance Room! If you want a list of mods currently on Mumble, use the !mods command. <br/><br/>If there is not a mod available, try going to the IRC channel by <a href="http://webchat.freenode.net/?channels=tpmods"><b><span style="color:#39a5dd">clicking here</span></b></a>, where a mod is almost always availble to help there! c:');
-            reply = '[NA Mumble] ' + user.name + ' is waiting in the In-Game Moderators Assistance Room!';
-            if (slackAuth == true) {
-                sendtoslack(slackChannel, reply);
-            }
         }
     });
 
@@ -1861,17 +1560,6 @@ if (channels.indexOf(state.channel_id) == -1){
         fs.writeFileSync(path.join(__dirname,'/bot_data/','welcome_system.txt'), splitParts.join('\n'));
 		console.log('welcome system has been backed up!');
 	}
-	
-	function backupRanked(){
-		console.log('backing up ranked system!');
-		splitParts = [];
-        for (var i = 0; i < rPlayerList.length; i++) {
-            splitParts[i] = rPlayerList[i] + ' ' + rPlayerServer[i] + ' ' + rPlayerElo[i] + ' ' + rPlayerGames[i] + ' ' + rPlayerWins[i] + ' ' + rPlayerLosses[i];
-        }
-        fs.writeFileSync(path.join(__dirname,'/bot_data/','ranked_system.txt'), splitParts.join('\n'));
-		console.log('Ranked system has been backed up!');
-	}
-	
     function draftplayer(playerd) { // interface with google sheets to write player name on the draft board
         console.log(playerd + ' is being drafted!');
         draftPickRound = picknum % seasonSize;
@@ -2017,7 +1705,6 @@ if (channels.indexOf(state.channel_id) == -1){
 				}
             }
         })
-
         function random3() {
             console.log(reply);
 			if (tempGame.length > 0){
@@ -2061,192 +1748,4 @@ if (channels.indexOf(state.channel_id) == -1){
         day = (day < 10 ? "0" : "") + day;
         return month + "/" + day + "/" + year + "||" + hour + ":" + min + ":" + sec + "[CST]";
     }
-	
-	function rSetup(){
-		var rTempElo = [];
-		for (var i = 0; i < rQueue.length; i++){
-			rTempElo[i] = rPlayerElo[rPlayerList.indexOf(rQueue[i])];
-		}
-		bubbleSortElo(rTempElo,rQueue);
-		var tempRed = [rQueue[0]];
-		var tempRedElo = rTempElo[0];
-		var tempBlue = [];
-		var tempBlueElo = 0;
-		for (var i = 1;i<rQueue.length;i++){
-			if (tempRedElo > tempBlueElo && tempRed.length <= 4){
-				tempBlue.push(rQueue[i]);
-				tempBlueElo += rTempElo[i];
-			}
-			else {
-				tempRed.push(rQueue[i]);
-				tempRedElo += rTempElo[i];
-			}
-		}
-		tempRedElo = tempRedElo/4;
-		tempBlueElo = tempBlueElo/4;
-		var tempServer = 0;
-		for (var i = 0;i < rQueue.length;i++){
-			var tempIndex = rPlayerList.indexOf(rQueue[i]);
-			rPlayerGames[tempIndex] += 1;
-			switch (rPlayerServer[tempIndex]){
-				case 'centra':
-					tempserver -= 1;
-					break;
-				case 'origin':
-					tempserver += 1;
-					break;
-				case 'radius':
-					tempserver += 1;
-					break;
-				case 'pi':
-					tempserver += 1;
-					break;
-				case 'orbit':
-					tempserver += 2;
-					break;
-				case 'chord':
-					tempserver += 2;
-					break;
-				case 'diameter':
-					tempserver -= 2;
-					break;
-			}
-		}
-		if (tempServer <-12){
-			tempServer = 'diameter';
-		}
-		else if (tempServer < -5){
-			tempServer = 'centra';
-		}
-		else if (tempServer < 2){
-			tempServer = 'sphere';
-		}
-		else if (tempServer < 5){
-			tempServer = 'origin';
-		}
-		else if (tempServer <=12){
-			tempServer = 'radius';
-		}
-		else{
-			tempServer = 'orbit';
-		}
-		var randomIndex = Math.floor(Math.random() * rankedMaps.length); 
-		var tempMap = rankedMaps[randomIndex];
-		var tempId = rPlayerGames.reduce((accumulator, currentValue) => accumulator + currentValue)/8;
-		var tempGame = [tempRed[0],tempRed[1],tempRed[2],tempRed[3],tempBlue[0],tempBlue[1],tempBlue[2],tempBlue[3],tempRedElo,tempBlueElo,tempId,tempServer,tempMap,0,0,0,0,0,0,0,0,0,0,0]; 
-		if (rGame01.length == 0){
-			rGame01 = tempGame;
-		}
-		else if (rGame02.length == 0){
-			rGame02 = tempGame;
-		}
-		else if (rGame03.length == 0){
-			rGame03 = tempGame;
-		}
-		else if (rGame04.length == 0){
-			rGame04 = tempGame;
-		}
-		else if (rGame05.length == 0){
-			rGame05 = tempGame;
-		}
-		rgamesLogger.rgames(tempGame[10]+' starting with game data: '+tempGame,{'Timestamp':getDateTime()});
-		rQueue = [];
-		createTagProGroup(tempGame[11], tempGame[10], botName, false, tempGame[12],tempGame);
-	}
-	
-	function bubbleSortElo(array,arrayb) {
-		var done = false;
-		while (!done) {
-		done = true;
-		for (var i = 1; i < array.length; i += 1) {
-			if (array[i - 1] < array[i]) {
-				done = false;
-				var tmp = array[i-1];
-				var tmpb = arrayb[i-1];
-				array[i-1] = array[i];
-				arrayb[i-1] = arrayb[i];
-				array[i] = tmp;
-				arrayb[i] = tmpb;
-				}
-			}
-		}
-		rQueue = arrayb;
-		rTempElo = array;
-	}
-	
-	function calcElo(player,result,opponent){
-		console.log(player+result+opponent);
-		var oldElo = rPlayerElo[rPlayerList.indexOf(player)];
-		var newElo = 0;
-		var changeElo = 0;
-		var modElo = rPlayerWins[rPlayerList.indexOf(player)]+rPlayerLosses[rPlayerList.indexOf(player)];
-		if (modElo <= 10){
-			modElo = 80;
-		}
-		else if (modElo <= 25){
-			modElo = 40;
-		}
-		else{
-			modElo = 20;
-		}
-		if (result == true){
-			newElo = oldElo+modElo*1.5*(1-(1/(Math.pow(10,-(oldElo-opponent)/400)+1)));
-			rPlayerElo[rPlayerList.indexOf(player)] = newElo;
-			rPlayerWins[rPlayerList.indexOf(player)] += 1;
-			connection.userByName(player).sendMessage('<br/>Your ranked game has finished!<br/>Result: WIN<br/>Old Elo: '+oldElo+'<br/>New Elo : '+newElo+' ('+changeElo+')<br/>Thanks for playing! Rejoin the queue with !rjoin ! c:');
-		}
-		else if (result == false){
-			newElo = oldElo+modElo*1.5*(0-(1/(Math.pow(10,-(oldElo-opponent)/400)+1)));; // change to reflect lose equation
-			rPlayerElo[rPlayerList.indexOf(player)] = newElo;
-			rPlayerLosses[rPlayerList.indexOf(player)] += 1;
-			connection.userByName(player).sendMessage('<br/>Your ranked game has finished!<br/>Result: LOSS<br/>Old Elo: '+oldElo+'<br/>New Elo : '+newElo+' ('+changeElo+')<br/>Thanks for playing! Rejoin the queue with !rjoin ! c:');
-		}
-		else {
-			newElo = oldElo;
-			connection.userByName(player).sendMessage('<br/>Your ranked game has finished!<br/>Result: VOID due to '+opponent+'<br/>Old Elo: '+oldElo+'<br/>New Elo : '+newElo+' ('+changeElo+')<br/>Thanks for playing! Rejoin the queue with !rjoin ! c:');
-		}
-	}
-	
-	function gameProcess(process,result){
-		rgamesLogger.rgames(process[10]+' finished with result of '+result+' '+process,{'Timestamp':getDateTime()});
-		if (result == true || result == false){
-			if (result == true){
-				for (var i = 0; i < 4;i++){
-					calcElo(process[i],true,process[9]);
-					calcElo(process[i+4],false,process[8]);
-				}
-			}
-			else if (result == false) {
-				for (var i = 0; i < 4;i++){
-					calcElo(process[i],false,process[9]);
-					calcElo(process[i+4],true,process[8]);
-				}
-			}
-		}
-		else {
-			if (rPlayerList.indexOf(result) > -1){
-				rPlayerBan.push(result);
-			}
-			for (var i = 0; i < 8;i++){
-				calcElo(process[i],'voided',result);
-			}
-			
-		}
-		if (rGame01.indexOf(process[0]) > -1){
-			rGame01 = [];
-		}
-		else if (rGame02.indexOf(process[0]) > -1){
-			rGame02 = [];
-		}
-		else if (rGame03.indexOf(process[0]) > -1){
-			rGame03 = [];
-		}
-		else if (rGame04.indexOf(process[0]) > -1){
-			rGame04 = [];
-		}
-		else if (rGame05.indexOf(process[0]) > -1){
-			rGame05 = [];
-		}
-		setTimeout(backupRanked,5000);
-	}
 });
