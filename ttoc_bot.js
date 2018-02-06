@@ -12,11 +12,11 @@ var API = GroupMe.Stateless;
 const path = require('path');
 const winston = require('winston');
 var irc = require('irc');
-
 var script = google.script('v1');
 var sheets = google.sheets('v4');
 var SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/forms'];
-var now = new Date();
+
+var moment = require('moment');
 
 // Logger setup, all logs are stored in the logs folder.
 const mumbleLogger = winston.createLogger({
@@ -27,15 +27,15 @@ const mumbleLogger = winston.createLogger({
 	},
 	transports: [
 		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/error','error_'+now.getMonth()+'-'+now.getDay()+'-'+now.getFullYear+'.log'),
+			filename: path.join(__dirname,'/logs/error/','error_'+moment.format('YYYY-MM-DD')+'.log'),
 			level: 'error'
 		}),
 		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/mumblechat','chat_'+now.getMonth()+'-'+now.getDay()+'-'+now.getFullYear+'.log'),
+			filename: path.join(__dirname,'/logs/mumblechat/','chat_'+moment.format('YYYY-MM-DD')+'.log'),
 			level: 'chat'
 		}),
 		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/mumblelog','mlog_'+now.getMonth()+'-'+now.getDay()+'-'+now.getFullYear+'.log'),
+			filename: path.join(__dirname,'/logs/mumblelog/','mlog_'+moment.format('YYYY-MM-DD')+'.log'),
 			level: 'mlog'
 		})
 	]
@@ -50,11 +50,11 @@ const ircLogger = winston.createLogger({
 	},
 	transports: [
 		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/irc','ircchat_'+now.getMonth()+'-'+now.getDay()+'-'+now.getFullYear+'.log'),
+			filename: path.join(__dirname,'/logs/irc/','ircchat_'+moment.format('YYYY-MM-DD')+'.log'),
 			level: 'chat'
 		}),
     new winston.transports.File({
-			filename: path.join(__dirname,'/logs/irc','rqueue_'+now.getMonth()+'-'+now.getDay()+'-'+now.getFullYear+'.log'),
+			filename: path.join(__dirname,'/logs/irc/','rqueue_'+moment.format('YYYY-MM-DD')+'.log'),
 			level: 'irclog'
 		})	
 	]
@@ -889,7 +889,7 @@ if (channels.indexOf(state.channel_id) == -1){
                             while (connection.channelByName(parentChannels[0]).parent.name != 'North American TagPro Mumble') {
                                 parentChannels.unshift(connection.channelByName(parentChannels[0]).parent.name);
                             }
-                            var mumbleUrlSet = 'mumble://mumble.koalabeast.com';
+                            var mumbleUrlSet = 'mumble://'+mumbleUrl;
                             for (i = 0; i < parentChannels.length; i++) {
                                 mumbleUrlSet = mumbleUrlSet + '/' + parentChannels[i].replace(/ /g, "%20");
                             }
@@ -1407,12 +1407,6 @@ if (channels.indexOf(state.channel_id) == -1){
     });
 
     connection.on('user-move', function(user, fromChannel, toChannel, actor) { // user-move is the event emitted when a user switches channels
-		if (actor.name == undefined){
-		mumbleLogger.mlog(user.name+" was moved from "+fromChannel.name+" to "+toChannel.name+" by ",{'Timestamp': getDateTime()});
-		}
-		else {
-		mumbleLogger.mlog(user.name+" was moved from "+fromChannel.name+" to "+toChannel.name+" by "+actor.name,{'Timestamp': getDateTime()});
-        }
 		if ((lockChannelList.indexOf(toChannel.name) > -1 || superlockChannelList.indexOf(toChannel.name) > -1) && actor.name != botName && (whitelist.indexOf(actor.name) == -1 && mods.indexOf(actor.name) == -1 && pseudoMods.indexOf(actor.name) == -1)) { // prevents user from entering if channel is locked.
             user.moveToChannel(botMoveTo);
             user.sendMessage('Sorry, you cannot enter this channel right now. :c');
@@ -1734,18 +1728,6 @@ if (channels.indexOf(state.channel_id) == -1){
     }
 
     function getDateTime() {
-        var date = new Date();
-        var hour = date.getHours();
-        hour = (hour < 10 ? "0" : "") + hour;
-        var min = date.getMinutes();
-        min = (min < 10 ? "0" : "") + min;
-        var sec = date.getSeconds();
-        sec = (sec < 10 ? "0" : "") + sec;
-        var year = date.getFullYear();
-        var month = date.getMonth() + 1;
-        month = (month < 10 ? "0" : "") + month;
-        var day = date.getDate();
-        day = (day < 10 ? "0" : "") + day;
-        return month + "/" + day + "/" + year + "||" + hour + ":" + min + ":" + sec + "[CST]";
+        return moment.format('YYYY-MM-DD HH:mm:ss Z');;
     }
 });
