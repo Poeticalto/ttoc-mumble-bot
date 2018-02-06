@@ -27,15 +27,15 @@ const mumbleLogger = winston.createLogger({
 	},
 	transports: [
 		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/error/','error_'+moment.format('YYYY-MM-DD')+'.log'),
+			filename: path.join(__dirname,'/logs/error/','error_'+moment().format('YYYY-MM-DD')+'.log'),
 			level: 'error'
 		}),
 		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/mumblechat/','chat_'+moment.format('YYYY-MM-DD')+'.log'),
+			filename: path.join(__dirname,'/logs/mumblechat/','chat_'+moment().format('YYYY-MM-DD')+'.log'),
 			level: 'chat'
 		}),
 		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/mumblelog/','mlog_'+moment.format('YYYY-MM-DD')+'.log'),
+			filename: path.join(__dirname,'/logs/mumblelog/','mlog_'+moment().format('YYYY-MM-DD')+'.log'),
 			level: 'mlog'
 		})
 	]
@@ -50,11 +50,11 @@ const ircLogger = winston.createLogger({
 	},
 	transports: [
 		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/irc/','ircchat_'+moment.format('YYYY-MM-DD')+'.log'),
+			filename: path.join(__dirname,'/logs/irc/','ircchat_'+moment().format('YYYY-MM-DD')+'.log'),
 			level: 'chat'
 		}),
     new winston.transports.File({
-			filename: path.join(__dirname,'/logs/irc/','rqueue_'+moment.format('YYYY-MM-DD')+'.log'),
+			filename: path.join(__dirname,'/logs/irc/','rqueue_'+moment().format('YYYY-MM-DD')+'.log'),
 			level: 'irclog'
 		})	
 	]
@@ -1728,6 +1728,6 @@ if (channels.indexOf(state.channel_id) == -1){
     }
 
     function getDateTime() {
-        return moment.format('YYYY-MM-DD HH:mm:ss Z');;
+        return moment().format('YYYY-MM-DD HH:mm:ss Z');;
     }
 });

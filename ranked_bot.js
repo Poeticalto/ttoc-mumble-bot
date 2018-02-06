@@ -19,7 +19,7 @@ const rgamesLogger = winston.createLogger({
 			level: 'rgames'
 		}),
 		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/rqueue/','rqueue_'+moment.format('YYYY-MM-DD')+'.log'),
+			filename: path.join(__dirname,'/logs/rqueue/','rqueue_'+moment().format('YYYY-MM-DD')+'.log'),
 			level: 'rqueue'
 		})	
 	]
