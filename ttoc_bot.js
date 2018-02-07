@@ -31,18 +31,21 @@ const mumbleLogger = winston.createLogger({
 			filename: path.join(__dirname,'/logs/error/','error_'),
 			datePattern: 'yyyy-MM-dd.log',
 			localTime: true,
+			createTree: false,
 			level: 'error'
 		}),
 		new (winston.transports.DailyRotateFile)({
 			filename: path.join(__dirname,'/logs/mumblechat/','chat_'),
 			datePattern: 'yyyy-MM-dd.log',
 			localTime: true,
+			createTree: false,
 			level: 'chat'
 		}),
 		new (winston.transports.DailyRotateFile)({
 			filename: path.join(__dirname,'/logs/mumblelog/','mlog_'),
 			datePattern: 'yyyy-MM-dd.log',
 			localTime: true,
+			createTree: false,
 			level: 'mlog'
 		})
 	]
@@ -60,11 +63,13 @@ const ircLogger = winston.createLogger({
 			filename: path.join(__dirname,'/logs/irc/','ircchat_'),
 			datePattern: 'yyyy-MM-dd.log',
 			localTime: true,
+			createTree: false,
 			level: 'chat'
 		}),
     new (winston.transports.DailyRotateFile)({
 			filename: path.join(__dirname,'/logs/irc/','irclog_'),
 			datePattern: 'yyyy-MM-dd.log',
+			createTree: false,
 			localTime: true,
 			level: 'irclog'
 		})	
