@@ -22,7 +22,7 @@ const rgamesLogger = winston.createLogger({
 		new (winston.transports.DailyRotateFile)({
 			filename: path.join(__dirname,'/logs/rqueue/','rqueue_.log'),
 			localTime: true,
-			prepend: false,
+			prepend: true,
 			level: 'rqueue'
 		})	
 	]
