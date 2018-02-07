@@ -28,21 +28,21 @@ const mumbleLogger = winston.createLogger({
 	},
 	transports: [
 		new (winston.transports.DailyRotateFile)({
-			filename: path.join(__dirname,'/logs/error/','error.log'),
+			filename: path.join(__dirname,'/logs/error/','error_'),
+			datePattern: 'yyyy-MM-dd.log',
 			localTime: true,
-			prepend: true,
 			level: 'error'
 		}),
 		new (winston.transports.DailyRotateFile)({
-			filename: path.join(__dirname,'/logs/mumblechat/','chat.log'),
+			filename: path.join(__dirname,'/logs/mumblechat/','chat_'),
+			datePattern: 'yyyy-MM-dd.log',
 			localTime: true,
-			prepend: true,
 			level: 'chat'
 		}),
 		new (winston.transports.DailyRotateFile)({
-			filename: path.join(__dirname,'/logs/mumblelog/','mlog.log'),
+			filename: path.join(__dirname,'/logs/mumblelog/','mlog_'),
+			datePattern: 'yyyy-MM-dd.log',
 			localTime: true,
-			prepend: true,
 			level: 'mlog'
 		})
 	]
@@ -57,15 +57,15 @@ const ircLogger = winston.createLogger({
 	},
 	transports: [
 		new (winston.transports.DailyRotateFile)({
-			filename: path.join(__dirname,'/logs/irc/','ircchat.log'),
+			filename: path.join(__dirname,'/logs/irc/','ircchat_'),
+			datePattern: 'yyyy-MM-dd.log',
 			localTime: true,
-			prepend: true,
 			level: 'chat'
 		}),
     new (winston.transports.DailyRotateFile)({
-			filename: path.join(__dirname,'/logs/irc/','irclog.log'),
+			filename: path.join(__dirname,'/logs/irc/','irclog_'),
+			datePattern: 'yyyy-MM-dd.log',
 			localTime: true,
-			prepend: true,
 			level: 'irclog'
 		})	
 	]
