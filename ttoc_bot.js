@@ -202,6 +202,9 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','welcome_system.txt'))) {
     console.log('welcome_system.txt was created!');
 }
 
+console.log(welcomeUser);
+console.log(welcomeMessage);
+
 if (fs.existsSync(path.join(__dirname,'/bot_data/','tournament_info.txt'))) {
     rows = fs.readFileSync(path.join(__dirname,'/bot_data/','tournament_info.txt')).toString().split("\n");
     seasonNum = rows[1]; // seasonNum refers to the season # of the tourney
