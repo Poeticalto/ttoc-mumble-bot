@@ -154,8 +154,8 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','mail_system.txt'))) {
             mailTimestamp.push(splitParts[i].split(" ")[0]);
             mailSender.push(splitParts[i].split(" ")[1]);
             mailUser.push(splitParts[i].split(" ")[2]);
-            splitMessage = "";
-            for (var j = 3; j < splitParts[i].split(" ").length; j++) {
+            splitMessage = splitParts[i].split(" ")[3];
+            for (var j = 4; j < splitParts[i].split(" ").length; j++) {
                 splitMessage = splitMessage + ' ' + splitParts[i].split(" ")[j];
             }
             mailMessage.push(splitMessage);
@@ -189,8 +189,8 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','welcome_system.txt'))) {
     for (var i = 0; i < splitParts.length; i++) {
         if (splitParts[i].split(" ").length >= 2) {
             welcomeUser.push(splitParts[i].split(" ")[0]);
-            splitMessage = "";
-            for (var j = 1; j < splitParts[i].split(" ").length; j++) {
+            splitMessage = splitParts[i].split(" ")[1];
+            for (var j = 2; j < splitParts[i].split(" ").length; j++) {
                 splitMessage = splitMessage + ' ' + splitParts[i].split(" ")[j];
             }
             welcomeMessage.push(splitMessage);
