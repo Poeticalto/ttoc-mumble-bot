@@ -6,6 +6,7 @@ var readline = require('readline');
 var cats = require('cat-ascii-faces');
 const path = require('path');
 const winston = require('winston');
+require('winston-daily-rotate-file');
 var moment = require('moment');
 
 const rgamesLogger = winston.createLogger({
@@ -18,8 +19,10 @@ const rgamesLogger = winston.createLogger({
 			filename: path.join(__dirname,'/logs/rgames/','rgames.log'),
 			level: 'rgames'
 		}),
-		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/rqueue/','rqueue_'+moment().format('YYYY-MM-DD')+'.log'),
+		new (winston.transports.DailyRotateFile)({
+			filename: path.join(__dirname,'/logs/rqueue/','rqueue_.log'),
+			localTime: true,
+			prepend: true,
 			level: 'rqueue'
 		})	
 	]

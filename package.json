@@ -19,7 +19,8 @@
     "moment": "^2.20.1",
     "mumble": "^0.3.12",
     "request": "^2.83.0",
-    "winston": "^3.0.0-rc1"
+    "winston": "^3.0.0-rc1",
+    "winston-daily-rotate-file": "^2.0.0-rc.1"
   },
   "devDependencies": {},
   "repository": {
