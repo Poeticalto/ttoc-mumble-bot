@@ -187,7 +187,7 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','mumble_info.txt'))) {
 if (fs.existsSync(path.join(__dirname,'/bot_data/','welcome_system.txt'))) {
     splitParts = fs.readFileSync(path.join(__dirname,'/bot_data/','welcome_system.txt')).toString().split("\n");
     for (var i = 0; i < splitParts.length; i++) {
-        if (splitParts[i].split(" ").length >= 4) {
+        if (splitParts[i].split(" ").length >= 2) {
             welcomeUser.push(splitParts[i].split(" ")[0]);
             splitMessage = "";
             for (var j = 1; j < splitParts[i].split(" ").length; j++) {
@@ -201,9 +201,6 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','welcome_system.txt'))) {
     fs.openSync(path.join(__dirname,'/bot_data/','welcome_system.txt'), 'w');
     console.log('welcome_system.txt was created!');
 }
-console.log(welcomeUser);
-console.log(welcomeMessage);
-
 
 if (fs.existsSync(path.join(__dirname,'/bot_data/','tournament_info.txt'))) {
     rows = fs.readFileSync(path.join(__dirname,'/bot_data/','tournament_info.txt')).toString().split("\n");
