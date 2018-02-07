@@ -30,19 +30,19 @@ const mumbleLogger = winston.createLogger({
 		new (winston.transports.DailyRotateFile)({
 			filename: path.join(__dirname,'/logs/error/','error.log'),
 			localTime: true,
-			prepend: true,
+			prepend: false,
 			level: 'error'
 		}),
 		new (winston.transports.DailyRotateFile)({
 			filename: path.join(__dirname,'/logs/mumblechat/','chat.log'),
 			localTime: true,
-			prepend: true,
+			prepend: false,
 			level: 'chat'
 		}),
 		new (winston.transports.DailyRotateFile)({
 			filename: path.join(__dirname,'/logs/mumblelog/','mlog.log'),
 			localTime: true,
-			prepend: true,
+			prepend: false,
 			level: 'mlog'
 		})
 	]
