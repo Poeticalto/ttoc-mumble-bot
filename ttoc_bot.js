@@ -20,7 +20,7 @@ var SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googl
 var moment = require('moment');
 
 // Logger setup, all logs are stored in the logs folder.
-const mumbleLogger = winston.createLogger({
+var mumbleLogger = winston.createLogger({
 	levels: {
 		error: 0,
 		chat: 1,
@@ -51,7 +51,7 @@ const mumbleLogger = winston.createLogger({
 
 
 
-const ircLogger = winston.createLogger({
+var ircLogger = winston.createLogger({
 	levels: {
 		chat : 1,
 		irclog: 2

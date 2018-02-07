@@ -9,7 +9,7 @@ const winston = require('winston');
 require('winston-daily-rotate-file');
 var moment = require('moment');
 
-const rgamesLogger = winston.createLogger({
+var rgamesLogger = winston.createLogger({
 	levels: {
 		rgames: 0,
 		rqueue: 1
