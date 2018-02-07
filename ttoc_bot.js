@@ -10,7 +10,8 @@ var WebClient = require('@slack/client').WebClient;
 var GroupMe = require('groupme');
 var API = GroupMe.Stateless;
 const path = require('path');
-const winston = require('winston');
+var winston = require('winston');
+require('winston-daily-rotate-file');
 var irc = require('irc');
 var script = google.script('v1');
 var sheets = google.sheets('v4');
@@ -26,16 +27,19 @@ const mumbleLogger = winston.createLogger({
 		mlog: 2
 	},
 	transports: [
-		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/error/','error_'+moment().format('YYYY-MM-DD')+'.log'),
+		new (winston.transports.DailyRotateFile)({
+			filename: path.join(__dirname,'/logs/error/','error'),
+			localTime: true,
 			level: 'error'
 		}),
-		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/mumblechat/','chat_'+moment().format('YYYY-MM-DD')+'.log'),
+		new (winston.transports.DailyRotateFile)({
+			filename: path.join(__dirname,'/logs/mumblechat/','chat'),
+			localTime: true,
 			level: 'chat'
 		}),
-		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/mumblelog/','mlog_'+moment().format('YYYY-MM-DD')+'.log'),
+		new (winston.transports.DailyRotateFile)({
+			filename: path.join(__dirname,'/logs/mumblelog/','mlog'),
+			localTime: true,
 			level: 'mlog'
 		})
 	]
@@ -49,12 +53,14 @@ const ircLogger = winston.createLogger({
 		irclog: 2
 	},
 	transports: [
-		new winston.transports.File({
-			filename: path.join(__dirname,'/logs/irc/','ircchat_'+moment().format('YYYY-MM-DD')+'.log'),
+		new (winston.transports.DailyRotateFile)({
+			filename: path.join(__dirname,'/logs/irc/','ircchat'),
+			localTime: true,
 			level: 'chat'
 		}),
-    new winston.transports.File({
-			filename: path.join(__dirname,'/logs/irc/','rqueue_'+moment().format('YYYY-MM-DD')+'.log'),
+    new (winston.transports.DailyRotateFile)({
+			filename: path.join(__dirname,'/logs/irc/','irclog'),
+			localTime: true,
 			level: 'irclog'
 		})	
 	]
@@ -189,8 +195,6 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','welcome_system.txt'))) {
     fs.openSync(path.join(__dirname,'/bot_data/','welcome_system.txt'), 'w');
     console.log('welcome_system.txt was created!');
 }
-console.log(welcomeUser);
-console.log(welcomeMessage);
 
 if (fs.existsSync(path.join(__dirname,'/bot_data/','tournament_info.txt'))) {
     rows = fs.readFileSync(path.join(__dirname,'/bot_data/','tournament_info.txt')).toString().split("\n");
