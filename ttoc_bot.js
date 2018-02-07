@@ -201,6 +201,9 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','welcome_system.txt'))) {
     fs.openSync(path.join(__dirname,'/bot_data/','welcome_system.txt'), 'w');
     console.log('welcome_system.txt was created!');
 }
+console.log(welcomeUser);
+console.log(welcomeMessage);
+
 
 if (fs.existsSync(path.join(__dirname,'/bot_data/','tournament_info.txt'))) {
     rows = fs.readFileSync(path.join(__dirname,'/bot_data/','tournament_info.txt')).toString().split("\n");
