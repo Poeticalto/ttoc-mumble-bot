@@ -616,7 +616,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     });
 
     connection.on('userRemove', function(data) {
-		if (typeof data != 'undefined';){
+		if (typeof data != 'undefined'){
         if (data.actor != null && data.ban == false) {
             reply = '[NA Mumble] ' + connection.userBySession(data.actor).name + ' kicked ' + mumbleSessionUsers[mumbleSessionNum.indexOf(data.session)] + ': ' + data.reason;
 			mumbleLogger.mlog(reply,{'Timestamp': getDateTime()});
