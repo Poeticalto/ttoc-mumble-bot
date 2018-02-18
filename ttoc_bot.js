@@ -616,6 +616,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     });
 
     connection.on('userRemove', function(data) {
+		if (typeof data != 'undefined';){
         if (data.actor != null && data.ban == false) {
             reply = '[NA Mumble] ' + connection.userBySession(data.actor).name + ' kicked ' + mumbleSessionUsers[mumbleSessionNum.indexOf(data.session)] + ': ' + data.reason;
 			mumbleLogger.mlog(reply,{'Timestamp': getDateTime()});
@@ -629,13 +630,14 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                 sendtoslack(slackChannel, reply);
             }
         }
-    })
+    }})
 
     var users = [];
     var usersf = [];
     var usersl = [];
 	
     connection.on('userState', function(state) {
+		if (typeof state != 'undefined'){
         if (mumbleSessionNum.indexOf(state.session) > -1) {
             mumbleSessionUsers[mumbleSessionNum.indexOf(state.session)] = state.name;
         } else {
@@ -655,7 +657,8 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             usersf.push(state.name);
             updateuserarray(usersf, usersl);
         }
-    });
+		}
+	});
 
     function updateuserarray(array1, array2) {
         if (array1.indexOf(null) > -1) {
@@ -667,6 +670,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     }
 
     connection.on('user-disconnect', function(state) {
+		if (typeof state != 'undefined'){
 		mumbleLogger.mlog(state.name+" has disconnected.",{'Timestamp': getDateTime()});
         if (modsMumbleList.indexOf(state.name) > -1) {
             modsMumbleList.splice(modsMumbleList.indexOf(state.name), 1);
@@ -684,6 +688,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             usersf.splice(usersf.indexOf(state.name), 1);
             updateuserarray(usersf, usersl);
         }
+		}
     });
 
     rl.on('line', (input) => {
@@ -697,6 +702,7 @@ if (channels.indexOf(state.channel_id) == -1){
 }); */ //used to get a list of channel ids, may be better as a tree function depending on the amount of channels on the server
 
     connection.on('user-priority-speaker', function(user, status, actor) {	
+		if (typeof actor != 'undefined'){
 		mumbleLogger.mlog(user.name+" had priority speaker status changed to "+status+" by "+actor.name,{'Timestamp': getDateTime()});
         if (whitelist.indexOf(actor.name) > -1 && status == true) {
             if (user.name == botName && user.channel.name != actor.channel.name) { // moves bot to the channel of the actor 
@@ -710,7 +716,9 @@ if (channels.indexOf(state.channel_id) == -1){
                 connection.user.channel.sendMessage(actor.name + ' has moved ' + user.name + ' to ' + connection.user.channel.name + '!');
             }
         }
+		}
     });
+	
 	connection.on('user-mute', function(user,status,actor){
 		mumbleLogger.mlog(user.name+" changed mute status to "+status+" by "+actor.name,{'Timestamp': getDateTime()});
 	})
@@ -1397,6 +1405,7 @@ if (channels.indexOf(state.channel_id) == -1){
     })
 
     connection.on('user-connect', function(user) { // user-connect is the event emitted when a user connects to the server
+		if (typeof user != 'undefined'){
 		mumbleLogger.mlog(user.name+" has connected.",{'Timestamp': getDateTime()});
         if (mailUser.indexOf(user.name.toLowerCase()) > -1) { // sends mail if user has mail to collect.
             user.sendMessage("Howdy " + user.name + "! I've been keeping some cool mail from other people for you, let me go get it!");
@@ -1419,9 +1428,11 @@ if (channels.indexOf(state.channel_id) == -1){
         } else if (greylist.indexOf(user.name) == -1 && signupsOpen == false && motdSet == false) { // default message sent to every player on connect.
             //user.sendMessage("<br/>"+botName+" sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");
         }
+		}
     });
 
     connection.on('user-move', function(user, fromChannel, toChannel, actor) { // user-move is the event emitted when a user switches channels
+		if (typeof actor != 'undefined'){
 		if ((lockChannelList.indexOf(toChannel.name) > -1 || superlockChannelList.indexOf(toChannel.name) > -1) && actor.name != botName && (whitelist.indexOf(actor.name) == -1 && mods.indexOf(actor.name) == -1 && pseudoMods.indexOf(actor.name) == -1)) { // prevents user from entering if channel is locked.
             user.moveToChannel(botMoveTo);
             user.sendMessage('Sorry, you cannot enter this channel right now. :c');
@@ -1436,6 +1447,7 @@ if (channels.indexOf(state.channel_id) == -1){
         if (mailUser.indexOf(user.name.toLowerCase()) > -1) {
             user.sendMessage("This is an automated reminder from " + botName + " that you have some mail! Message !getmail to me when you're ready to receive it! c:");
         }
+		}
     });
 
     function sheetsetup() { // sets up the form and sheet for a season.

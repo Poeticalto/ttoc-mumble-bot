@@ -158,6 +158,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     var usersl = [];
 	
     connection.on('userState', function(state) {
+		if (typeof state != 'undefined'){
         if (mumbleSessionNum.indexOf(state.session) > -1) {
             mumbleSessionUsers[mumbleSessionNum.indexOf(state.session)] = state.name;
         } else {
@@ -177,6 +178,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             usersf.push(state.name);
             updateuserarray(usersf, usersl);
         }
+		}
     });
 
     function updateuserarray(array1, array2) {
@@ -189,6 +191,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     }
 
     connection.on('user-disconnect', function(state) {
+		if (typeof state != 'undefined'){
         if (modsMumbleList.indexOf(state.name) > -1) {
             modsMumbleList.splice(modsMumbleList.indexOf(state.name), 1);
         }
@@ -204,6 +207,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         }
 		if (rQueue.indexOf(state.name) > -1) {
 			rQueue.splice(rQueue.indexOf(state.name),1);
+		}
 		}
     });
 
