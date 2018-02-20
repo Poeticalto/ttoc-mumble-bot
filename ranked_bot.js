@@ -192,6 +192,9 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 
     connection.on('user-disconnect', function(state) {
 		if (typeof state != 'undefined'){
+		if (state.name == botName){
+			process.exit(0);
+		}
         if (modsMumbleList.indexOf(state.name) > -1) {
             modsMumbleList.splice(modsMumbleList.indexOf(state.name), 1);
         }

@@ -672,6 +672,9 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     connection.on('user-disconnect', function(state) {
 		if (typeof state != 'undefined'){
 		mumbleLogger.mlog(state.name+" has disconnected.",{'Timestamp': getDateTime()});
+		if (state.name == botName){
+			process.exit(0);
+		}
         if (modsMumbleList.indexOf(state.name) > -1) {
             modsMumbleList.splice(modsMumbleList.indexOf(state.name), 1);
         }
