@@ -78,7 +78,7 @@ mumbleLogger.emitErrs = false;
 // Location for the token used to verify Google oAuth. This was taken from the nodejs quickstart, so if you have the token saved elsewhere, change the DIR/PATH.
 var TOKEN_PATH = path.join(__dirname,'/keys/','gappAuth.json');
 
-// The following are defaults for the various functions of the bot.
+// The following are defaults for the various functions of the bot
 var mumbleUrl = 'mumble.koalabeast.com';
 var botName = 'test_BOT';
 var botHome = 'Meep is God';
@@ -87,13 +87,19 @@ var help = 'I am a bot designed in node.js!';
 var tohelp = 'Sorry, I did not recognize that. Use !help for a list of public commands! c:';
 var botInfo = "I am a test bot using Poeticalto's ttoc-mumble-bot as a base!";
 var greyMessage = "<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)";
-var scriptId = 'none';
-var spreadsheetId = 'none';
+var activeScriptId = 'none';
+var activeSpreadsheetId = 'none';
+var scriptId = [];
+var spreadsheetId = [];
+var tournamentLabel = [];
+var activeTournament = 'none';
 var mailUser = [];
 var mailSender = [];
 var mailMessage = [];
 var mailTimestamp = [];
 var rows;
+var tournamentName;
+var tournamentServer;
 var seasonNum;
 var ssMapName;
 var ssMapLink;
@@ -103,6 +109,10 @@ var whitelist = ['Poeticalto', 'Poeticaltwo'];
 var blacklist = [];
 var greylist = [];
 var mods = [];
+var tournamentRunners = [];
+var pseudoMods = [];
+var	rPlayerBan = []; 
+var	ircBridgeBan = [];
 var welcomeUser = [];
 var welcomeMessage = [];
 var slackAuth = false;
@@ -128,12 +138,17 @@ var splitMessage;
 
 if (fs.existsSync(path.join(__dirname,'/bot_data/','gscript_info.txt'))) {
     rows = fs.readFileSync(path.join(__dirname,'/bot_data/','gscript_info.txt')).toString().split("\n");
-	scriptId = rows[0];
-	spreadsheetId = rows[1];
+    for (var i = 0; i < rows.length; i++) {
+        if (rows[i].split(" ").length >= 3) {
+            tournamentLabel.push(rows[i].split(" ")[0]);
+            scriptId.push(rows[i].split(" ")[1]);
+            spreadsheetId.push(rows[i].split(" ")[2]);
+        }
+    }	
 	console.log('gscript info imported from gscript_info.txt!');
 } else {
     fs.openSync(path.join(__dirname,'/bot_data/','gscript_info.txt'), 'w');
-	fs.writeFileSync(path.join(__dirname,'/bot_data/','gscript_info.txt'),scriptId + '\n' + spreadsheetId + '\n');
+	fs.writeFileSync(path.join(__dirname,'/bot_data/','gscript_info.txt'),activeTournament + ' ' + activeScriptId + ' ' + activeSpreadsheetId + '\n');
     console.log('gscript_info.txt was created!');
 }
 
@@ -202,11 +217,10 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','welcome_system.txt'))) {
     console.log('welcome_system.txt was created!');
 }
 
-console.log(welcomeUser);
-console.log(welcomeMessage);
-
 if (fs.existsSync(path.join(__dirname,'/bot_data/','tournament_info.txt'))) {
     rows = fs.readFileSync(path.join(__dirname,'/bot_data/','tournament_info.txt')).toString().split("\n");
+	tournamentName = rows[0];
+	tournamentServer = rows[2];
     seasonNum = rows[1]; // seasonNum refers to the season # of the tourney
     ssMapName = rows[3]; // ssMapName is the map name for the tourney
     ssMapLink = rows[4]; // ssMapLink is the link for the map
@@ -226,7 +240,8 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','usergroups.txt'))) {
     greylist = splitParts[3].split(" ");
     blacklist = splitParts[4].split(" "); 
 	rPlayerBan = splitParts[5].split(" "); 
-	ircBridgeBan = splitParts[6].split(" "); // custom groups can be added after this line.
+	ircBridgeBan = splitParts[6].split(" "); 
+	tournamentRunners = splitParts[7].split(" ");// custom groups can be added after this line.
     console.log('user groups imported from usergroups.txt!');
 } else {
     fs.openSync(path.join(__dirname,'/bot_data/','usergroups.txt'), 'w');
@@ -272,7 +287,7 @@ if (fs.existsSync(path.join(__dirname,'/keys/','client_secret.json'))) {
         // sets the client secret to a variable to be used when running Gapp stuff.
         gappkey = content;
         gAuth = true;
-		if (scriptId == "none" || spreadsheetId == "none"){
+		if (activeScriptId == "none" || activeSpreadsheetId == "none"){
 			console.log('An illegal scriptID or spreadsheetID has been detected, gAuth has been switched off to prevent issues!');
 			gAuth = false;
 		}
@@ -335,7 +350,7 @@ function gscriptrun(auth) { // This function runs code from Google Scripts
         resource: {
             function: gScriptName
         },
-        scriptId: scriptId
+        scriptId: activeScriptId
     }, function(err, resp) {
         if (err) {
             console.log('The API returned an error: ' + err); // The API encountered a problem before the script started executing.
@@ -362,7 +377,7 @@ function ssread(auth) { // this function reads a range from the spreadsheet
     testarr = [];
     sheets.spreadsheets.values.get({
         auth: auth,
-        spreadsheetId: spreadsheetId,
+        spreadsheetId: activeSpreadsheetId,
         range: ssReadFrom,
     }, function(err, response) {
         if (err) {
@@ -441,14 +456,6 @@ var mumbleSessionNum = [];
 var mumbleSessionUsers = [];
 var groupmeChatBridge = false;
 var contentPieces;
-var rQueue = [];
-var tpServers = ["centra","diameter","chord","orbit","origin","pi","radius","sphere"];
-var rGame01 = [];
-var rGame02 = [];
-var rGame03 = [];
-var rGame04 = [];
-var rGame05 = [];
-var ircBridge = [];
 
 const rl = readline.createInterface({ // creates cmd interface to interact with the bot
     input: process.stdin,
@@ -1243,6 +1250,20 @@ if (channels.indexOf(state.channel_id) == -1){
                         reply = tohelp;
                     }
                     break;
+				case 'settournament':
+					if (whitelist.indexOf(actor.name) > -1 || tournamentRunners.indexOf(actor.name) > -1){
+						if (tournamentLabel.indexOf(playerd.toLowerCase()) > -1){
+							reply = "Setting active tournament to "+playerd.toLowerCase();
+							setTournament(playerd.toLowerCase());
+						}
+						else {
+							reply = "Sorry, I didn't recognize that tournament. Please try again!"
+						}
+					}
+					else {
+						reply = tohelp;
+					}
+					break;
                 case 'setupdraft': // sets up the draft, playerd is uneeded.
                     if (whitelist.indexOf(actor.name) > -1 && gAuth == true) {
                         setupDraft = 1;
@@ -1341,14 +1362,19 @@ if (channels.indexOf(state.channel_id) == -1){
                     }
                     break;
                 case 'updatelinks': // updates links from the spreadsheet, playerd is uneeded
-                    if (whitelist.indexOf(actor.name) > -1 && gAuth == true) {
+                    if (whitelist.indexOf(actor.name) > -1 && gAuth == true && signupsOpen = false) {
                         console.log('updating links!');
                         reply = 'Updating links!';
                         updatelinks();
                         setupStart = 1;
                         signupsOpen = true;
-                    } else {
-                        reply = tohelp;
+                    } 
+					else if (whitelist.indexOf(actor.name) > -1 && gAuth == true && signupsOpen = true) {
+						signupsOpen = false;
+						reply = 'Tournament links have been turned off!';
+					}
+					else {
+						reply = tohelp;
                     }
                     break;
                 case 'updatemotd': // updates var motd to a line on motd.txt, playerd defines which number to utilize, defaults to 0
@@ -1554,7 +1580,7 @@ if (channels.indexOf(state.channel_id) == -1){
 
     function backupLinks() { // backs up data.
         console.log('backing up spreadsheet links!');
-        rows = ['TToC', seasonNum, 'Sphere', ssMapName, ssMapLink, sgnLink, ssLink];
+        rows = [tournamentName, seasonNum,tournamentServer, ssMapName, ssMapLink, sgnLink, ssLink];
         fs.writeFileSync(path.join(__dirname,'/bot_data/','tournament_info.txt'), rows.join('\n'));
         console.log('spreadsheet links have been backed up!');
     }
@@ -1643,6 +1669,8 @@ if (channels.indexOf(state.channel_id) == -1){
         }
 
         function random6() {
+			tournamentName = rows[0];
+			tournamentServer = rows[2];
             ssMapLink = rows[4];
             ssMapName = rows[3];
             ssLink = rows[6];
@@ -1756,7 +1784,12 @@ if (channels.indexOf(state.channel_id) == -1){
         }
         setTimeout(random3, 1000);
     }
-
+	function setTournament(name) {
+		activeTournament = name;
+		activeScriptId = scriptId[tournamentLabel.indexOf(name)];
+		activeSpreadsheetId = spreadsheetId[tournamentLabel.indexOf(name)];
+		console.log('Active Tournament set to '+name);
+	}
     function getDateTime() {
         return moment().format('YYYY-MM-DD HH:mm:ss Z');;
     }
