@@ -1342,6 +1342,9 @@ if (channels.indexOf(state.channel_id) == -1){
                         console.log(users[i]);
                     }
                     break;
+				case 'test':
+					reply = '<br/>'+activeTournament+' signups are currently open for <a href="'+ssMapLink+'"><span style="color:#39a5dd">'+ssMapName+'</span></a> on '+tournamentServer+'!<br/><br/><a href="'+sgnLink+'"><b><span style="color:#aa0000">Click here for the signups!</span></b></a><br/><a href="'+ssLink+'"><b><span style="color:#00007f">Click here for the spreadsheet!</span></b></a>'+greyMessage;
+					break;
                 case 'time': // shows the time
                     if (setupStart == 1) {
                         reply = 'TToC was treed at 9:30 PM CST and the draft will start at around 10:15 PM CST.';
