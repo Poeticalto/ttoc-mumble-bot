@@ -1258,8 +1258,28 @@ if (channels.indexOf(state.channel_id) == -1){
 				case 'settournament':
 					if (whitelist.indexOf(actor.name) > -1 || tournamentRunners.indexOf(actor.name) > -1){
 						if (tournamentLabel.indexOf(playerd.toLowerCase()) > -1){
-							reply = "Setting active tournament to "+playerd.toLowerCase();
-							setTournament(playerd.toLowerCase());
+							switch (playerd.toLowerCase()) {
+								case 'ttoc':
+									playerd = 'TToC';
+									break;
+								case 'rcl':
+									playerd = 'RCL';
+									break;
+								case 'fltp':
+									playerd = 'FLTP';
+									break;
+								case 'nnft':
+									playerd = 'NNFT';
+									break;
+								case 'cltp':
+									playerd = 'CLTP';
+									break;
+								case 'pipberry':
+									playerd = 'Pipberry';
+									break;
+							}
+							reply = "Setting active tournament to "+playerd);
+							setTournament(playerd);
 						}
 						else {
 							reply = "Sorry, I didn't recognize that tournament. Please try again!"
@@ -1447,7 +1467,7 @@ if (channels.indexOf(state.channel_id) == -1){
 			mumbleLogger.chat("Bot retrieved mail for "+user.name,{ 'Timestamp': getDateTime() });
         }
         if (signupsOpen == true && greylist.indexOf(user.name) == -1) { // if a tournament is running, signups are sent to the player
-            user.sendMessage("<br/>TToC signups are currently open for " + ssMapName + "! If you want to signup, message me !signups or !spreadsheet<br/><br/>(If you don't want these automated messages, message the !stop command to me)");
+            user.sendMessage('<br/>'+activeTournament+' signups are currently open for <a href="'+ssMapLink+'"><span style="color:#39a5dd">'+ssMapName+'</span></a> on '+tournamentServer+'!<br/><br/><a href="'+sgnLink+'"><b><span style="color:#aa0000">Click here for the signups!</span></b></a><br/><a href="'+ssLink+'"><b><span style="color:#00007f">Click here for the spreadsheet!</span></b></a>'+greyMessage);
 			mumbleLogger.chat("Automated signups sent to "+user.name,{ 'Timestamp': getDateTime() });
         } else if (greylist.indexOf(user.name) == -1 && signupsOpen == false && motdSet == true) { // sends the motd if active
             user.sendMessage(motd);
@@ -1669,7 +1689,12 @@ if (channels.indexOf(state.channel_id) == -1){
         console.log('Retrieving links from the spreadsheet!');
 
         function random4() {
-            ssReadFrom = "'Hall of Fame'!B17:B23";
+			if (activeTournament.toLowerCase() == "ttoc"){
+				ssReadFrom = "'Hall of Fame'!B17:B23";
+			}
+			else {
+				ssReadFrom = "'Season Champions'!O17:O23";
+			}
             authorize(JSON.parse(gappkey), ssread);
         }
 
@@ -1791,8 +1816,8 @@ if (channels.indexOf(state.channel_id) == -1){
     }
 	function setTournament(name) {
 		activeTournament = name;
-		activeScriptId = scriptId[tournamentLabel.indexOf(name)];
-		activeSpreadsheetId = spreadsheetId[tournamentLabel.indexOf(name)];
+		activeScriptId = scriptId[tournamentLabel.indexOf(name.toLowerCase())];
+		activeSpreadsheetId = spreadsheetId[tournamentLabel.indexOf(name.toLowerCase())];
 		console.log('Active Tournament set to '+name);
 	}
     function getDateTime() {
