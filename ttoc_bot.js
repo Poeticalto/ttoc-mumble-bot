@@ -114,7 +114,7 @@ var pseudoMods = [];
 var	rPlayerBan = []; 
 var	ircBridgeBan = [];
 var welcomeUser = [];
-var ircBridge[];
+var ircBridge = [];
 var welcomeMessage = [];
 var slackAuth = false;
 var slackChannel = undefined;
