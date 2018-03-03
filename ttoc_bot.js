@@ -288,10 +288,6 @@ if (fs.existsSync(path.join(__dirname,'/keys/','client_secret.json'))) {
         // sets the client secret to a variable to be used when running Gapp stuff.
         gappkey = content;
         gAuth = true;
-		if (activeScriptId == "none" || activeSpreadsheetId == "none"){
-			console.log('An illegal scriptID or spreadsheetID has been detected, gAuth has been switched off to prevent issues!');
-			gAuth = false;
-		}
     });
 }
 
@@ -1371,14 +1367,14 @@ if (channels.indexOf(state.channel_id) == -1){
                     }
                     break;
                 case 'updatelinks': // updates links from the spreadsheet, playerd is uneeded
-                    if (whitelist.indexOf(actor.name) > -1 && gAuth == true && signupsOpen == false) {
+                    if ((whitelist.indexOf(actor.name) > -1 || tournamentRunners.indexOf(actor.name) > -1) && gAuth == true && signupsOpen == false) {
                         console.log('updating links!');
                         reply = 'Updating links!';
                         updatelinks();
                         setupStart = 1;
                         signupsOpen = true;
                     } 
-					else if (whitelist.indexOf(actor.name) > -1 && gAuth == true && signupsOpen == true) {
+					else if ((whitelist.indexOf(actor.name) > -1 || tournamentRunners.indexOf(actor.name) > -1) && gAuth == true && signupsOpen == true) {
 						signupsOpen = false;
 						reply = 'Tournament links have been turned off!';
 					}
