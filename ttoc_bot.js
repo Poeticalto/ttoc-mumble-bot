@@ -1278,7 +1278,7 @@ if (channels.indexOf(state.channel_id) == -1){
 									playerd = 'Pipberry';
 									break;
 							}
-							reply = "Setting active tournament to "+playerd);
+							reply = "Setting active tournament to "+playerd;
 							setTournament(playerd);
 						}
 						else {
