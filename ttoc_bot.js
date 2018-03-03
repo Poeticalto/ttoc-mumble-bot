@@ -404,7 +404,7 @@ function sswrite(auth) { // this function writes a range to the spreadsheet
     };
     var sheets = google.sheets('v4');
     sheets.spreadsheets.values.update({
-        spreadsheetId: spreadsheetId,
+        spreadsheetId: activeSpreadsheetId,
         range: ssReadFrom,
         valueInputOption: 'RAW',
         resource: body,
@@ -807,6 +807,14 @@ if (channels.indexOf(state.channel_id) == -1){
         }
         if (isCommand && privateMessage) {
             switch (command) {
+				case 'active':
+					if (whitelist.indexOf(actor.name) > -1 || tournamentRunners.indexOf(actor.name) > -1){
+						reply = "The active tournament is "+activeTournament; 
+					}
+					else {
+						reply = tohelp;
+					}
+					break;
                 case 'backup': // this case is uneeded since function backup runs after each write/splice, but is kept as a redundant measure.
                     if (whitelist.indexOf(actor.name) > -1) {
                         backupLinks();
@@ -1362,14 +1370,14 @@ if (channels.indexOf(state.channel_id) == -1){
                     }
                     break;
                 case 'updatelinks': // updates links from the spreadsheet, playerd is uneeded
-                    if (whitelist.indexOf(actor.name) > -1 && gAuth == true && signupsOpen = false) {
+                    if (whitelist.indexOf(actor.name) > -1 && gAuth == true && signupsOpen == false) {
                         console.log('updating links!');
                         reply = 'Updating links!';
                         updatelinks();
                         setupStart = 1;
                         signupsOpen = true;
                     } 
-					else if (whitelist.indexOf(actor.name) > -1 && gAuth == true && signupsOpen = true) {
+					else if (whitelist.indexOf(actor.name) > -1 && gAuth == true && signupsOpen == true) {
 						signupsOpen = false;
 						reply = 'Tournament links have been turned off!';
 					}
