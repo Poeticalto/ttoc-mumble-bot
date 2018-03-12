@@ -480,19 +480,8 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         console.log('connection ready');
         connection.user.setSelfDeaf(false); // mute/deafens the bot
         connection.user.setComment(help); // sets the help statement as the comment for the bot
+		setInterval(callEveryHour, 1000*60*60);
     });
-
-    var nextDate = new Date();
-    if (nextDate.getMinutes() === 0) {
-        callEveryHour()
-    } 
-    else {
-        nextDate.setHours(d.getHours() + 1);
-        nextDate.setMinutes(0);
-        nextDate.setSeconds(0);
-        var difference = nextDate - new Date();
-        setTimeout(callEveryHour, difference);
-    }
 
     process.on('uncaughtException', function (exception) {
         console.log(exception);
