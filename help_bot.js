@@ -35,18 +35,18 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','irc_help_info.txt'))) {
 */
 if (fs.existsSync(path.join(__dirname,'/bot_data/','mumble_help_info.txt'))) {
     rows = fs.readFileSync(path.join(__dirname,'/bot_data/','mumble_help_info.txt')).toString().split("\n");
-	mumbleUrl = rows[0];
-	botName = rows[1];
-	botHome = rows[2];
-	botMoveTo = rows[3];
-	help = rows[4];
-	tohelp = rows[5];
-	botInfo = rows[6];
-	greyMessage = rows[7];
+    mumbleUrl = rows[0];
+    botName = rows[1];
+    botHome = rows[2];
+    botMoveTo = rows[3];
+    help = rows[4];
+    tohelp = rows[5];
+    botInfo = rows[6];
+    greyMessage = rows[7];
     console.log('Mumble info imported from mumble_help_info.txt!');
 } else {
     fs.openSync(path.join(__dirname,'/bot_data/','mumble_help_info.txt'), 'w');
-	fs.writeFileSync(path.join(__dirname,'/bot_data/','mumble_info.txt'),mumbleUrl + '\n' + botName + '\n' + botHome + '\n' + botMoveTo + '\n' + help+ '\n'+ tohelp + '\n' + botInfo + '\n' + greyMessage + '\n');
+    fs.writeFileSync(path.join(__dirname,'/bot_data/','mumble_info.txt'),mumbleUrl + '\n' + botName + '\n' + botHome + '\n' + botMoveTo + '\n' + help+ '\n'+ tohelp + '\n' + botInfo + '\n' + greyMessage + '\n');
     console.log('mumble_help_info.txt was created!');
 }
 
@@ -57,8 +57,8 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','usergroups.txt'))) {
     pseudoMods = splitParts[2].split(" ");
     greylist = splitParts[3].split(" ");
     blacklist = splitParts[4].split(" "); 
-	rPlayerBan = splitParts[5].split(" "); 
-	ircBridgeBan = splitParts[6].split(" "); // custom groups can be added after this line.
+    rPlayerBan = splitParts[5].split(" "); 
+    ircBridgeBan = splitParts[6].split(" "); // custom groups can be added after this line.
     console.log('user groups imported from usergroups.txt!');
 } else {
     fs.openSync(path.join(__dirname,'/bot_data/','usergroups.txt'), 'w');
@@ -105,11 +105,11 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         connection.user.setSelfDeaf(false); // mute/deafens the bot
         connection.user.setComment(help); // sets the help statement as the comment for the bot
     });
-	
-	process.on('uncaughtException', function (exception) {
-	console.log(exception);
-	});
-/*	
+
+    process.on('uncaughtException', function (exception) {
+        console.log(exception);
+    });
+    /*	
 	if (ircAuth == true){
 	var client = new irc.Client(ircServer, ircName, {
 		channels: [ircChannel],
@@ -125,7 +125,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 		console.log('IRC info was not imported, you will not be able to use IRC functionality at this time. :c');
 		var client;
 	}
-	
+
 	client.addListener('error', function(message) {
 		console.error('ERROR: %s: %s', message.command, message.args.join(' '));
 	});
@@ -149,12 +149,12 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 				ircBridgeBan.push(message.split(' ')[1]);
 			}
 		}
-		
+
 		if (to.match(/^[#&]/)) {
 			for (var i=0; i < ircBridge.length ; i++){
 				const messageCheck = message || '';
 				const isMod = messageCheck[0] === '<';
-				
+
 				if (from == 'mods_slack1' && isMod){
 					var tempMod =  message.split(' ')[0];
 					tempMod = tempMod.substring(1,tempMod.length-1);
@@ -179,7 +179,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 		if (message == '!cat'){
 			client.say('#tpmods',cats());
 		}
-		
+
 	});
 	client.addListener('pm', function(nick, message) {
 		console.log('Got private message from %s: %s', nick, message);
@@ -211,7 +211,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     var users = [];
     var usersf = [];
     var usersl = [];
-	
+
     connection.on('userState', function(state) {
         if (mumbleSessionNum.indexOf(state.session) > -1) {
             mumbleSessionUsers[mumbleSessionNum.indexOf(state.session)] = state.name;
@@ -222,7 +222,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         if (users.indexOf(state.name) == -1 && greylist.indexOf(state.name) == -1) {
             users.push(state.name);
             if (mods.indexOf(state.name) > -1 && modsMumbleList.indexOf(state.name) == -1) {
-                    modsMumbleList.push(state.name);
+                modsMumbleList.push(state.name);
             }
         }
         if (users.indexOf(null) > -1) {
@@ -250,9 +250,9 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         if (greylist.indexOf(state.name) == -1) {
             users.splice(users.indexOf(state.name), 1);
         }
-		if (ircBridge.indexOf(state.name) > -1){
-			ircBridge.splice(ircBridge.indexOf(state.name), 1);
-		}
+        if (ircBridge.indexOf(state.name) > -1){
+            ircBridge.splice(ircBridge.indexOf(state.name), 1);
+        }
         if (users.indexOf(null) > -1) {
             users.splice(users.indexOf(null), 1);
         }
@@ -263,8 +263,8 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     });
 
     rl.on('line', (input) => {
-            connection.user.channel.sendMessage(input);
-        }) //allows user to chat as the bot via command line
+        connection.user.channel.sendMessage(input);
+    }) //allows user to chat as the bot via command line
 
     /* var channels = [];
 connection.on( 'channelState', function (state) {
@@ -272,7 +272,7 @@ if (channels.indexOf(state.channel_id) == -1){
 	channels.push(state.channel_id);}
 }); */ //used to get a list of channel ids, may be better as a tree function depending on the amount of channels on the server
 
-	connection.on('message', function(message, actor, scope) {
+    connection.on('message', function(message, actor, scope) {
         console.log(actor.name);
         message = message.replace(/\n/g, ""); // consolidates message to one line
         reply = "";
@@ -291,13 +291,13 @@ if (channels.indexOf(state.channel_id) == -1){
         console.log(message);
         if (isCommand && privateMessage) {
             switch (command) {
-				case 'cat': // sends a cat to the user.
+                case 'cat': // sends a cat to the user.
                     reply = cats();
                     break;
                 case 'cats': // sends multiple cats to the user.
                     reply = "<br/>" + cats() + "<br/>" + cats() + "<br/>" + cats() + "<br/>" + cats() + "<br/>" + cats();
                     break;
-				case 'find': // gives a url to a player on the server, playerd defines user to find, case-insensitive.
+                case 'find': // gives a url to a player on the server, playerd defines user to find, case-insensitive.
                     if (playerd != undefined) {
                         if (usersl.indexOf(playerd.toLowerCase()) > -1) {
                             playerd = usersf[usersl.indexOf(playerd.toLowerCase())];
@@ -321,91 +321,90 @@ if (channels.indexOf(state.channel_id) == -1){
                         reply = '<br/> A user could not be found! Please make sure to specify a user in the command like this: !find Cryanide';
                     }
                     break;
-				case 'help': // sends help info to the actor.
+                case 'help': // sends help info to the actor.
                     reply = help;
                     break;
-				case 'info': // displays info about the bot
+                case 'info': // displays info about the bot
                     reply = botInfo;
                     break;
-				case 'mods':
-					if (ircBridge.indexOf(actor.name) == -1 && actor.isRegistered() == true){
-					ircBridge.push(actor.name);
-						if (playerd == undefined){
-							client.say('#tpmods',actor.name+' has joined via the NA Mumble Bridge!');
-							reply = "<br/>You have been connected to the #tpmods IRC Channel! To communicate, simply PM me with your message and I'll forward it along!<br/>If you want to disconnect from the bridge, simply message !mods or disconnect from Mumble.";
-						}
-						else {
-							client.say('#tpmods',actor.name+' has joined via the NA Mumble Bridge with: '+playerd);
-							reply = "<br/>Your message has been sent to the #tpmods IRC Channel! To communicate further, simply PM me with your message and I'll forward it along!<br/>If you want to disconnect from the bridge, simply message !mods or disconnect from Mumble.";
-						}
-					}
-					else if (actor.isRegistered() == false){
-						reply = '<br/>Sorry, only registered Mumble users can use the NA Mumble Bridge.<br/>Register yourself by right clicking on your name and clicking register, or <a href="https://goo.gl/3ORahu"><b><span style="color:#39a5dd">click here</span></b></a> to go directly to the IRC channel via your browser!'
-					}
-					else {
-						ircBridge.splice(ircBridge.indexOf(actor.name),1);
-						reply = "You have disconnected from the #tpmods IRC Channel! If you need any help from a mod on Mumble, use the !modlist command to find a mod!";
-						client.say('#tpmods',actor.name+' has disconnected from the NA Mumble Bridge!');
-					}
-					break;
+                case 'mods':
+                    if (ircBridge.indexOf(actor.name) == -1 && actor.isRegistered() == true){
+                        ircBridge.push(actor.name);
+                        if (playerd == undefined){
+                            client.say('#tpmods',actor.name+' has joined via the NA Mumble Bridge!');
+                            reply = "<br/>You have been connected to the #tpmods IRC Channel! To communicate, simply PM me with your message and I'll forward it along!<br/>If you want to disconnect from the bridge, simply message !mods or disconnect from Mumble.";
+                        }
+                        else {
+                            client.say('#tpmods',actor.name+' has joined via the NA Mumble Bridge with: '+playerd);
+                            reply = "<br/>Your message has been sent to the #tpmods IRC Channel! To communicate further, simply PM me with your message and I'll forward it along!<br/>If you want to disconnect from the bridge, simply message !mods or disconnect from Mumble.";
+                        }
+                    }
+                    else if (actor.isRegistered() == false){
+                        reply = '<br/>Sorry, only registered Mumble users can use the NA Mumble Bridge.<br/>Register yourself by right clicking on your name and clicking register, or <a href="https://goo.gl/3ORahu"><b><span style="color:#39a5dd">click here</span></b></a> to go directly to the IRC channel via your browser!'
+                    }
+                    else {
+                        ircBridge.splice(ircBridge.indexOf(actor.name),1);
+                        reply = "You have disconnected from the #tpmods IRC Channel! If you need any help from a mod on Mumble, use the !modlist command to find a mod!";
+                        client.say('#tpmods',actor.name+' has disconnected from the NA Mumble Bridge!');
+                    }
+                    break;
                 case 'modslist':
                     reply = '<br/> Here are the mods currently on: <br/>' + modsMumbleList + '<br/>To find any of these mods, use the !find command! c:';
                     break;
-				case 'reboot':
-					if (whitelist.indexOf(actor.name) > -1) {
-						process.exit(0);
-					}
-					else {
-						reply = tohelp;
-					}
-					break;
-				case 'send':
-					client.say('#tpmods',actor.name+'has sent the following request: '+message);
-					reply = 'Your message has been sent! You will receive mail once your request has been processed by the mods.';
-					break;
-				default:
-					reply = tohelp;
-					break;
-			}
-			var noReply = ['move'];
+                case 'reboot':
+                    if (whitelist.indexOf(actor.name) > -1) {
+                        process.exit(0);
+                    }
+                    else {
+                        reply = tohelp;
+                    }
+                    break;
+                case 'send':
+                    client.say('#tpmods',actor.name+'has sent the following request: '+message);
+                    reply = 'Your message has been sent! You will receive mail once your request has been processed by the mods.';
+                    break;
+                default:
+                    reply = tohelp;
+                    break;
+            }
+            var noReply = ['move'];
             if (noReply.indexOf(command) == -1 || reply != '') {
                 console.log(reply);
                 actor.sendMessage(reply);
             }
         }
-		else if (privateMessage && ircBridge.indexOf(actor.name) > -1){
-			client.say('#tpmods',actor.name+': '+message);
-			}
-	})
-	
-	connection.on('error', function(MumbleError) { //incomplete, error event when something goes wrong through mumble, need to add parsing of error
-        console.log(MumbleError.name);
-		process.exit(0);		
+        else if (privateMessage && ircBridge.indexOf(actor.name) > -1){
+            client.say('#tpmods',actor.name+': '+message);
+        }
     })
-	
-	connection.on('user-move', function(user, fromChannel, toChannel, actor) { 
-		if (user.name == botName){
-			user.moveToChannel(connection.channelByName(botHome));
-		}
-		if (toChannel.name == 'In-Game Moderators Assistance Room' && mods.indexOf(user.name) == -1) {
+
+    connection.on('error', function(MumbleError) { //incomplete, error event when something goes wrong through mumble, need to add parsing of error
+        console.log(MumbleError.name);
+        process.exit(0);		
+    })
+
+    connection.on('user-move', function(user, fromChannel, toChannel, actor) { 
+        if (user.name == botName){
+            user.moveToChannel(connection.channelByName(botHome));
+        }
+        if (toChannel.name == 'In-Game Moderators Assistance Room' && mods.indexOf(user.name) == -1) {
             user.sendMessage('<br/>Welcome to the In-Game Moderators Assistance Room! If you want a list of mods currently on Mumble, use the !mods command. <br/><br/>If there is not a mod available, try going to the IRC channel by <a href="http://webchat.freenode.net/?channels=tpmods"><b><span style="color:#39a5dd">clicking here</span></b></a>, where a mod is almost always availble to help there! c:');
             reply = '[NA Mumble] ' + user.name + ' is waiting in the In-Game Moderators Assistance Room!';
             if (slackAuth == true) {
                 sendtoslack(slackChannel, reply);
             }
         }	
-	})
-	
-	
+    })
+
+
 })
-    
-	function sendtoslack(cid, message) {
-        web.chat.postMessage(cid, message, function(err, res) {
-            if (err) {
-                console.log('Error:', err);
-            } else {
-                console.log('Message sent: ', res);
-            }
-        })
-    }
-	
+
+function sendtoslack(cid, message) {
+    web.chat.postMessage(cid, message, function(err, res) {
+        if (err) {
+            console.log('Error:', err);
+        } else {
+            console.log('Message sent: ', res);
+        }
+    })
+}

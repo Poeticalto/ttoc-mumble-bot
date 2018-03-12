@@ -18,6 +18,7 @@
     "lodash": "^4.17.4",
     "moment": "^2.20.1",
     "mumble": "^0.3.12",
+    "npm": "^5.7.1",
     "request": "^2.83.0",
     "winston": "^3.0.0-rc1",
     "winston-daily-rotate-file": "^2.0.0-rc.1"
