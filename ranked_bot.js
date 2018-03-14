@@ -537,6 +537,19 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         if (user.name == botName){
             user.moveToChannel(connection.channelByName(botHome));
         }})
+		
+	function callEveryHour() {
+		connection.user.setSelfDeaf(false);
+		if (groupmeAuth == true){
+			request({
+				method: 'POST',
+				uri: 'https://api.groupme.com/v3/bots/post',
+				body: JSON.stringify({ "bot_id" : groupmeListenId,"text": 'This is an hourly ping' })
+			}, function(error, response, body) {
+            console.log(body);
+			})
+		}
+	}
 })
 
 function backupRanked(){
@@ -809,17 +822,4 @@ function gameProcess(process,result){
         rGame05 = [];
     }
     setTimeout(backupRanked,5000);
-}
-
-function callEveryHour() {
-    connection.user.setSelfDeaf(false);
-    if (groupmeAuth == true){
-        request({
-            method: 'POST',
-            uri: 'https://api.groupme.com/v3/bots/post',
-            body: JSON.stringify({ "bot_id" : groupmeListenId,"text": 'This is an hourly ping' })
-        }, function(error, response, body) {
-            console.log(body);
-        })
-    }
 }
