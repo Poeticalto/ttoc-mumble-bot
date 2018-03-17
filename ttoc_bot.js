@@ -16,8 +16,9 @@ var irc = require('irc');
 var script = google.script('v1');
 var sheets = google.sheets('v4');
 var SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/forms'];
-
 var moment = require('moment');
+var lame = require('lame');
+var needle = require('needle');
 
 // Logger setup, all logs are stored in the logs folder.
 var mumbleLogger = winston.createLogger({
@@ -48,8 +49,6 @@ var mumbleLogger = winston.createLogger({
         })
     ]
 });
-
-
 
 var ircLogger = winston.createLogger({
     levels: {
@@ -262,7 +261,7 @@ if (fs.existsSync(path.join(__dirname,'/keys/','groupme_keys.txt'))) {
     groupmeUsername = groupmeAccessToken[3]; // groupmeUsername is your groupme name in the group, used to filter out messages
     GMBOT = groupmeAccessToken[2]; // GMBOT is the name of your groupme bot
     groupmeUserId = groupmeAccessToken[1]; // groupmeUserId is your user id [not the bot id]
-    groupmeListenId = groupmeAccessToken[5];
+    groupmeListenId = groupmeAccessToken[5]; // listenId is where to send ping messages
     groupmeAccessToken = groupmeAccessToken[0]; // groupmeAccessToken is your groupme access token
     groupmeAuth = true;
     console.log('GroupMe keys imported from groupme_keys.txt!');
@@ -480,6 +479,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         console.log('connection ready');
         connection.user.setSelfDeaf(false); // mute/deafens the bot
         connection.user.setComment(help); // sets the help statement as the comment for the bot
+		connection.connection.setBitrate(24000);
 		setInterval(callEveryHour, 1000*60*60);
     });
 
@@ -592,7 +592,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                 var botdeets;
                 for (var i = 0; i < ret.length; i++) {
                     if (ret[i].name == GMBOT) {
-                        groupmeBotId = ret[i].groupmeBotId;
+                        groupmeBotId = ret[i].bot_id;
                     }
                 }
                 console.log("[API.Bots.index return] Firing up bot!", groupmeBotId);
@@ -613,9 +613,11 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         if (msg["data"] &&
             msg["data"]["subject"] &&
             msg["data"]["subject"]["text"]) { // error is thrown when attempting to access a message without data,subject, or text, so checks to make sure they all exist
-            if (groupmeBotId && msg["data"]["subject"]["name"] != groupmeUsername && msg["data"]["subject"]["groupmeGroupId"] == groupmeGroupId) {
-                connection.user.channel.sendMessage(msg["data"]["subject"]["text"]);
-            }
+            if (groupmeBotId && msg["data"]["subject"]["name"] != groupmeUsername && msg["data"]["subject"]["group_id"] == groupmeGroupId) {
+                //connection.user.channel.sendMessage(msg["data"]["subject"]["text"]);
+				var rawMessage = msg["data"]["subject"]["text"];
+				ttsConvert(rawMessage);	
+			}
         }
     });
 
@@ -699,7 +701,9 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     });
 
     rl.on('line', (input) => {
-        connection.user.channel.sendMessage(input);
+        //connection.user.channel.sendMessage(input);
+		var rawMessage = input;
+		ttsConvert(rawMessage);		
     }) //allows user to chat as the bot via command line
 
     /* var channels = [];
@@ -778,21 +782,12 @@ if (channels.indexOf(state.channel_id) == -1){
                 connection.user.channel.sendMessage("Sorry, there was nothing to respond to!");
                 mumbleLogger.chat("Bot response: "+"Sorry, there was nothing to respond to!",{ 'Timestamp': getDateTime() });
             } else if (groupmeAuth == true) {
-                playerd = '@zo ' + playerd;
-
                 function hi() {
                     console.log("Success!");
                 }
                 API.Messages.create(groupmeAccessToken, groupmeGroupId, {
                     message: {
-                        text: playerd,
-                        attachments: [{
-                            type: "mentions",
-                            groupmeUserIds: [46185459],
-                            loci: [
-                                [0, 3]
-                            ]
-                        }]
+                        text: playerd
                     }
                 }, hi);
             }
@@ -1389,6 +1384,14 @@ if (channels.indexOf(state.channel_id) == -1){
                         reply = tohelp;
                     }
                     break;
+				case 'tts':
+					if (whitelist.indexOf(actor.name) > -1) {
+						ttsConvert(playerd);
+					}
+					else {
+						reply = tohelp;
+					}
+					break;
                 case 'updatelinks': // updates links from the spreadsheet, playerd is uneeded
                     if ((whitelist.indexOf(actor.name) > -1 || tournamentRunners.indexOf(actor.name) > -1) && gAuth == true && signupsOpen == false) {
                         console.log('updating links!');
@@ -1838,4 +1841,38 @@ if (channels.indexOf(state.channel_id) == -1){
             })
         }
     }
+	function play(file, client) {
+		var stream = fs.createReadStream(file);
+		var decoder = new lame.Decoder();
+		decoder.on('format', function(format) {
+			var input = connection.inputStream(format);
+			decoder.pipe(input);
+		});
+		stream.pipe(decoder);
+	};
+	function ttsConvert(rawMessage) {
+		var base = 'http://vozme.com/';
+		var opts = {
+			text : rawMessage,
+			lang : 'eng',
+			gn : 'ml', //fm for female, ml for male
+			interface : 'full'
+		};
+				
+		needle.post(base + 'text2voice.php', opts, {}, function(err, resp) {
+			if (err) {
+				console.log('Error: no download link');
+			}
+			var url = base + resp.body.split('<source')[1].split('"')[1];
+			needle.get(url, { output : path.join(__dirname,'/music/','tts_out.mp3') }, function(err, resp, body) {
+				if (err) {
+					console.log('Error: no mp3');
+					return false;
+				}
+			play(path.join(__dirname,'/music/','tts_out.mp3'),connection);
+			return true;
+			});
+		});
+	}
+	
 });

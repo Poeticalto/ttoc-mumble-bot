@@ -540,15 +540,6 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 		
 	function callEveryHour() {
 		connection.user.setSelfDeaf(false);
-		if (groupmeAuth == true){
-			request({
-				method: 'POST',
-				uri: 'https://api.groupme.com/v3/bots/post',
-				body: JSON.stringify({ "bot_id" : groupmeListenId,"text": 'This is an hourly ping' })
-			}, function(error, response, body) {
-            console.log(body);
-			})
-		}
 	}
 })
 
