@@ -1192,8 +1192,8 @@ if (channels.indexOf(state.channel_id) == -1){
                     break;
                 case 'play':
                     if (whitelist.indexOf(actor.name) > -1){
-                        if (fs.existsSync(path.join(__dirname,'/music/',playerd,'.mp3'))) {
-                            play(path.join(__dirname,'/music/',playerd,'.mp3'),connection);
+                        if (fs.existsSync(path.join(__dirname,'/music/',playerd+'.mp3'))) {
+                            play(path.join(__dirname,'/music/',playerd+'.mp3'),connection);
                             reply = "Playing "+playerd+".mp3!";
                         }
                         else{
