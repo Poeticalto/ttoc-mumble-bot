@@ -479,8 +479,8 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         console.log('connection ready');
         connection.user.setSelfDeaf(false); // mute/deafens the bot
         connection.user.setComment(help); // sets the help statement as the comment for the bot
-		connection.connection.setBitrate(24000);
-		setInterval(callEveryHour, 1000*60*60);
+        connection.connection.setBitrate(24000);
+        setInterval(callEveryHour, 1000*60*60);
     });
 
     process.on('uncaughtException', function (exception) {
@@ -615,9 +615,9 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             msg["data"]["subject"]["text"]) { // error is thrown when attempting to access a message without data,subject, or text, so checks to make sure they all exist
             if (groupmeBotId && msg["data"]["subject"]["name"] != groupmeUsername && msg["data"]["subject"]["group_id"] == groupmeGroupId) {
                 //connection.user.channel.sendMessage(msg["data"]["subject"]["text"]);
-				var rawMessage = msg["data"]["subject"]["text"];
-				ttsConvert(rawMessage);	
-			}
+                var rawMessage = msg["data"]["subject"]["text"];
+                ttsConvert(rawMessage);	
+            }
         }
     });
 
@@ -702,8 +702,8 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 
     rl.on('line', (input) => {
         //connection.user.channel.sendMessage(input);
-		var rawMessage = input;
-		ttsConvert(rawMessage);		
+        var rawMessage = input;
+        ttsConvert(rawMessage);		
     }) //allows user to chat as the bot via command line
 
     /* var channels = [];
@@ -1190,6 +1190,20 @@ if (channels.indexOf(state.channel_id) == -1){
                 case 'move':
                     connection.userByName(playerd).moveToChannel(actor.channel.name);
                     break;
+                case 'play':
+                    if (whitelist.indexOf(actor.name) > -1){
+                        if (fs.existsSync(path.join(__dirname,'/music/',playerd,'.mp3'))) {
+                            play(path.join(__dirname,'/music/',playerd,'.mp3'),connection);
+                            reply = "Playing "+playerd+".mp3!";
+                        }
+                        else{
+                            reply = "Sorry, that file does not exist!";
+                        }
+                    }
+                    else{
+                        reply = tohelp;
+                    }
+                    break;
                 case 'qak': // qak
                     reply = 'qak';
                     break;
@@ -1384,14 +1398,14 @@ if (channels.indexOf(state.channel_id) == -1){
                         reply = tohelp;
                     }
                     break;
-				case 'tts':
-					if (whitelist.indexOf(actor.name) > -1) {
-						ttsConvert(playerd);
-					}
-					else {
-						reply = tohelp;
-					}
-					break;
+                case 'tts':
+                    if (whitelist.indexOf(actor.name) > -1) {
+                        ttsConvert(playerd);
+                    }
+                    else {
+                        reply = tohelp;
+                    }
+                    break;
                 case 'updatelinks': // updates links from the spreadsheet, playerd is uneeded
                     if ((whitelist.indexOf(actor.name) > -1 || tournamentRunners.indexOf(actor.name) > -1) && gAuth == true && signupsOpen == false) {
                         console.log('updating links!');
@@ -1841,38 +1855,38 @@ if (channels.indexOf(state.channel_id) == -1){
             })
         }
     }
-	function play(file, client) {
-		var stream = fs.createReadStream(file);
-		var decoder = new lame.Decoder();
-		decoder.on('format', function(format) {
-			var input = connection.inputStream(format);
-			decoder.pipe(input);
-		});
-		stream.pipe(decoder);
-	};
-	function ttsConvert(rawMessage) {
-		var base = 'http://vozme.com/';
-		var opts = {
-			text : rawMessage,
-			lang : 'eng',
-			gn : 'ml', //fm for female, ml for male
-			interface : 'full'
-		};
-				
-		needle.post(base + 'text2voice.php', opts, {}, function(err, resp) {
-			if (err) {
-				console.log('Error: no download link');
-			}
-			var url = base + resp.body.split('<source')[1].split('"')[1];
-			needle.get(url, { output : path.join(__dirname,'/music/','tts_out.mp3') }, function(err, resp, body) {
-				if (err) {
-					console.log('Error: no mp3');
-					return false;
-				}
-			play(path.join(__dirname,'/music/','tts_out.mp3'),connection);
-			return true;
-			});
-		});
-	}
-	
+    function play(file, client) {
+        var stream = fs.createReadStream(file);
+        var decoder = new lame.Decoder();
+        decoder.on('format', function(format) {
+            var input = connection.inputStream(format);
+            decoder.pipe(input);
+        });
+        stream.pipe(decoder);
+    };
+    function ttsConvert(rawMessage) {
+        var base = 'http://vozme.com/';
+        var opts = {
+            text : rawMessage,
+            lang : 'eng',
+            gn : 'ml', //fm for female, ml for male
+            interface : 'full'
+        };
+
+        needle.post(base + 'text2voice.php', opts, {}, function(err, resp) {
+            if (err) {
+                console.log('Error: no download link');
+            }
+            var url = base + resp.body.split('<source')[1].split('"')[1];
+            needle.get(url, { output : path.join(__dirname,'/music/','tts_out.mp3') }, function(err, resp, body) {
+                if (err) {
+                    console.log('Error: no mp3');
+                    return false;
+                }
+                play(path.join(__dirname,'/music/','tts_out.mp3'),connection);
+                return true;
+            });
+        });
+    }
+
 });
