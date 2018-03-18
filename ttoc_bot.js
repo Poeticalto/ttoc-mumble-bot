@@ -19,6 +19,7 @@ var SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googl
 var moment = require('moment');
 var lame = require('lame');
 var needle = require('needle');
+var txtomp3 = require("text-to-mp3");
 
 // Logger setup, all logs are stored in the logs folder.
 var mumbleLogger = winston.createLogger({
@@ -1865,7 +1866,7 @@ if (channels.indexOf(state.channel_id) == -1){
         stream.pipe(decoder);
     };
     function ttsConvert(rawMessage) {
-        var base = 'http://vozme.com/';
+        /*var base = 'http://vozme.com/';
         var opts = {
             text : rawMessage,
             lang : 'eng',
@@ -1886,7 +1887,16 @@ if (channels.indexOf(state.channel_id) == -1){
                 play(path.join(__dirname,'/music/','tts_out.mp3'),connection);
                 return true;
             });
-        });
+        }); */
+		txtomp3.getMp3(rawMessage).then(function(binaryStream){
+			var file = fs.createWriteStream("tts_out.mp3"); // write it down the file
+			file.write(binaryStream);
+			file.end();
+			play(path.join(__dirname,'/music/','tts_out.mp3'),connection);
+			})
+		.catch(function(err){
+			console.log("Error", err);
+		});
     }
 
 });
