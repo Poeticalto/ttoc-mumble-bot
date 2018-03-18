@@ -1889,7 +1889,7 @@ if (channels.indexOf(state.channel_id) == -1){
             });
         }); */
 		txtomp3.getMp3(rawMessage).then(function(binaryStream){
-			var file = fs.createWriteStream("tts_out.mp3"); // write it down the file
+			var file = fs.createWriteStream(path.join(__dirname,'/music/','tts_out.mp3')); // write it down the file
 			file.write(binaryStream);
 			file.end();
 			play(path.join(__dirname,'/music/','tts_out.mp3'),connection);
