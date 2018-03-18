@@ -479,7 +479,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         console.log('connection ready');
         connection.user.setSelfDeaf(false); // mute/deafens the bot
         connection.user.setComment(help); // sets the help statement as the comment for the bot
-        connection.connection.setBitrate(24000);
+        connection.connection.setBitrate(96000);
         setInterval(callEveryHour, 1000*60*60);
     });
 
