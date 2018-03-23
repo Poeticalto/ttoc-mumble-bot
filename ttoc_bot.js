@@ -763,9 +763,12 @@ if (channels.indexOf(state.channel_id) == -1){
         if (privateMessage){
             mumbleLogger.chat('PM from '+actor.name+': '+message,{ 'Timestamp': getDateTime() });
         }
-        else{
+        else if (scope == "channel"){
             mumbleLogger.chat('CM from '+actor.name+': '+message,{ 'Timestamp': getDateTime() });
         }
+		else {
+			mumbleLogger.chat('Tree from '+actor.name+' originating from '+connection.channelById(scope[0]).name+':'+message,{'Timestamp': getDateTime()});
+		}
         if (contentPieces.length > 2) {
             for (i = 2; i <= contentPieces.length - 1; i++) {
                 playerd = playerd + ' ' + contentPieces[i];
@@ -1866,36 +1869,36 @@ if (channels.indexOf(state.channel_id) == -1){
         stream.pipe(decoder);
     };
     function ttsConvert(rawMessage) {
-        /*var base = 'http://vozme.com/';
-        var opts = {
-            text : rawMessage,
-            lang : 'eng',
-            gn : 'ml', //fm for female, ml for male
-            interface : 'full'
-        };
-
-        needle.post(base + 'text2voice.php', opts, {}, function(err, resp) {
-            if (err) {
-                console.log('Error: no download link');
-            }
-            var url = base + resp.body.split('<source')[1].split('"')[1];
-            needle.get(url, { output : path.join(__dirname,'/music/','tts_out.mp3') }, function(err, resp, body) {
-                if (err) {
-                    console.log('Error: no mp3');
-                    return false;
-                }
-                play(path.join(__dirname,'/music/','tts_out.mp3'),connection);
-                return true;
-            });
-        }); */
 		txtomp3.getMp3(rawMessage).then(function(binaryStream){
-			var file = fs.createWriteStream(path.join(__dirname,'/music/','tts_out.mp3')); // write it down the file
+			var file = fs.createWriteStream(path.join(__dirname,'/music/','tts_out.mp3'));
 			file.write(binaryStream);
 			file.end();
 			play(path.join(__dirname,'/music/','tts_out.mp3'),connection);
 			})
 		.catch(function(err){
 			console.log("Error", err);
+		    var base = 'http://vozme.com/'; //use vozme.com as a backup if google returns error
+			var opts = {
+            text : rawMessage,
+            lang : 'eng',
+            gn : 'ml', //fm for female, ml for male
+            interface : 'full'
+			};
+
+			needle.post(base + 'text2voice.php', opts, {}, function(err, resp) {
+				if (err) {
+					console.log('Error: no download link');
+				}
+				var url = base + resp.body.split('<source')[1].split('"')[1];
+				needle.get(url, { output : path.join(__dirname,'/music/','tts_out.mp3') }, function(err, resp, body) {
+					if (err) {
+						console.log('Error: no mp3');
+						return false;
+					}
+					play(path.join(__dirname,'/music/','tts_out.mp3'),connection);
+					return true;
+				});
+			});
 		});
     }
 
