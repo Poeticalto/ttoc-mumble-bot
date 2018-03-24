@@ -761,13 +761,13 @@ if (channels.indexOf(state.channel_id) == -1){
         const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br")[0].split("<p")[0].toLowerCase();
         var playerd = contentPieces[1];
         if (privateMessage){
-            mumbleLogger.chat('PM from '+actor.name+': '+message,{ 'Timestamp': getDateTime() });
+            mumbleLogger.chat('PM from '+actor.name+': '+message.substring(0,2000),{ 'Timestamp': getDateTime() });
         }
         else if (scope == "channel"){
-            mumbleLogger.chat('CM from '+actor.name+': '+message,{ 'Timestamp': getDateTime() });
+            mumbleLogger.chat('CM from '+actor.name+': '+message.substring(0,2000),{ 'Timestamp': getDateTime() });
         }
 		else {
-			mumbleLogger.chat('Tree from '+actor.name+' originating from '+connection.channelById(scope[0]).name+':'+message,{'Timestamp': getDateTime()});
+			mumbleLogger.chat('Tree from '+actor.name+' originating from '+connection.channelById(scope[0]).name+':'+message.substring(0,2000),{'Timestamp': getDateTime()});
 		}
         if (contentPieces.length > 2) {
             for (i = 2; i <= contentPieces.length - 1; i++) {

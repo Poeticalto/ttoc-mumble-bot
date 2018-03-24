@@ -288,7 +288,7 @@ if (channels.indexOf(state.channel_id) == -1){
                 playerd = playerd + ' ' + contentPieces[i];
             }
         } // arg playerd may have multiple words, so combine everything afters command into one var
-        console.log(message);
+		console.log(message);
         if (isCommand && privateMessage) {
             switch (command) {
                 case 'cat': // sends a cat to the user.
