@@ -58,13 +58,13 @@ var ircLogger = winston.createLogger({
     },
     transports: [
         new (winston.transports.DailyRotateFile)({
-            filename: path.join(__dirname,'/logs/irc/','%DATE%.log'),
+            filename: path.join(__dirname,'/logs/ircchat/','%DATE%.log'),
             localTime: 'true',
             createTree: 'false',
             level: 'chat'
         }),
         new (winston.transports.DailyRotateFile)({
-            filename: path.join(__dirname,'/logs/irc/','%DATE%.log'),
+            filename: path.join(__dirname,'/logs/irclog/','%DATE%.log'),
             createTree: 'false',
             localTime: 'true',
             level: 'irclog'
