@@ -21,60 +21,6 @@ var lame = require('lame');
 var needle = require('needle');
 var txtomp3 = require("text-to-mp3");
 
-// Logger setup, all logs are stored in the logs folder.
-var mumbleLogger = winston.createLogger({
-    levels: {
-        error: 0,
-        chat: 1,
-        mlog: 2
-    },
-    transports: [
-        new (winston.transports.DailyRotateFile)({
-            filename: path.join(__dirname,'/logs/error/','%DATE%.log'),
-            prepend: 'true',
-            localTime: 'true',
-            level: 'error'
-        }),
-        new (winston.transports.DailyRotateFile)({
-            filename: path.join(__dirname,'/logs/mumblechat/','%DATE%.log'),
-            prepend: 'true',
-            localTime: 'true',
-            level: 'chat'
-        }),
-        new (winston.transports.DailyRotateFile)({
-            filename: path.join(__dirname,'/logs/mumblelog/','%DATE%.log'),
-            prepend: 'true',
-            localTime: 'true',
-            createTree: 'false',
-            level: 'mlog'
-        })
-    ]
-});
-
-var ircLogger = winston.createLogger({
-    levels: {
-        chat : 1,
-        irclog: 2
-    },
-    transports: [
-        new (winston.transports.DailyRotateFile)({
-            filename: path.join(__dirname,'/logs/ircchat/','%DATE%.log'),
-            localTime: 'true',
-            createTree: 'false',
-            level: 'chat'
-        }),
-        new (winston.transports.DailyRotateFile)({
-            filename: path.join(__dirname,'/logs/irclog/','%DATE%.log'),
-            createTree: 'false',
-            localTime: 'true',
-            level: 'irclog'
-        })	
-    ]
-});
-
-mumbleLogger.exitOnError = false;
-mumbleLogger.emitErrs = false;
-
 // Location for the token used to verify Google oAuth. This was taken from the nodejs quickstart, so if you have the token saved elsewhere, change the DIR/PATH.
 var TOKEN_PATH = path.join(__dirname,'/keys/','gappAuth.json');
 
@@ -132,6 +78,7 @@ var gappkey;
 var ircAuth = false;
 var splitParts;
 var splitMessage;
+var logToWeb = 'false';
 
 // for each file, replaces the defaults if it exists.
 // consult the readme for help on how to setup each .txt file.
@@ -192,6 +139,7 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','mumble_info.txt'))) {
     tohelp = rows[5];
     botInfo = rows[6];
     greyMessage = rows[7];
+	logToWeb = rows[8];
     console.log('Mumble info imported from mumble_info.txt!');
 } else {
     fs.openSync(path.join(__dirname,'/bot_data/','mumble_info.txt'), 'w');
@@ -414,6 +362,64 @@ function sswrite(auth) { // this function writes a range to the spreadsheet
         }
     });
 }
+var setLogDir = __dirname;
+if (logToWeb == 'true'){
+	setLogDir = '/var/www/html/';
+}
+
+// Logger setup, all logs are stored in the logs folder.
+var mumbleLogger = winston.createLogger({
+    levels: {
+        error: 0,
+        chat: 1,
+        mlog: 2
+    },
+    transports: [
+        new (winston.transports.DailyRotateFile)({
+            filename: path.join(setLogDir,'/logs/error/','%DATE%.log'),
+            prepend: 'true',
+            localTime: 'true',
+            level: 'error'
+        }),
+        new (winston.transports.DailyRotateFile)({
+            filename: path.join(setLogDir,'/logs/mumblechat/','%DATE%.log'),
+            prepend: 'true',
+            localTime: 'true',
+            level: 'chat'
+        }),
+        new (winston.transports.DailyRotateFile)({
+            filename: path.join(setLogDir,'/logs/mumblelog/','%DATE%.log'),
+            prepend: 'true',
+            localTime: 'true',
+            createTree: 'false',
+            level: 'mlog'
+        })
+    ]
+});
+
+var ircLogger = winston.createLogger({
+    levels: {
+        chat : 1,
+        irclog: 2
+    },
+    transports: [
+        new (winston.transports.DailyRotateFile)({
+            filename: path.join(setLogDir,'/logs/ircchat/','%DATE%.log'),
+            localTime: 'true',
+            createTree: 'false',
+            level: 'chat'
+        }),
+        new (winston.transports.DailyRotateFile)({
+            filename: path.join(setLogDir,'/logs/irclog/','%DATE%.log'),
+            createTree: 'false',
+            localTime: 'true',
+            level: 'irclog'
+        })	
+    ]
+});
+
+mumbleLogger.exitOnError = false;
+mumbleLogger.emitErrs = false;
 
 // End of defining google apps scripts
 // Define global variables
