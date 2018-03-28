@@ -30,19 +30,19 @@ var mumbleLogger = winston.createLogger({
     },
     transports: [
         new (winston.transports.DailyRotateFile)({
-            filename: path.join(__dirname,'/logs/error/','error.log'),
+            filename: path.join(__dirname,'/logs/error/','error-%DATE%.log'),
             prepend: 'true',
             localTime: 'true',
             level: 'error'
         }),
         new (winston.transports.DailyRotateFile)({
-            filename: path.join(__dirname,'/logs/mumblechat/','chat.log'),
+            filename: path.join(__dirname,'/logs/mumblechat/','chat-%DATE%.log'),
             prepend: 'true',
             localTime: 'true',
             level: 'chat'
         }),
         new (winston.transports.DailyRotateFile)({
-            filename: path.join(__dirname,'/logs/mumblelog/','mlog.log'),
+            filename: path.join(__dirname,'/logs/mumblelog/','mlog-%DATE%.log'),
             prepend: 'true',
             localTime: 'true',
             createTree: 'false',
@@ -58,13 +58,13 @@ var ircLogger = winston.createLogger({
     },
     transports: [
         new (winston.transports.DailyRotateFile)({
-            filename: path.join(__dirname,'/logs/irc/','ircchat.log'),
+            filename: path.join(__dirname,'/logs/irc/','ircchat-%DATE%.log'),
             localTime: 'true',
             createTree: 'false',
             level: 'chat'
         }),
         new (winston.transports.DailyRotateFile)({
-            filename: path.join(__dirname,'/logs/irc/','irclog.log'),
+            filename: path.join(__dirname,'/logs/irc/','irclog-%DATE%.log'),
             createTree: 'false',
             localTime: 'true',
             level: 'irclog'
@@ -708,10 +708,10 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     }) //allows user to chat as the bot via command line
 
     /* var channels = [];
-connection.on( 'channelState', function (state) {
-if (channels.indexOf(state.channel_id) == -1){
-	channels.push(state.channel_id);}
-}); */ //used to get a list of channel ids, may be better as a tree function depending on the amount of channels on the server
+	connection.on( 'channelState', function (state) {
+		if (channels.indexOf(state.channel_id) == -1){
+		channels.push(state.channel_id);}
+	}); */ //used to get a list of channel ids, may be better as a tree function depending on the amount of channels on the server
 
     connection.on('user-priority-speaker', function(user, status, actor) {	
         if (typeof actor != 'undefined'){
@@ -797,7 +797,7 @@ if (channels.indexOf(state.channel_id) == -1){
             }
             console.log(playerd);
         }
-        if (privateMessage == false && connection.user.channel.name == "Draft Channel") {
+        if (scope == 'channel' && connection.user.channel.name == "Draft Channel") {
             connection.channelByName('Spectating Lounge [Open to all]').sendMessage(actor.name + ': ' + message);
             mumbleLogger.chat("Bot forwarded message to Spectating Lounge",{ 'Timestamp': getDateTime() });
         }
