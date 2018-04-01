@@ -20,6 +20,7 @@ var moment = require('moment');
 var lame = require('lame');
 var needle = require('needle');
 var txtomp3 = require("text-to-mp3");
+var schedule = require('node-schedule');
 
 // Location for the token used to verify Google oAuth. This was taken from the nodejs quickstart, so if you have the token saved elsewhere, change the DIR/PATH.
 var TOKEN_PATH = path.join(__dirname,'/keys/','gappAuth.json');
@@ -363,7 +364,7 @@ function sswrite(auth) { // this function writes a range to the spreadsheet
     });
 }
 var setLogDir = __dirname;
-if (logToWeb == 'true'){
+if (logToWeb == 'true'){//logs directly to web folder for server use
 	setLogDir = '/var/www/html/';
 }
 
@@ -377,21 +378,17 @@ var mumbleLogger = winston.createLogger({
     transports: [
         new (winston.transports.DailyRotateFile)({
             filename: path.join(setLogDir,'/logs/error/','%DATE%.log'),
-            prepend: 'true',
             localTime: 'true',
             level: 'error'
         }),
         new (winston.transports.DailyRotateFile)({
             filename: path.join(setLogDir,'/logs/mumblechat/','%DATE%.log'),
-            prepend: 'true',
             localTime: 'true',
             level: 'chat'
         }),
         new (winston.transports.DailyRotateFile)({
             filename: path.join(setLogDir,'/logs/mumblelog/','%DATE%.log'),
-            prepend: 'true',
             localTime: 'true',
-            createTree: 'false',
             level: 'mlog'
         })
     ]
@@ -406,20 +403,18 @@ var ircLogger = winston.createLogger({
         new (winston.transports.DailyRotateFile)({
             filename: path.join(setLogDir,'/logs/ircchat/','%DATE%.log'),
             localTime: 'true',
-            createTree: 'false',
             level: 'chat'
         }),
         new (winston.transports.DailyRotateFile)({
             filename: path.join(setLogDir,'/logs/irclog/','%DATE%.log'),
-            createTree: 'false',
-            localTime: 'true',
+            createTree: 'true',
             level: 'irclog'
         })	
     ]
 });
 
 mumbleLogger.exitOnError = false;
-mumbleLogger.emitErrs = false;
+mumbleLogger.emitErrs = true;
 
 // End of defining google apps scripts
 // Define global variables
@@ -467,15 +462,7 @@ const rl = readline.createInterface({ // creates cmd interface to interact with 
 // connect to the mumble server
 console.log('Connecting to Mumble Server');
 console.log('Connecting');
-if (groupmeAuth == true){
-    request({
-        method: 'POST',
-        uri: 'https://api.groupme.com/v3/bots/post',
-        body: JSON.stringify({ "bot_id" : groupmeListenId,"text": 'Bot has been initialized!' })
-    }, function(error, response, body) {
-        console.log(body);
-    })
-}
+pingMessage('Bot has been initialized!');
 
 mumble.connect(mumbleUrl, options, function(error, connection) {
     if (error) { throw new Error(error); }
@@ -487,7 +474,14 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         connection.user.setSelfDeaf(false); // mute/deafens the bot
         connection.user.setComment(help); // sets the help statement as the comment for the bot
         connection.connection.setBitrate(72000);
-        setInterval(callEveryHour, 1000*60*60);
+		var hourlyPing = schedule.scheduleJob('0 * * * *', function(){
+			connection.user.setSelfDeaf(false);
+			pingMessage('Hourly Ping');
+		});
+		var dailyReset = schedule.scheduleJob('0 4 * * *',function(){
+			pingMessage('Daily Reset');
+			process.exit(0);
+		}
     });
 
     process.on('uncaughtException', function (exception) {
@@ -627,8 +621,8 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             }
         }
     });
-
-    connection.on('userRemove', function(data) {
+    
+	connection.on('userRemove', function(data) {
         if (typeof data != 'undefined'){
             if (data.actor != null && data.ban == false) {
                 reply = '[NA Mumble] ' + connection.userBySession(data.actor).name + ' kicked ' + mumbleSessionUsers[mumbleSessionNum.indexOf(data.session)] + ': ' + data.reason;
@@ -803,7 +797,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             }
             console.log(playerd);
         }
-        if (scope == 'channel' && connection.user.channel.name == "Draft Channel") {
+        if (scope == 'channel' && connection.user.channel.name == "Draft Channel") {// forwards messages to the spec channel if bot is in the draft channel
             connection.channelByName('Spectating Lounge [Open to all]').sendMessage(actor.name + ': ' + message);
             mumbleLogger.chat("Bot forwarded message to Spectating Lounge",{ 'Timestamp': getDateTime() });
         }
@@ -1853,18 +1847,6 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     function getDateTime() {
         return moment().format('YYYY-MM-DD HH:mm:ss Z');;
     }
-    function callEveryHour() {
-        connection.user.setSelfDeaf(false);
-        if (groupmeAuth == true){
-            request({
-                method: 'POST',
-                uri: 'https://api.groupme.com/v3/bots/post',
-                body: JSON.stringify({ "bot_id" : groupmeListenId,"text": 'Hourly ping' })
-            }, function(error, response, body) {
-                console.log(body);
-            })
-        }
-    }
     function play(file, client) {
         var stream = fs.createReadStream(file);
         var decoder = new lame.Decoder();
@@ -1907,5 +1889,15 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 			});
 		});
     }
-
+	function pingMessage(message){
+					if (groupmeAuth == true){
+				request({
+					method: 'POST',
+					uri: 'https://api.groupme.com/v3/bots/post',
+					body: JSON.stringify({ "bot_id" : groupmeListenId,"text": message })
+				}, function(error, response, body) {
+					console.log(body);
+				})
+			}
+	}
 });
