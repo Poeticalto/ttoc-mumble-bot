@@ -481,7 +481,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 		var dailyReset = schedule.scheduleJob('0 4 * * *',function(){
 			pingMessage('Daily Reset');
 			process.exit(0);
-		}
+		});
     });
 
     process.on('uncaughtException', function (exception) {
