@@ -462,13 +462,13 @@ const rl = readline.createInterface({ // creates cmd interface to interact with 
 // connect to the mumble server
 console.log('Connecting to Mumble Server');
 console.log('Connecting');
-pingMessage('Bot has been initialized!');
 
 mumble.connect(mumbleUrl, options, function(error, connection) {
     if (error) { throw new Error(error); }
 
     connection.authenticate(botName);
     connection.on('initialized', function() {
+		pingMessage('Bot has been initialized!');
         mumbleLogger.chat("Bot has connected and is ready to go!",{ 'Timestamp': getDateTime() });
         console.log('connection ready');
         connection.user.setSelfDeaf(false); // mute/deafens the bot
