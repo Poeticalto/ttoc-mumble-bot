@@ -11,6 +11,8 @@ var GroupMe = require('groupme');
 var API = GroupMe.Stateless;
 const path = require('path');
 var winston = require('winston');
+const {format} = require('winston');
+const {printf} = format;
 require('winston-daily-rotate-file');
 var irc = require('irc');
 var script = google.script('v1');
@@ -369,12 +371,15 @@ if (logToWeb == 'true'){//logs directly to web folder for server use
 }
 
 // Logger setup, all logs are stored in the logs folder.
+
+
 var mumbleLogger = winston.createLogger({
     levels: {
         error: 0,
         chat: 1,
         mlog: 2
     },
+	format: printf(info => {return `${info.LT} [${info.level}] ${info.message}`}),
     transports: [
         new (winston.transports.DailyRotateFile)({
             filename: path.join(setLogDir,'/logs/error/','%DATE%.log'),
@@ -488,7 +493,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     if (slackAuth == true) {
         var web = new WebClient(slackToken);
     } else {
-        console.log('Slack token was noot imported, you will not be able to use Slack functionality at this time. :c');
+        console.log('Slack token was not imported, you will not be able to use Slack functionality at this time. :c');
         var web;
     }
 
@@ -745,7 +750,6 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         mumbleLogger.mlog(user.name+" changed suppressed status to "+status+" by "+actor.name,{'LT': getDateTime()});
     })
     connection.on('message', function(message, actor, scope) {
-        console.log(actor.name);
         message = message.replace(/\n/g, ""); // consolidates message to one line
         reply = "";
         const privateMessage = scope === 'private'; // scope defines how the bot received the message
@@ -769,7 +773,6 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                 playerd = playerd + ' ' + contentPieces[i];
             }
         } // arg playerd may have multiple words, so combine everything after command into one var
-        console.log(message);
         if (privateMessage == false && isChat == true && groupmeChatBridge == true) {
             var playerd = contentPieces[0];
             if (contentPieces.length > 1) {
@@ -790,7 +793,6 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                     }
                 }, hi);
             }
-            console.log(playerd);
         }
         if (scope == 'channel' && connection.user.channel.name == "Draft Channel") {// forwards messages to the spec channel if bot is in the draft channel
             connection.channelByName('Spectating Lounge [Open to all]').sendMessage(actor.name + ': ' + message);
@@ -1076,19 +1078,16 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                         if (lockChannelList.indexOf(actor.channel.name) == -1 && superlockChannelList.indexOf(actor.channel.name) == -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has put this channel on lockdown! No new users will be allowed unless moved by a whitelisted user.');
                             mumbleLogger.chat(actor.channel.name+" was put on lockdown by "+actor.name,{ 'LT': getDateTime() });
-                            console.log(actor.channel.name + ' has been put on lockdown');
                             lockChannelList.push(actor.channel.name);
                         } else if (lockChannelList.indexOf(actor.channel.name) == -1 && superlockChannelList.indexOf(actor.channel.name) > -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has downgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
                             lockChannelList.push(actor.channel.name);
-                            console.log(actor.channel.name + ' has been downgraded to lockdown');
                             mumbleLogger.chat(actor.channel.name+" has been downgraded to lockdown by "+actor.name,{ 'LT': getDateTime() });
                             superlockChannelList.splice(superlockChannelList.indexOf(actor.channel.name), 1);
                         } else if (lockChannelList.indexOf(actor.channel.name) > -1 || superlockChannelList.indexOf(actor.channel.name) > -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has lifted the channel lockdown! Users may now freely enter and leave.');
                             lockChannelList.splice(lockChannelList.indexOf(actor.channel.name), 1);
                             superlockChannelList.splice(superlockChannelList.indexOf(actor.channel.name), 1);
-                            console.log(actor.channel.name + ' has been removed from lockdown');
                             mumbleLogger.chat(actor.channel.name+" has been removed from lockdown by "+actor.name,{ 'LT': getDateTime() });
                         }
                     } else {
@@ -1101,17 +1100,14 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                         if (lockChannelList.indexOf(actor.channel.name) == -1 && superlockChannelList.indexOf(actor.channel.name) == -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has put this channel on super lockdown! No new users will be allowed to enter or leave unless moved by a whitelisted user.');
                             superlockChannelList.push(actor.channel.name);
-                            console.log(actor.channel.name + ' has been put on lockdown+');
                             mumbleLogger.chat(actor.channel.name+" has been put on lockdown+ by "+actor.name,{ 'LT': getDateTime() });
                         } else if (lockChannelList.indexOf(actor.channel.name) > -1 && superlockChannelList.indexOf(actor.channel.name) == -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has upgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
-                            console.log(actor.channel.name + ' has been upgraded to lockdown+');
                             mumbleLogger.chat(actor.channel.name+" has been upgraded to lockdown+ by "+actor.name,{ 'LT': getDateTime() });
                             superlockChannelList.push(actor.channel.name);
                             lockChannelList.splice(superlockChannelList.indexOf(actor.channel.name), 1);
                         } else if (lockChannelList.indexOf(actor.channel.name) > -1 || superlockChannelList.indexOf(actor.channel.name) > -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has lifted the channel lockdown! Users may now freely enter and leave.');
-                            console.log(actor.channel.name + ' has been removed from lockdown+');
                             mumbleLogger.chat(actor.channel.name+" has been removed from lockdown+ by "+actor.name,{ 'LT': getDateTime() });
                             lockChannelList.splice(lockChannelList.indexOf(actor.channel.name), 1);
                             superlockChannelList.splice(superlockChannelList.indexOf(actor.channel.name), 1);
@@ -1427,9 +1423,6 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                             motdSet = true;
                             playerd = parseInt(contentPieces[1]);
                             motd = fs.readFileSync(path.join(__dirname,'/bot_data/','motd_system.txt')).toString().split("\n");
-                            console.log(playerd);
-                            console.log(Number.isInteger(playerd));
-                            console.log(motd.length);
                             if (Number.isInteger(playerd) == true && playerd <= motd.length - 1 && playerd >= 0) {
                                 motd = motd[playerd];
                             } else {
@@ -1461,7 +1454,6 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             }
             var noReply = ['getmail', 'group', 'lock', 'lock+', 'here', 'trade', 'move'];
             if (noReply.indexOf(command) == -1 || reply != '') {
-                console.log(reply);
                 mumbleLogger.chat("Bot response: "+reply,{ 'LT': getDateTime() });
                 actor.sendMessage(reply);
             }
@@ -1566,10 +1558,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 
         function random12() {
             seasonSize = rows[0];
-            console.log(seasonSize);
-            console.log(rows);
             playerd = parseInt(seasonSize) + 5;
-            console.log(seasonSize);
             ssReadFrom = "'S-" + seasonNum + "'!N6:N" + playerd;
             authorize(JSON.parse(gappkey), ssread);
             for (i = 0; i < seasonSize; i++) {
@@ -1664,7 +1653,6 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         console.log('welcome system has been backed up!');
     }
     function draftplayer(playerd) { // interface with google sheets to write player name on the draft board
-        console.log(playerd + ' is being drafted!');
         draftPickRound = picknum % seasonSize;
         if (draftPickRound == 0 && draftRound == 1) {
             draftPickRound = seasonSize;
@@ -1734,11 +1722,6 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             ssLink = rows[6];
             sgnLink = rows[5];
             seasonNum = rows[1];
-            console.log(ssMapName);
-            console.log(ssMapLink);
-            console.log(seasonNum);
-            console.log(ssLink);
-            console.log(sgnLink);
         }
         random4();
         setTimeout(random6, 5000);
@@ -1805,7 +1788,6 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                     groupId = groupId + "/#rg-" + mapname;
                     reply = '<br/>Your ranked game is ready!<br/>Settings: 8 min game, Golden Cap OT<br/>Map: '+tempGame[12]+'<br/>'+'<a href="'+groupSend+groupId+'"><b><span style="color:#39a5dd">Click here for the group!</span></b></a>'+'<br/><br/>Red (P1-P4): '+tempGame[0]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[0])]+'], '+tempGame[1]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[1])]+'], '+tempGame[2]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[2])]+'], '+tempGame[3]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[3])]+'] ['+tempGame[8]+']<br/>Blue (P5-P8): '+tempGame[4]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[4])]+'], '+tempGame[5]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[5])]+'], '+tempGame[6]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[6])]+'], '+tempGame[7]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[7])]+'] ['+tempGame[9]+']<br/><br/>Vote using !vr, !vb, or !vv #<br/>Use <a href="https://gist.github.com/Poeticalto/00de8353fce79cac9059b22f20242039/raw/a5a6515e75ac210ec9798c00b532742646b4728f/TagPro_Competitive_Group_Maker.user.js"><b><span style="color:#39a5dd">this userscript</span></b></a> to set up groups automatically!<br/><br/>Good luck and have fun!';
                 }
-                console.log(groupSend + groupId);
             } else {
                 if (tempGame.length > 0){
                     reply = '<br/>Your ranked game is ready!<br/>Settings: 8 min game, Golden Cap OT<br/>Map: '+tempGame[12]+'<br/>'+'<a href="'+'"><b><span style="color:#39a5dd">ERR creating group, play on '+tempGame[11]+'</span></b></a>'+'<br/><br/>Red (P1-P4): '+tempGame[0]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[0])]+'], '+tempGame[1]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[1])]+'], '+tempGame[2]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[2])]+'], '+tempGame[3]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[3])]+'] ['+tempGame[8]+']<br/>Blue (P5-P8): '+tempGame[4]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[4])]+'], '+tempGame[5]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[5])]+'], '+tempGame[6]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[6])]+'], '+tempGame[7]+'['+rPlayerElo[rPlayerList.indexOf(tempGame[7])]+'] ['+tempGame[9]+']<br/><br/>Vote using !vr, !vb, or !vv #<br/>Use <a href="https://gist.github.com/Poeticalto/00de8353fce79cac9059b22f20242039/raw/a5a6515e75ac210ec9798c00b532742646b4728f/TagPro_Competitive_Group_Maker.user.js"><b><span style="color:#39a5dd">this userscript</span></b></a> to set up groups automatically!<br/><br/>Good luck and have fun!';
@@ -1816,7 +1798,6 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             }
         })
         function random3() {
-            console.log(reply);
             if (tempGame.length > 0){
                 for (var i = 0;i < 7;i++){ 
                     connection.userByName(tempGame[i]).sendMessage(reply);
@@ -1849,7 +1830,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         console.log('Active Tournament set to '+name);
     }
     function getDateTime() {
-        return moment().format("HH:mm:ss:SSS");
+        return moment().format("HH:mm:ss.SSS");
     }
     function play(file, client) {
         var stream = fs.createReadStream(file);
