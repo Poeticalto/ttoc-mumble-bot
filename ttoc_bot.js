@@ -464,7 +464,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     connection.authenticate(botName);
     connection.on('initialized', function() {
 		pingMessage('Bot has been initialized!');
-        mumbleLogger.chat("Bot has connected and is ready to go!",['LT': getDateTime() });
+        mumbleLogger.chat("Bot has connected and is ready to go!",{'LT': getDateTime() });
         console.log('connection ready');
         connection.user.setSelfDeaf(false); // mute/deafens the bot
         connection.user.setComment(help); // sets the help statement as the comment for the bot
