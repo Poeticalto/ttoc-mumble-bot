@@ -478,7 +478,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 			connection.user.setSelfDeaf(false);
 			pingMessage('Hourly Ping');
 		});
-		var dailyReset = schedule.scheduleJob('0 4 * * *',function(){
+		var dailyReset = schedule.scheduleJob('0 0 * * *',function(){
 			pingMessage('Daily Reset');
 			process.exit(0);
 		});
