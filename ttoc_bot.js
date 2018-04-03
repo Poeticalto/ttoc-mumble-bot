@@ -378,17 +378,14 @@ var mumbleLogger = winston.createLogger({
     transports: [
         new (winston.transports.DailyRotateFile)({
             filename: path.join(setLogDir,'/logs/error/','%DATE%.log'),
-            localTime: 'true',
             level: 'error'
         }),
         new (winston.transports.DailyRotateFile)({
             filename: path.join(setLogDir,'/logs/mumblechat/','%DATE%.log'),
-            localTime: 'true',
             level: 'chat'
         }),
         new (winston.transports.DailyRotateFile)({
             filename: path.join(setLogDir,'/logs/mumblelog/','%DATE%.log'),
-            localTime: 'true',
             level: 'mlog'
         })
     ]
@@ -402,12 +399,10 @@ var ircLogger = winston.createLogger({
     transports: [
         new (winston.transports.DailyRotateFile)({
             filename: path.join(setLogDir,'/logs/ircchat/','%DATE%.log'),
-            localTime: 'true',
             level: 'chat'
         }),
         new (winston.transports.DailyRotateFile)({
             filename: path.join(setLogDir,'/logs/irclog/','%DATE%.log'),
-            createTree: 'true',
             level: 'irclog'
         })	
     ]
@@ -469,7 +464,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     connection.authenticate(botName);
     connection.on('initialized', function() {
 		pingMessage('Bot has been initialized!');
-        mumbleLogger.chat("Bot has connected and is ready to go!",{ 'Timestamp': getDateTime() });
+        mumbleLogger.chat("Bot has connected and is ready to go!",['LT': getDateTime() });
         console.log('connection ready');
         connection.user.setSelfDeaf(false); // mute/deafens the bot
         connection.user.setComment(help); // sets the help statement as the comment for the bot
@@ -626,13 +621,13 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         if (typeof data != 'undefined'){
             if (data.actor != null && data.ban == false) {
                 reply = '[NA Mumble] ' + connection.userBySession(data.actor).name + ' kicked ' + mumbleSessionUsers[mumbleSessionNum.indexOf(data.session)] + ': ' + data.reason;
-                mumbleLogger.mlog(reply,{'Timestamp': getDateTime()});
+                mumbleLogger.mlog(reply,{'LT': getDateTime()});
                 if (slackAuth == true) {
                     sendtoslack(slackChannel, reply);
                 }
             } else if (data.actor != null && data.ban == true) {
                 reply = '[NA Mumble] ' + connection.userBySession(data.actor).name + ' banned ' + mumbleSessionUsers[mumbleSessionNum.indexOf(data.session)] + ': ' + data.reason;
-                mumbleLogger.mlog(reply,{'Timestamp': getDateTime()});
+                mumbleLogger.mlog(reply,{'LT': getDateTime()});
                 if (slackAuth == true) {
                     sendtoslack(slackChannel, reply);
                 }
@@ -678,7 +673,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 
     connection.on('user-disconnect', function(state) {
         if (typeof state != 'undefined'){
-            mumbleLogger.mlog(state.name+" has disconnected.",{'Timestamp': getDateTime()});
+            mumbleLogger.mlog(state.name+" has disconnected.",{'LT': getDateTime()});
             if (state.name == botName){
                 process.exit(0);
             }
@@ -715,7 +710,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 
     connection.on('user-priority-speaker', function(user, status, actor) {	
         if (typeof actor != 'undefined'){
-            mumbleLogger.mlog(user.name+" had priority speaker status changed to "+status+" by "+actor.name,{'Timestamp': getDateTime()});
+            mumbleLogger.mlog(user.name+" had priority speaker status changed to "+status+" by "+actor.name,{'LT': getDateTime()});
             if (whitelist.indexOf(actor.name) > -1 && status == true) {
                 if (user.name == botName && user.channel.name != actor.channel.name) { // moves bot to the channel of the actor 
                     user.moveToChannel(actor.channel);
@@ -732,22 +727,22 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     });
 
     connection.on('user-mute', function(user,status,actor){
-        mumbleLogger.mlog(user.name+" changed mute status to "+status+" by "+actor.name,{'Timestamp': getDateTime()});
+        mumbleLogger.mlog(user.name+" changed mute status to "+status+" by "+actor.name,{'LT': getDateTime()});
     })
     connection.on('user-deaf', function(user,status,actor){
-        mumbleLogger.mlog(user.name+" changed deaf status to "+status+" by "+actor.name,{'Timestamp': getDateTime()});
+        mumbleLogger.mlog(user.name+" changed deaf status to "+status+" by "+actor.name,{'LT': getDateTime()});
     })
     connection.on('user-recording', function(user,status){
-        mumbleLogger.mlog(user.name+" changed recording status to "+status,{'Timestamp': getDateTime()});
+        mumbleLogger.mlog(user.name+" changed recording status to "+status,{'LT': getDateTime()});
     })
     connection.on('self-mute', function(user,status){
-        mumbleLogger.mlog(user.name+" has set self-mute status to "+status,{'Timestamp': getDateTime()});
+        mumbleLogger.mlog(user.name+" has set self-mute status to "+status,{'LT': getDateTime()});
     })
     connection.on('self-deaf', function(user,status){
-        mumbleLogger.mlog(user.name+" has set self-deaf status to "+status,{'Timestamp': getDateTime()});
+        mumbleLogger.mlog(user.name+" has set self-deaf status to "+status,{'LT': getDateTime()});
     })
     connection.on('user-suppress', function(user,status,actor){
-        mumbleLogger.mlog(user.name+" changed suppressed status to "+status+" by "+actor.name,{'Timestamp': getDateTime()});
+        mumbleLogger.mlog(user.name+" changed suppressed status to "+status+" by "+actor.name,{'LT': getDateTime()});
     })
     connection.on('message', function(message, actor, scope) {
         console.log(actor.name);
@@ -761,13 +756,13 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         const command = contentPieces[0].slice(0, contentPieces[0].length).split("<br")[0].split("<p")[0].toLowerCase();
         var playerd = contentPieces[1];
         if (privateMessage){
-            mumbleLogger.chat('PM from '+actor.name+': '+message.substring(0,2000),{ 'Timestamp': getDateTime() });
+            mumbleLogger.chat('PM from '+actor.name+': '+message.substring(0,2000),{ 'LT': getDateTime() });
         }
         else if (scope == "channel"){
-            mumbleLogger.chat('CM from '+actor.name+': '+message.substring(0,2000),{ 'Timestamp': getDateTime() });
+            mumbleLogger.chat('CM from '+actor.name+': '+message.substring(0,2000),{ 'LT': getDateTime() });
         }
 		else {
-			mumbleLogger.chat('Tree from '+actor.name+' originating from '+connection.channelById(scope[0]).name+':'+message.substring(0,2000),{'Timestamp': getDateTime()});
+			mumbleLogger.chat('Tree from '+actor.name+' originating from '+connection.channelById(scope[0]).name+':'+message.substring(0,2000),{'LT': getDateTime()});
 		}
         if (contentPieces.length > 2) {
             for (i = 2; i <= contentPieces.length - 1; i++) {
@@ -784,7 +779,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             }
             if (playerd == undefined) {
                 connection.user.channel.sendMessage("Sorry, there was nothing to respond to!");
-                mumbleLogger.chat("Bot response: "+"Sorry, there was nothing to respond to!",{ 'Timestamp': getDateTime() });
+                mumbleLogger.chat("Bot response: "+"Sorry, there was nothing to respond to!",{ 'LT': getDateTime() });
             } else if (groupmeAuth == true) {
                 function hi() {
                     console.log("Success!");
@@ -799,7 +794,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         }
         if (scope == 'channel' && connection.user.channel.name == "Draft Channel") {// forwards messages to the spec channel if bot is in the draft channel
             connection.channelByName('Spectating Lounge [Open to all]').sendMessage(actor.name + ': ' + message);
-            mumbleLogger.chat("Bot forwarded message to Spectating Lounge",{ 'Timestamp': getDateTime() });
+            mumbleLogger.chat("Bot forwarded message to Spectating Lounge",{ 'LT': getDateTime() });
         }
         if (isCommand && privateMessage) {
             switch (command) {
@@ -860,18 +855,18 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                             if (groupmeChatBridge == false) {
                                 groupmeChatBridge = true;
                                 connection.user.channel.sendMessage("<br/>Chat mode has been enabled! To chat with the bot, preface your chat with the @ symbol like this @hi bot!");
-                                mumbleLogger.chat("Bot activated GroupMe Bridge",{ 'Timestamp': getDateTime() });
+                                mumbleLogger.chat("Bot activated GroupMe Bridge",{ 'LT': getDateTime() });
                                 incoming.disconnect();
                                 incoming.connect();
                             } else {
                                 groupmeChatBridge = false;
                                 connection.user.channel.sendMessage("<br/>Chat mode has been disabled! :c");
-                                mumbleLogger.chat("Bot deactivated GroupMe Bridge",{ 'Timestamp': getDateTime() });
+                                mumbleLogger.chat("Bot deactivated GroupMe Bridge",{ 'LT': getDateTime() });
                                 incoming.disconnect();
                             }
                         } else {
                             connection.user.channel.sendMessage("GroupMe functionality has not been enabled! Chat mode is not activated. :c");
-                            mumbleLogger.chat("Bot failed to activate GroupMe bridge due to lack of API key.",{ 'Timestamp': getDateTime() });
+                            mumbleLogger.chat("Bot failed to activate GroupMe bridge due to lack of API key.",{ 'LT': getDateTime() });
                         }
                     } else {
                         reply = tohelp;
@@ -1058,10 +1053,10 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                     if (whitelist.indexOf(actor.name) > -1) {
                         connection.user.moveToChannel(actor.channel);
                         actor.channel.sendMessage(actor.name + ' has summoned me to this channel!');
-                        mumbleLogger.chat("Bot was summoned to "+actor.channel.name+" by "+actor.name,{ 'Timestamp': getDateTime() });
+                        mumbleLogger.chat("Bot was summoned to "+actor.channel.name+" by "+actor.name,{ 'LT': getDateTime() });
                     } else {
                         actor.sendMessage(tohelp);
-                        mumbleLogger.chat("Bot response: "+tohelp,{ 'Timestamp': getDateTime() });
+                        mumbleLogger.chat("Bot response: "+tohelp,{ 'LT': getDateTime() });
                     }
                     break;
                 case 'home': // moves the bot back to a predefined home channel.
@@ -1070,7 +1065,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                         connection.channelByName(botHome).sendMessage(actor.name + ' has sent me to this channel!');
                     } else {
                         actor.sendMessage(tohelp);
-                        mumbleLogger.chat("Bot response: "+tohelp,{ 'Timestamp': getDateTime() });
+                        mumbleLogger.chat("Bot response: "+tohelp,{ 'LT': getDateTime() });
                     }
                     break;
                 case 'info': // displays info about the bot
@@ -1080,25 +1075,25 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                     if (whitelist.indexOf(actor.name) > -1 || mods.indexOf(actor.name) > -1 || pseudoMods.indexOf(actor.name) > -1) {
                         if (lockChannelList.indexOf(actor.channel.name) == -1 && superlockChannelList.indexOf(actor.channel.name) == -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has put this channel on lockdown! No new users will be allowed unless moved by a whitelisted user.');
-                            mumbleLogger.chat(actor.channel.name+" was put on lockdown by "+actor.name,{ 'Timestamp': getDateTime() });
+                            mumbleLogger.chat(actor.channel.name+" was put on lockdown by "+actor.name,{ 'LT': getDateTime() });
                             console.log(actor.channel.name + ' has been put on lockdown');
                             lockChannelList.push(actor.channel.name);
                         } else if (lockChannelList.indexOf(actor.channel.name) == -1 && superlockChannelList.indexOf(actor.channel.name) > -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has downgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
                             lockChannelList.push(actor.channel.name);
                             console.log(actor.channel.name + ' has been downgraded to lockdown');
-                            mumbleLogger.chat(actor.channel.name+" has been downgraded to lockdown by "+actor.name,{ 'Timestamp': getDateTime() });
+                            mumbleLogger.chat(actor.channel.name+" has been downgraded to lockdown by "+actor.name,{ 'LT': getDateTime() });
                             superlockChannelList.splice(superlockChannelList.indexOf(actor.channel.name), 1);
                         } else if (lockChannelList.indexOf(actor.channel.name) > -1 || superlockChannelList.indexOf(actor.channel.name) > -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has lifted the channel lockdown! Users may now freely enter and leave.');
                             lockChannelList.splice(lockChannelList.indexOf(actor.channel.name), 1);
                             superlockChannelList.splice(superlockChannelList.indexOf(actor.channel.name), 1);
                             console.log(actor.channel.name + ' has been removed from lockdown');
-                            mumbleLogger.chat(actor.channel.name+" has been removed from lockdown by "+actor.name,{ 'Timestamp': getDateTime() });
+                            mumbleLogger.chat(actor.channel.name+" has been removed from lockdown by "+actor.name,{ 'LT': getDateTime() });
                         }
                     } else {
                         actor.sendMessage(tohelp);
-                        mumbleLogger.chat("Bot response: "+tohelp,{ 'Timestamp': getDateTime() });
+                        mumbleLogger.chat("Bot response: "+tohelp,{ 'LT': getDateTime() });
                     }
                     break;
                 case 'lock+': // prevents users from entering or leaving the channel [note, move back does not work if bot does not have permissions to move]
@@ -1107,23 +1102,23 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has put this channel on super lockdown! No new users will be allowed to enter or leave unless moved by a whitelisted user.');
                             superlockChannelList.push(actor.channel.name);
                             console.log(actor.channel.name + ' has been put on lockdown+');
-                            mumbleLogger.chat(actor.channel.name+" has been put on lockdown+ by "+actor.name,{ 'Timestamp': getDateTime() });
+                            mumbleLogger.chat(actor.channel.name+" has been put on lockdown+ by "+actor.name,{ 'LT': getDateTime() });
                         } else if (lockChannelList.indexOf(actor.channel.name) > -1 && superlockChannelList.indexOf(actor.channel.name) == -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has upgraded the channel lockdown! New users will not be allowed in unless moved by a whitelisted user.');
                             console.log(actor.channel.name + ' has been upgraded to lockdown+');
-                            mumbleLogger.chat(actor.channel.name+" has been upgraded to lockdown+ by "+actor.name,{ 'Timestamp': getDateTime() });
+                            mumbleLogger.chat(actor.channel.name+" has been upgraded to lockdown+ by "+actor.name,{ 'LT': getDateTime() });
                             superlockChannelList.push(actor.channel.name);
                             lockChannelList.splice(superlockChannelList.indexOf(actor.channel.name), 1);
                         } else if (lockChannelList.indexOf(actor.channel.name) > -1 || superlockChannelList.indexOf(actor.channel.name) > -1) {
                             connection.channelByName(actor.channel.name).sendMessage(actor.name + ' has lifted the channel lockdown! Users may now freely enter and leave.');
                             console.log(actor.channel.name + ' has been removed from lockdown+');
-                            mumbleLogger.chat(actor.channel.name+" has been removed from lockdown+ by "+actor.name,{ 'Timestamp': getDateTime() });
+                            mumbleLogger.chat(actor.channel.name+" has been removed from lockdown+ by "+actor.name,{ 'LT': getDateTime() });
                             lockChannelList.splice(lockChannelList.indexOf(actor.channel.name), 1);
                             superlockChannelList.splice(superlockChannelList.indexOf(actor.channel.name), 1);
                         }
                     } else {
                         actor.sendMessage(tohelp);
-                        mumbleLogger.chat("Bot response: "+tohelp,{ 'Timestamp': getDateTime() });
+                        mumbleLogger.chat("Bot response: "+tohelp,{ 'LT': getDateTime() });
                     }
                     break;
                 case 'locklist':
@@ -1467,7 +1462,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             var noReply = ['getmail', 'group', 'lock', 'lock+', 'here', 'trade', 'move'];
             if (noReply.indexOf(command) == -1 || reply != '') {
                 console.log(reply);
-                mumbleLogger.chat("Bot response: "+reply,{ 'Timestamp': getDateTime() });
+                mumbleLogger.chat("Bot response: "+reply,{ 'LT': getDateTime() });
                 actor.sendMessage(reply);
             }
         }
@@ -1478,21 +1473,21 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 
     connection.on('error', function(MumbleError) { //incomplete, error event when something goes wrong through mumble, need to add parsing of error
         console.log(MumbleError.name);
-        mumbleLogger.error("Mumble Error: "+MumbleError.name,{'Timestamp': getDateTime()});
+        mumbleLogger.error("Mumble Error: "+MumbleError.name,{'LT': getDateTime()});
         process.exit(0);		
     })
 
     connection.on('user-connect', function(user) { // user-connect is the event emitted when a user connects to the server
         if (typeof user != 'undefined'){
-            mumbleLogger.mlog(user.name+" has connected.",{'Timestamp': getDateTime()});
+            mumbleLogger.mlog(user.name+" has connected.",{'LT': getDateTime()});
             if (mailUser.indexOf(user.name.toLowerCase()) > -1) { // sends mail if user has mail to collect.
                 user.sendMessage("Howdy " + user.name + "! I've been keeping some cool mail from other people for you, let me go get it!");
                 getmail(user);
-                mumbleLogger.chat("Bot retrieved mail for "+user.name,{ 'Timestamp': getDateTime() });
+                mumbleLogger.chat("Bot retrieved mail for "+user.name,{ 'LT': getDateTime() });
             }
             if (signupsOpen == true && greylist.indexOf(user.name) == -1) { // if a tournament is running, signups are sent to the player
                 user.sendMessage('<br/>'+activeTournament+' signups are currently open for <a href="'+ssMapLink+'"><span style="color:#39a5dd">'+ssMapName+'</span></a> on '+tournamentServer+'!<br/><br/><a href="'+sgnLink+'"><b><span style="color:#aa0000">Click here for the signups!</span></b></a><br/><a href="'+ssLink+'"><b><span style="color:#00007f">Click here for the spreadsheet!</span></b></a>'+greyMessage);
-                mumbleLogger.chat("Automated signups sent to "+user.name,{ 'Timestamp': getDateTime() });
+                mumbleLogger.chat("Automated signups sent to "+user.name,{ 'LT': getDateTime() });
             } else if (greylist.indexOf(user.name) == -1 && signupsOpen == false && motdSet == true) { // sends the motd if active
                 user.sendMessage(motd);
                 mumbleLogger.chat("motd sent to "+user.name,{ 'Timestamp': getDateTime() });
@@ -1502,7 +1497,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                 } else {
                     user.sendMessage(welcomeMessage[welcomeUser.indexOf(user.name)]);
                 }
-                mumbleLogger.chat("Bot sent custom welcome message to "+user.name,{ 'Timestamp': getDateTime() });
+                mumbleLogger.chat("Bot sent custom welcome message to "+user.name,{ 'LT': getDateTime() });
             } else if (greylist.indexOf(user.name) == -1 && signupsOpen == false && motdSet == false) { // default message sent to every player on connect.
                 //user.sendMessage("<br/>"+botName+" sends a cat to say hi!<br/><br/>"+cats()+"<br/><br/>(If you don't want these automated messages when you connect, message the !stop command to me.)");
             }
@@ -1511,14 +1506,14 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 
     connection.on('user-move', function(user, fromChannel, toChannel, actor) { // user-move is the event emitted when a user switches channels
 		if (typeof actor == 'undefined'){
-			mumbleLogger.mlog(user.name+" moved by server from "+fromChannel.name+" to "+toChannel.name,{'Timestamp': getDateTime()});
+			mumbleLogger.mlog(user.name+" moved by server from "+fromChannel.name+" to "+toChannel.name,{'LT': getDateTime()});
 		}
 		if (typeof actor != 'undefined' && typeof user != 'undefined' && typeof fromChannel != 'undefined' && typeof toChannel != 'undefined'){			
 			if (user.name == actor.name){
-				mumbleLogger.mlog(user.name+" moved self from "+fromChannel.name+" to "+toChannel.name,{'Timestamp': getDateTime()});
+				mumbleLogger.mlog(user.name+" moved self from "+fromChannel.name+" to "+toChannel.name,{'LT': getDateTime()});
 			}
 			else {
-				mumbleLogger.mlog(user.name+" was moved from "+fromChannel.name+" to "+toChannel.name+" by "+actor.name,{'Timestamp': getDateTime()});
+				mumbleLogger.mlog(user.name+" was moved from "+fromChannel.name+" to "+toChannel.name+" by "+actor.name,{'LT': getDateTime()});
             }
 			if ((lockChannelList.indexOf(toChannel.name) > -1 || superlockChannelList.indexOf(toChannel.name) > -1) && actor.name != botName && (whitelist.indexOf(actor.name) == -1 && mods.indexOf(actor.name) == -1 && pseudoMods.indexOf(actor.name) == -1)) { // prevents user from entering if channel is locked.
                 user.moveToChannel(botMoveTo);
@@ -1854,7 +1849,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         console.log('Active Tournament set to '+name);
     }
     function getDateTime() {
-        return moment().format('YYYY-MM-DD HH:mm:ss Z');;
+        return moment().format("HH:mm:ss:SSS");
     }
     function play(file, client) {
         var stream = fs.createReadStream(file);
