@@ -1510,9 +1510,17 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
     });
 
     connection.on('user-move', function(user, fromChannel, toChannel, actor) { // user-move is the event emitted when a user switches channels
-        if (typeof actor != 'undefined' && typeof user != 'undefined' && typeof fromChannel != 'undefined' && typeof toChannel != 'undefined' && typeof actor.name != 'undefined' && typeof user.name != 'undefined'){
-			mumbleLogger.mlog(user.name+" was moved from "+fromChannel.name+" to "+toChannel.name+" by "+actor.name,{'Timestamp': getDateTime()});
-            if ((lockChannelList.indexOf(toChannel.name) > -1 || superlockChannelList.indexOf(toChannel.name) > -1) && actor.name != botName && (whitelist.indexOf(actor.name) == -1 && mods.indexOf(actor.name) == -1 && pseudoMods.indexOf(actor.name) == -1)) { // prevents user from entering if channel is locked.
+		if (typeof actor == 'undefined'){
+			mumbleLogger.mlog(user.name+" moved by server from "+fromChannel.name+" to "+toChannel.name,{'Timestamp': getDateTime()});
+		}
+		if (typeof actor != 'undefined' && typeof user != 'undefined' && typeof fromChannel != 'undefined' && typeof toChannel != 'undefined'){			
+			if (user.name == actor.name){
+				mumbleLogger.mlog(user.name+" moved self from "+fromChannel.name+" to "+toChannel.name,{'Timestamp': getDateTime()});
+			}
+			else {
+				mumbleLogger.mlog(user.name+" was moved from "+fromChannel.name+" to "+toChannel.name+" by "+actor.name,{'Timestamp': getDateTime()});
+            }
+			if ((lockChannelList.indexOf(toChannel.name) > -1 || superlockChannelList.indexOf(toChannel.name) > -1) && actor.name != botName && (whitelist.indexOf(actor.name) == -1 && mods.indexOf(actor.name) == -1 && pseudoMods.indexOf(actor.name) == -1)) { // prevents user from entering if channel is locked.
                 user.moveToChannel(botMoveTo);
                 user.sendMessage('Sorry, you cannot enter this channel right now. :c');
                 connection.channelByName(toChannel.name).sendMessage(user.name + ' was prevented from entering this channel!');
