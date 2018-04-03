@@ -1830,7 +1830,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         console.log('Active Tournament set to '+name);
     }
     function getDateTime() {
-        return moment().format("HH:mm:ss.SSS");
+        return moment().format("HH:mm:ss.SSS ZZ");
     }
     function play(file, client) {
         var stream = fs.createReadStream(file);
