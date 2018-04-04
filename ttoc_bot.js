@@ -438,6 +438,7 @@ var modsMumbleList = [];
 var mumbleSessionNum = [];
 var mumbleSessionUsers = [];
 var mumbleUnique = [];
+var mumbleUniqueNum = 0;
 var groupmeChatBridge = false;
 var contentPieces;
 
@@ -571,7 +572,10 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             if (usersf.indexOf(state.name) == -1) {
 				usersf.push(state.name);
                 updateuserarray(usersf, usersl);
-				mumbleCensus.census('Total Users on Server: '+usersf.length,{'LT': getDateTime()});
+				if (mumbleUniqueNum != usersf.length){
+					mumbleCensus.census('Total Users on Server: '+usersf.length,{'LT': getDateTime()});
+					mumbleUniqueNum = usersf.length;
+				}
             }
         }
     });
@@ -606,7 +610,10 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             if (usersf.indexOf(state.name) > -1) {
                 usersf.splice(usersf.indexOf(state.name), 1);
                 updateuserarray(usersf, usersl);
-				mumbleCensus.census('Total Users on Server: '+usersf.length,{'LT': getDateTime()});
+				if (mumbleUniqueNum != usersf.length){
+					mumbleCensus.census('Total Users on Server: '+usersf.length,{'LT': getDateTime()});
+					mumbleUniqueNum = usersf.length;
+				}
             }
         }
     });
