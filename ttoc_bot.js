@@ -102,16 +102,6 @@ if (fs.existsSync(path.join(__dirname,'/bot_data/','gscript_info.txt'))) {
     console.log('gscript_info.txt was created!');
 }
 
-if (fs.existsSync(path.join(__dirname,'/bot_data/','irc_info.txt'))) {
-    ircChannel = fs.readFileSync(path.join(__dirname,'/bot_data/','irc_info.txt')).toString().split("\n");
-    ircServer = ircChannel[0];
-    ircName = ircChannel[1];
-    ircPassword = ircChannel[3];
-    ircChannel = ircChannel[2];
-    ircAuth = false;
-    console.log('IRC server info imported from irc_info.txt!');
-}
-
 if (fs.existsSync(path.join(__dirname,'/bot_data/','mail_system.txt'))) {
     splitParts = fs.readFileSync(path.join(__dirname,'/bot_data/','mail_system.txt')).toString().split("\n");
     for (var i = 0; i < splitParts.length; i++) {
@@ -396,21 +386,17 @@ var mumbleLogger = winston.createLogger({
     ]
 });
 
-var ircLogger = winston.createLogger({
-    levels: {
-        chat : 1,
-        irclog: 2
-    },
-    transports: [
-        new (winston.transports.DailyRotateFile)({
-            filename: path.join(setLogDir,'/logs/ircchat/','%DATE%.log'),
-            level: 'chat'
-        }),
-        new (winston.transports.DailyRotateFile)({
-            filename: path.join(setLogDir,'/logs/irclog/','%DATE%.log'),
-            level: 'irclog'
-        })	
-    ]
+var mumbleCensus = winston.createLogger({
+	levels: {
+		census: 0
+	},
+	format: printf(info => {return `${info.LT} ${info.message}`}),
+	transports: [
+		new (winston.transports.DailyRotateFile)({
+			filename: path.join(setLogDir,'/logs/census/','%DATE%.log'),
+			level: 'census'
+		})
+	]
 });
 
 mumbleLogger.exitOnError = false;
@@ -451,6 +437,7 @@ var draftSsDraftNum;
 var modsMumbleList = [];
 var mumbleSessionNum = [];
 var mumbleSessionUsers = [];
+var mumbleUnique = [];
 var groupmeChatBridge = false;
 var contentPieces;
 
@@ -474,12 +461,11 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         connection.user.setSelfDeaf(false); // mute/deafens the bot
         connection.user.setComment(help); // sets the help statement as the comment for the bot
         connection.connection.setBitrate(72000);
-		var hourlyPing = schedule.scheduleJob('0 * * * *', function(){
+		var hourlyPing = schedule.scheduleJob('15 * * * *', function(){
 			connection.user.setSelfDeaf(false);
 			pingMessage('Hourly Ping');
 		});
 		var dailyReset = schedule.scheduleJob('0 0 * * *',function(){
-			pingMessage('Daily Reset');
 			process.exit(0);
 		});
     });
@@ -496,88 +482,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
         console.log('Slack token was not imported, you will not be able to use Slack functionality at this time. :c');
         var web;
     }
-
-    if (ircAuth == true){
-        var client = new irc.Client(ircServer, ircName, {
-            channels: [ircChannel],
-            sasl: true,
-            nick: ircName,
-            userName: ircName,
-            password: ircPassword,
-            stripColors: true,
-            showErrors: false,
-            autoRejoin: false
-        });
-        client.addListener('error', function(message) {
-            console.error('ERROR: %s: %s', message.command, message.args.join(' '));
-        });
-
-        client.addListener('message#blah', function(from, message) {
-            console.log('<%s> %s', from, message);
-        });
-
-        client.addListener('message', function(from, to, message) {
-            console.log('%s => %s: %s', from, to, message);
-            console.log(message);
-            if (from == 'mods_slack1' && message.split(' ')[0] == '!ban'){
-                if (ircBridge.indexOf(message.split(' ')[1]) > -1){
-                    ircBridgeBan.push(message.split(' ')[1]);
-                    ircBridge.splice(ircBridge.indexOf(message.split(' ')[1]),1);
-                    connection.userByName(message.split(' ')[1].sendMessage('You have been banned from using the NA Mumble Bridge!'));
-                    client.say('#tpmods',message.split(' ')[1]+' has been banned from the NA Mumble Bridge!');
-                    backupUsers();
-                }
-                else {
-                    ircBridgeBan.push(message.split(' ')[1]);
-                }
-            }
-
-            if (to.match(/^[#&]/)) {
-                for (var i=0; i < ircBridge.length ; i++){
-                    const messageCheck = message || '';
-                    const isMod = messageCheck[0] === '<';
-                    if (from == 'mods_slack1' && isMod){
-                        var tempMod =  message.split(' ')[0];
-                        tempMod = tempMod.substring(1,tempMod.length-1);
-                        var tempMessage = '';
-                        if (message.split(' ').length > 2) {
-                            for (i = 2; i <= message.split(' ').length - 1; i++) {
-                                tempMessage = tempMessage + ' ' + message.split(' ')[i];
-                            }
-                            message = message.split(' ')[1];
-                            connection.userByName(ircBridge[i]).sendMessage('#tpmods IRC Chat:<br/>[Mod]'+tempMod+': '+message);
-                        }
-                        else {
-                            connection.userByName(ircBridge[i]).sendMessage('#tpmods IRC Chat:<br/>'+from+': '+message);
-                        }
-                    }
-                }
-            }	
-            else {
-                // private message
-                console.log('private message');
-            }
-            if (message == '!cat'){
-                client.say('#tpmods',cats());
-            }
-
-        });
-        client.addListener('pm', function(nick, message) {
-            console.log('Got private message from %s: %s', nick, message);
-        });
-        client.addListener('join', function(channel, who) {
-            console.log('%s has joined %s', who, channel);
-        });
-        client.addListener('part', function(channel, who, reason) {
-            console.log('%s has left %s: %s', who, channel, reason);
-        });
-        client.addListener('kick', function(channel, who, by, reason) {
-            console.log('%s was kicked from %s by %s: %s', who, channel, by, reason);
-        });				
-    } else {
-        console.log('IRC info was not imported, you will not be able to use IRC functionality at this time. :c');
-        var client;
-    }
+	
     if (groupmeAuth == true) {
         var incoming = new GroupMe.IncomingStream(groupmeAccessToken, groupmeUserId, null);
     } else {
@@ -651,6 +556,9 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                 mumbleSessionNum.push(state.session);
                 mumbleSessionUsers.push(state.name);
             }
+			if (mumbleUnique.indexOf(state.name) == -1){
+				mumbleUnique.push(state.name);
+			}
             if (users.indexOf(state.name) == -1 && greylist.indexOf(state.name) == -1) {
                 users.push(state.name);
                 if (mods.indexOf(state.name) > -1 && modsMumbleList.indexOf(state.name) == -1) {
@@ -661,8 +569,9 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
                 users.splice(users.indexOf(null), 1); //unsure where the null leaks in from, but this removes it	
             }
             if (usersf.indexOf(state.name) == -1) {
-                usersf.push(state.name);
+				usersf.push(state.name);
                 updateuserarray(usersf, usersl);
+				mumbleCensus.census('Total Users on Server: '+usersf.length,{'LT': getDateTime()});
             }
         }
     });
@@ -697,6 +606,7 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             if (usersf.indexOf(state.name) > -1) {
                 usersf.splice(usersf.indexOf(state.name), 1);
                 updateuserarray(usersf, usersl);
+				mumbleCensus.census('Total Users on Server: '+usersf.length,{'LT': getDateTime()});
             }
         }
     });
@@ -1471,6 +1381,10 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 
     connection.on('user-connect', function(user) { // user-connect is the event emitted when a user connects to the server
         if (typeof user != 'undefined'){
+			if (mumbleUnique.indexOf(state.name) == -1){
+				mumbleUnique.push(state.name);
+				mumbleCensus.census('Total Unique Users: '+mumbleUnique.length,{'LT': getDateTime()});
+			}
             mumbleLogger.mlog(user.name+" has connected.",{'LT': getDateTime()});
             if (mailUser.indexOf(user.name.toLowerCase()) > -1) { // sends mail if user has mail to collect.
                 user.sendMessage("Howdy " + user.name + "! I've been keeping some cool mail from other people for you, let me go get it!");
