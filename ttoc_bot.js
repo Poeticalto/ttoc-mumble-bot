@@ -1381,8 +1381,8 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
 
     connection.on('user-connect', function(user) { // user-connect is the event emitted when a user connects to the server
         if (typeof user != 'undefined'){
-			if (mumbleUnique.indexOf(state.name) == -1){
-				mumbleUnique.push(state.name);
+			if (mumbleUnique.indexOf(user.name) == -1){
+				mumbleUnique.push(user.name);
 				mumbleCensus.census('Total Unique Users: '+mumbleUnique.length,{'LT': getDateTime()});
 			}
             mumbleLogger.mlog(user.name+" has connected.",{'LT': getDateTime()});
