@@ -1645,8 +1645,8 @@ mumble.connect(mumbleUrl, options, function(error, connection) {
             seasonNum = rows[1];
         }
         random4();
-        setTimeout(random6, 5000);
-        setTimeout(backupLinks, 6000);
+        setTimeout(random6, 10000);
+        setTimeout(backupLinks, 12000);
     }
 
     function getmail(actor) { // gets mail from arrays
